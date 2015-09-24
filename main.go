@@ -3,23 +3,19 @@
 package main
 
 import (
-	//	"fmt"
-	//	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
-	//	"time"
 
-	"github.com/Dataman-Cloud/omega-app/cache"
-	"github.com/Dataman-Cloud/omega-app/config"
-	"github.com/Dataman-Cloud/omega-app/util"
+	"github.com/Dataman-Cloud/omega-metrics/cache"
+	"github.com/Dataman-Cloud/omega-metrics/config"
+	"github.com/Dataman-Cloud/omega-metrics/util"
 	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 )
 
 func init() {
 	util.InitLog()
-	//	util.InitDB()
 	util.InitMQ()
 	cache.InitCache()
 
@@ -38,13 +34,11 @@ func destroy() {
 	log.Info("destroying ...")
 	cache.DestroyCache()
 	util.DestroyMQ()
-	//	util.DestroyDB()
 	util.DestroyLog()
 }
 
 func main() {
 	initEnv()
-	//start()
 	monitor()
 	defer destroy()
 }
@@ -56,37 +50,7 @@ func initEnv() {
 	log.Info("Runing with ", numCPU, " CPUs")
 }
 
-/*func start() {
-	gin.SetMode(gin.ReleaseMode)
-	router := gin.New()
-	router.Use(gin.Logger(), gin.Recovery(), authenticate)
-
-	router.GET("/", func(c *gin.Context) {
-		c.String(200, "pass")
-	})
-
-	appGroup := router.Group("/api/v1/applications")
-	{
-		appGroup.POST("/deploy", deployApp)
-	}
-	conf := config.Pairs()
-	addr := fmt.Sprintf("%s:%d", conf.Host, conf.Port)
-	server := &http.Server{
-		Addr:           addr,
-		Handler:        router,
-		ReadTimeout:    10 * time.Second,
-		WriteTimeout:   10 * time.Second,
-		MaxHeaderBytes: 1 << 20,
-	}
-	err := server.ListenAndServe()
-	if err != nil {
-		log.Fatal("can't start server: ", err)
-		panic(-1)
-	}
-}*/
-
 func monitor() {
-	//startP()
 	startC()
 	gin.SetMode(gin.ReleaseMode)
 	log.Info("[monitor] is up")
@@ -96,9 +60,7 @@ func monitor() {
 	monitorGroup := router.Group("/api/v1")
 	{
 		monitorGroup.GET("/metrics/cluster/:cluster_id", masterMetrics)
-		monitorGroup.GET("/masterState/:masterid", masterState)
-		monitorGroup.GET("/slaveMetrics/:slaveid", slaveMetrics)
 	}
-	router.Run(":6666")
+	router.Run(":9005")
 
 }

@@ -1,27 +1,29 @@
 ---
 numCPU: 1
-host: "lhan.dataman.io"
-port: 6500
+host: "localhost"
+port: 6080
 debugging: false
 log:
     console: true
-    file: "./omega-app.log"
+    file: "./omega-metrics.log"
     level: "debug"
     formatter: "text"
     maxSize: 1024000
 db:
     user: "oapp"
     password: "123456"
-    host: "lhan.dataman.io"
+    host: "localhost"
     port: 3306
     name: "oapp"
+    maxIdleConns: 5
+    maxOpenConns: 50
 cache:
-    host: "lhan.dataman.io"
+    host: "dev.dataman.io"
     port: 6379
     password: ""
     db: 0
 mq:
     user: "guest"
     password: "guest"
-    host: "lhan.dataman.io"
+    host: "dev.dataman.io"
     port: 5672

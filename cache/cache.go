@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/Dataman-Cloud/omega-app/config"
+	"github.com/Dataman-Cloud/omega-metrics/config"
 	log "github.com/Sirupsen/logrus"
 	redis "github.com/garyburd/redigo/redis"
 )

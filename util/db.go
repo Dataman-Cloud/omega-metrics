@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/Dataman-Cloud/omega-app/config"
+	"github.com/Dataman-Cloud/omega-metrics/config"
 	log "github.com/Sirupsen/logrus"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"

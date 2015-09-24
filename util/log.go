@@ -5,7 +5,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Dataman-Cloud/omega-app/config"
+	"github.com/Dataman-Cloud/omega-metrics/config"
 	log "github.com/Sirupsen/logrus"
 )
 
