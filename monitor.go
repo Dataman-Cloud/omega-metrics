@@ -20,8 +20,6 @@ func init() {
 func startC() {
 	fmt.Println("start master metrics mq consumer")
 	util.MetricsSubscribe(util.Metrics_exchange, util.Master_metrics_routing, handler)
-	/*	fmt.Println("start master state mq consumer")
-		util.MetricsSubscribe(util.Metrics_exchange, util.Master_state_routing, handler)*/
 }
 
 func startP() {
@@ -60,8 +58,6 @@ func writeToRedis(id string, json string) {
 		log.Errorf("LPUSH key:%s value:%s is wrong", id, json)
 		log.Errorln("[writeToRedis] error is ", err)
 	}
-	strs, _ := redis.Strings(conn.Do("LRANGE", "1_master_metrics", 0, -1))
-	fmt.Println("Data: ", strs)
 }
 
 func masterMetrics(ctx *gin.Context) {
