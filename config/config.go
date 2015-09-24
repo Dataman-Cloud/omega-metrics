@@ -72,7 +72,7 @@ func init() {
 
 	log.Println("initing config ...")
 
-	viper.SetConfigName("omega-app")
+	viper.SetConfigName("omega-metrics")
 	viper.AddConfigPath("./")
 	viper.AddConfigPath("$HOME/.omega/")
 	viper.AddConfigPath("/etc/omega/")

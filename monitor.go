@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/Dataman-Cloud/omega-app/cache"
-	"github.com/Dataman-Cloud/omega-app/config"
-	"github.com/Dataman-Cloud/omega-app/util"
+	"github.com/Dataman-Cloud/omega-metrics/cache"
+	"github.com/Dataman-Cloud/omega-metrics/config"
+	"github.com/Dataman-Cloud/omega-metrics/util"
 	log "github.com/Sirupsen/logrus"
 	redis "github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"
@@ -79,34 +79,4 @@ func masterMetrics(ctx *gin.Context) {
 	log.Info("Got master metrics", jsoninterface)
 	fmt.Println(reflect.TypeOf(jsoninterface))
 	ctx.JSON(http.StatusOK, jsoninterface)
-}
-
-func masterState(ctx *gin.Context) {
-	conn := cache.Open()
-	defer conn.Close()
-	masterid := ctx.Param("masterid") + "_" + util.Master_state_routing
-	log.Debug("masterid ", masterid)
-	jsonString, err := redis.String(conn.Do("LRANGE", masterid, 0, -1))
-	if err == nil {
-		log.Info("Got master state", jsonString)
-		ctx.String(http.StatusOK, jsonString)
-	} else if err != redis.ErrNil {
-		log.Error("[Master State] got error ", err)
-		ctx.String(http.StatusOK, "") //
-	}
-}
-
-func slaveMetrics(ctx *gin.Context) {
-	conn := cache.Open()
-	defer conn.Close()
-	slaveid := ctx.Param("slaveid") + "_" + util.Slave_metrics_routing
-	log.Debug("slaveid ", slaveid)
-	jsonString, err := redis.String(conn.Do("LRANGE", slaveid, 0, -1))
-	if err == nil {
-		log.Info("Got slave metrics", jsonString)
-		ctx.String(http.StatusOK, jsonString)
-	} else if err != redis.ErrNil {
-		log.Error("[Slave Metrics] got error ", err)
-		ctx.String(http.StatusOK, "") //
-	}
 }
