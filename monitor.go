@@ -54,7 +54,7 @@ func writeToRedis(id string, json string) {
 	log.Debug("write to redis")
 	conn.Send("LPUSH", id, json)
 	conn.Send("EXPIRE", id, config.DefaultTimeout)
-	_, err := conn.Do("LTRIM", id, 0, 19)
+	_, err := conn.Do("LTRIM", id, 0, 180)
 	if err != nil {
 		log.Errorf("LPUSH key:%s value:%s is wrong", id, json)
 		log.Errorln("[writeToRedis] error is ", err)
