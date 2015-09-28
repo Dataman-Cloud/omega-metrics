@@ -11,7 +11,6 @@
     
     FROM ubuntu:14.04
     MAINTAINER lhan lhan@dataman-inc.com
-
     #install go
     RUN mkdir -p /data/tools/go && cd /data/tools/go && \
         apt-get update && \
@@ -22,15 +21,20 @@
         tar xzf go* && \
         mv go /usr/local/.
         
+        
+在go1.5.linux-amd64目录下,通过命令`docker build -t "go1.5.linux-amd64" .`构建docker镜像。
+        
 ## 2.1 编译 Omega-metrics Dockerfile
     mkdir -p /data/tools/omega-metrics
     vi /data/tools/omega-metrics/Dockerfile
 
     FROM go1.5.linux-amd64
     MAINTAINER lhan lhan@dataman-inc.com
-
     #install omega-metrics
     CMD ["/data/omega-metrics/build.sh"]
+    
+    
+在omega-metrics目录下，通过命令`docker build -t "omega-metrics" .`构建docker镜像。
 ## 2.2 Omega-metrics 构建脚本
     mkdir -p /data/omega-metrics
     vi /data/omega-metrics/build.sh
@@ -48,7 +52,11 @@
     cd $GOPATH/src/github.com/Dataman-Cloud/ && \
     git clone https://leonluhan:DataMan1234@github.com/Dataman-Cloud/omega-metrics && \
     cd $GOPATH/src/github.com/Dataman-Cloud/omega-metrics && \
-    go build && mv omega-metrics /data/omega-metrics/
+    go build . && \
+    cp omega-metrics /data/omega-metrics/ && \
+    cd / && \
+    pwd && \
+    ./data/omega-metrics/omega-metrics
     
     chmod 777 /data/omega-metrics/build.sh
 ## 2.3 启动 Docker 编译出 Omega-metrics
@@ -58,4 +66,5 @@
                 
 ## 3. 测试Omega-metrics服务是否启动
     curl -X GET http://$host:9005/
-返回值为pass。其中`$host`是配置文件`omega-metrics.yaml`中的`host`
+返回值为pass。其中`$host`是配置文件`omega-metrics.yaml`中的`host`。
+
