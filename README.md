@@ -9,7 +9,7 @@
     mkdir -p /data/tools/go1.5.linux-amd64
     vi /data/tools/go1.5.linux-amd64/Dockerfile
     
-    ROM ubuntu:14.04
+    FROM ubuntu:14.04
     MAINTAINER lhan lhan@dataman-inc.com
 
     #install go
