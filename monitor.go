@@ -51,10 +51,11 @@ func handler(routingKey string, messageBody []byte) {
 func writeToRedis(id string, json string) {
 	conn := cache.Open()
 	defer conn.Close()
+	conf := config.Pairs()
 	log.Debug("write to redis")
 	conn.Send("LPUSH", id, json)
 	conn.Send("EXPIRE", id, config.DefaultTimeout)
-	_, err := conn.Do("LTRIM", id, 0, 180)
+	_, err := conn.Do("LTRIM", id, 0, conf.Cache.Llen)
 	if err != nil {
 		log.Errorf("LPUSH key:%s value:%s is wrong", id, json)
 		log.Errorln("[writeToRedis] error is ", err)
