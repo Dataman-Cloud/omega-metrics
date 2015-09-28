@@ -20,6 +20,16 @@ func startC() {
 	util.MetricsSubscribe(util.Metrics_exchange, util.Master_metrics_routing, handler)
 }
 
+func SetHeader(ctx *gin.Context) {
+	ctx.Header("Access-Control-Allow-Origin", "*")
+	ctx.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	ctx.Header("Access-Control-Allow-Headers", "Content-Type, Depth, User-Agent, X-File-Size, X-Requested-With, X-Requested-By, If-Modified-Since, X-File-Name, Cache-Control, X-XSRFToken, Authorization")
+	if ctx.Request.Method == "OPTIONS" {
+		ctx.String(204, "")
+	}
+	ctx.Next()
+}
+
 func handler(routingKey string, messageBody []byte) {
 	switch routingKey {
 	case util.Master_metrics_routing:
@@ -41,10 +51,11 @@ func handler(routingKey string, messageBody []byte) {
 func writeToRedis(id string, json string) {
 	conn := cache.Open()
 	defer conn.Close()
+	conf := config.Pairs()
 	log.Debug("write to redis")
 	conn.Send("LPUSH", id, json)
 	conn.Send("EXPIRE", id, config.DefaultTimeout)
-	_, err := conn.Do("LTRIM", id, 0, 19)
+	_, err := conn.Do("LTRIM", id, 0, conf.Cache.Llen)
 	if err != nil {
 		log.Errorf("LPUSH key:%s value:%s is wrong", id, json)
 		log.Errorln("[writeToRedis] error is ", err)

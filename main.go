@@ -3,9 +3,12 @@
 package main
 
 import (
+	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"runtime"
+	"time"
 
 	"github.com/Dataman-Cloud/omega-metrics/cache"
 	"github.com/Dataman-Cloud/omega-metrics/config"
@@ -55,12 +58,29 @@ func monitor() {
 	gin.SetMode(gin.ReleaseMode)
 	log.Info("[monitor] is up")
 	router := gin.New()
-	router.Use(gin.Logger(), gin.Recovery())
+	router.Use(gin.Logger(), gin.Recovery(), SetHeader)
+	// healthcheck
+	router.GET("/", func(c *gin.Context) {
+		c.String(200, "pass")
+	})
 
 	monitorGroup := router.Group("/api/v1")
 	{
 		monitorGroup.GET("/metrics/cluster/:cluster_id", masterMetrics)
 	}
-	router.Run(":9005")
 
+	conf := config.Pairs()
+	addr := fmt.Sprintf("%s:%d", conf.Host, conf.Port)
+	server := &http.Server{
+		Addr:           addr,
+		Handler:        router,
+		ReadTimeout:    20 * time.Second,
+		WriteTimeout:   20 * time.Second,
+		MaxHeaderBytes: 1 << 20,
+	}
+	err := server.ListenAndServe()
+	if err != nil {
+		log.Fatal("Can't start monitor server: ", err)
+		panic(-1)
+	}
 }

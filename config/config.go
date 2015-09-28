@@ -10,8 +10,8 @@ import (
 
 const (
 	DefaultTimeout   int = 24 * 3600
-	DefaultHost          = "lhan.dataman.io"
-	DefaultPort          = 6500
+	DefaultHost          = "localhost"
+	DefaultPort          = 9005
 	DefaultDebugging     = true
 )
 
@@ -51,6 +51,7 @@ type CacheConfig struct {
 	Password string
 	DB       int64
 	PoolSize int
+	Llen     int
 }
 
 type MqConfig struct {
