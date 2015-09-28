@@ -1,7 +1,7 @@
 ---
 numCPU: 1
 host: "localhost"
-port: 6080
+port: 9005
 debugging: false
 log:
     console: true
