@@ -1,6 +1,6 @@
 ---
 numCPU: 1
-host: "localhost"
+host: ""
 port: 9005
 debugging: false
 log:

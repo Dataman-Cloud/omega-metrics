@@ -55,7 +55,6 @@
     go build . && \
     cp omega-metrics /data/omega-metrics/ && \
     cd / && \
-    pwd && \
     ./data/omega-metrics/omega-metrics
     
     chmod 777 /data/omega-metrics/build.sh
