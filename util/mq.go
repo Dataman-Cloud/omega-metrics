@@ -48,15 +48,7 @@ func Publish(name string, message []byte) error {
 	}
 	defer channel.Close()
 
-	err = channel.ExchangeDeclare(
-		name,
-		"fanout",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
+	err = channel.ExchangeDeclare(name, "fanout", true, false, false, false, nil)
 	if err != nil {
 		log.Error("can't declare exchange", err)
 		return err
@@ -93,54 +85,25 @@ func Subscribe(name string, handler func([]byte)) error {
 		return err
 	}
 
-	err = channel.ExchangeDeclare(
-		name,
-		"fanout",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
+	err = channel.ExchangeDeclare(name, "fanout", true, false, false, false, nil)
 	if err != nil {
 		log.Error("can't declare exchange", err)
 		return err
 	}
 
-	queue, err := channel.QueueDeclare(
-		"",
-		false,
-		false,
-		true,
-		false,
-		nil,
-	)
+	queue, err := channel.QueueDeclare("", false, false, true, false, nil)
 	if err != nil {
 		log.Error("can't declare queue", err)
 		return err
 	}
 
-	err = channel.QueueBind(
-		queue.Name,
-		"",
-		name,
-		false,
-		nil,
-	)
+	err = channel.QueueBind(queue.Name, "", name, false, nil)
 	if err != nil {
 		log.Error("can't bind queue ", err)
 		return err
 	}
 
-	messages, err := channel.Consume(
-		queue.Name,
-		"",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
+	messages, err := channel.Consume(queue.Name, "", true, false, false, false, nil)
 	if err != nil {
 		log.Error("can't consume ", err)
 		return err
@@ -162,15 +125,7 @@ func MetricsPublish(exchange string, message []byte) error {
 	failOnError(err, "can't get channel")
 	defer channel.Close()
 
-	err = channel.ExchangeDeclare(
-		exchange,
-		"direct",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
+	err = channel.ExchangeDeclare(exchange, "direct", true, false, false, false, nil)
 	failOnError(err, "can't declare exchange")
 
 	err = channel.Publish(
