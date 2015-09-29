@@ -22,7 +22,7 @@ cache:
     port: 6379
     password: ""
     db: 0
-    llen: 180
+    llen: 178
 mq:
     user: "guest"
     password: "guest"
