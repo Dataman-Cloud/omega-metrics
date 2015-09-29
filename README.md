@@ -60,9 +60,10 @@
     
     chmod 777 /data/omega-metrics/build.sh
 ## 2.3 启动 Docker 编译出 Omega-metrics
-    docker run -v /data/omega-metrics:/data/omega-metrics \
+    docker run --net=host 
+               -v /data/omega-metrics:/data/omega-metrics \
                -v /data/omega-metrics/omega-metrics.yaml:/omega-metrics.yaml \
-                omega-metrics ./data/omega-metrics/omega-metrics
+               omega-metrics
                 
 ## 3. 测试Omega-metrics服务是否启动
     curl -X GET http://$host:9005/
