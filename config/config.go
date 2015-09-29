@@ -22,7 +22,6 @@ type Config struct {
 	Port         uint
 	Debugging    bool
 	Log          *LogConfig
-	Db           *DbConfig
 	Cache        *CacheConfig
 	Mq           *MqConfig
 }
@@ -33,16 +32,6 @@ type LogConfig struct {
 	MaxSize   int64
 	Level     string
 	Formatter string
-}
-
-type DbConfig struct {
-	User         string
-	Password     string
-	Host         string
-	Port         uint
-	Name         string
-	MaxIdleConns int
-	MaxOpenConns int
 }
 
 type CacheConfig struct {

@@ -31,35 +31,31 @@ func SetHeader(ctx *gin.Context) {
 }
 
 func handler(routingKey string, messageBody []byte) {
+	var json, id string
 	switch routingKey {
 	case util.Master_metrics_routing:
-		id, json := util.MasterMetricsJson(string(messageBody))
-		if id != "" && json != "" {
-			label := id + "_" + routingKey
-			log.Debug(label)
-			writeToRedis(label, json)
-		}
+		id, json = util.MasterMetricsJson(string(messageBody))
 	case util.Slave_metrics_routing:
-		id, json := util.SlaveMetricsJson(string(messageBody))
-		if id != "" && json != "" {
-			label := id + "_" + routingKey
-			writeToRedis(label, json)
-		}
+		id, json = util.SlaveMetricsJson(string(messageBody))
+	}
+
+	if id != "" && json != "" {
+		label := id + "_" + routingKey
+		err := writeToRedis(label, json)
+		log.Error("writeToRedis has err: ", err)
 	}
 }
 
-func writeToRedis(id string, json string) {
+func writeToRedis(id string, json string) error {
 	conn := cache.Open()
 	defer conn.Close()
 	conf := config.Pairs()
-	log.Debug("write to redis")
+	log.Debugf("redis LPUSH id %s, json %s", id, json)
 	conn.Send("LPUSH", id, json)
+	log.Debugf("redis EXPIRE id %s, json %s", id, json)
 	conn.Send("EXPIRE", id, config.DefaultTimeout)
 	_, err := conn.Do("LTRIM", id, 0, conf.Cache.Llen)
-	if err != nil {
-		log.Errorf("LPUSH key:%s value:%s is wrong", id, json)
-		log.Errorln("[writeToRedis] error is ", err)
-	}
+	return err
 }
 
 func masterMetrics(ctx *gin.Context) {
