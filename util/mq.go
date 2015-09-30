@@ -39,147 +39,19 @@ func MQ() *amqp.Connection {
 	return mq
 }
 
-func Publish(name string, message []byte) error {
-	mq := MQ()
-	channel, err := mq.Channel()
-	if err != nil {
-		log.Error("can't get channel", err)
-		return err
-	}
-	defer channel.Close()
-
-	err = channel.ExchangeDeclare(name, "fanout", true, false, false, false, nil)
-	if err != nil {
-		log.Error("can't declare exchange", err)
-		return err
-	}
-
-	err = channel.Publish(
-		name,
-		"",
-		false,
-		false,
-		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        message,
-		})
-	if err != nil {
-		log.Error("can't publish message", err)
-		return err
-	}
-	return nil
-}
-
-func Subscribe(name string, handler func([]byte)) error {
-	/*	handlerName := GetFunctionName(handler)
-		if _, ok := mqHandlers[handlerName]; ok {
-			log.Debug("handler existed")
-			return nil
-		}
-		mqHandlers[handlerName] = true*/
-
-	mq := MQ()
-	channel, err := mq.Channel()
-	if err != nil {
-		log.Error("can't get channel", err)
-		return err
-	}
-
-	err = channel.ExchangeDeclare(name, "fanout", true, false, false, false, nil)
-	if err != nil {
-		log.Error("can't declare exchange", err)
-		return err
-	}
-
-	queue, err := channel.QueueDeclare("", false, false, true, false, nil)
-	if err != nil {
-		log.Error("can't declare queue", err)
-		return err
-	}
-
-	err = channel.QueueBind(queue.Name, "", name, false, nil)
-	if err != nil {
-		log.Error("can't bind queue ", err)
-		return err
-	}
-
-	messages, err := channel.Consume(queue.Name, "", true, false, false, false, nil)
-	if err != nil {
-		log.Error("can't consume ", err)
-		return err
-	}
-
-	go func() {
-		defer channel.Close()
-		for message := range messages {
-			handler(message.Body)
-		}
-	}()
-
-	return nil
-}
-
-func MetricsPublish(exchange string, message []byte) error {
-	mq := MQ()
-	channel, err := mq.Channel()
-	failOnError(err, "can't get channel")
-	defer channel.Close()
-
-	err = channel.ExchangeDeclare(exchange, "direct", true, false, false, false, nil)
-	failOnError(err, "can't declare exchange")
-
-	err = channel.Publish(
-		exchange,
-		Master_metrics_routing,
-		false,
-		false,
-		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        message,
-		})
-	failOnError(err, "can't pulish message")
-	return nil
-}
-
 func MetricsSubscribe(exchange string, routingkey string, handler func(string, []byte)) error {
 
 	mq := MQ()
 	channel, err := mq.Channel()
 	failOnError(err, "can't get channel")
 
-	err = channel.ExchangeDeclare(
-		exchange,
-		"direct",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
+	err = channel.ExchangeDeclare(exchange, "direct", true, false, false, false, nil)
 	failOnError(err, "can't declare exchange")
-
-	/*	queue, err := channel.QueueDeclare(
-			routingkey,
-			true,
-			false,
-			false,
-			false,
-			nil,
-		)
-		failOnError(err, "can't declare queue")*/
 
 	err = channel.QueueBind(routingkey, routingkey, exchange, false, nil)
 	failOnError(err, "can't bind queue")
 
-	messages, err := channel.Consume(
-		routingkey,
-		"",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
+	messages, err := channel.Consume(routingkey, "", true, false, false, false, nil)
 	failOnError(err, "can't consume")
 
 	go func() {
