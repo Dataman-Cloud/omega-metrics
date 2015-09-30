@@ -40,7 +40,6 @@ func MQ() *amqp.Connection {
 }
 
 func MetricsSubscribe(exchange string, routingkey string, handler func(string, []byte)) error {
-
 	mq := MQ()
 	channel, err := mq.Channel()
 	failOnError(err, "can't get channel")
