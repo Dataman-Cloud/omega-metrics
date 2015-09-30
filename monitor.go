@@ -20,6 +20,7 @@ func startC() {
 	util.MetricsSubscribe(util.Metrics_exchange, util.Master_metrics_routing, handler)
 }
 
+//function use to handle cross-domain requests
 func SetHeader(ctx *gin.Context) {
 	ctx.Header("Access-Control-Allow-Origin", "*")
 	ctx.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
@@ -42,7 +43,9 @@ func handler(routingKey string, messageBody []byte) {
 	if id != "" && json != "" {
 		label := id + "_" + routingKey
 		err := writeToRedis(label, json)
-		log.Error("writeToRedis has err: ", err)
+		if err != nil {
+			log.Error("writeToRedis has err: ", err)
+		}
 	}
 }
 
