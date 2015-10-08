@@ -33,14 +33,15 @@ func SetHeader(ctx *gin.Context) {
 
 func handler(routingKey string, messageBody []byte) {
 	var json, id string
+	var leader int
 	switch routingKey {
 	case util.Master_metrics_routing:
-		id, json = util.MasterMetricsJson(string(messageBody))
+		id, leader, json = util.MasterMetricsJson(string(messageBody))
 	case util.Slave_metrics_routing:
 		id, json = util.SlaveMetricsJson(string(messageBody))
 	}
 
-	if id != "" && json != "" {
+	if id != "" && json != "" && leader == 1 {
 		label := id + "_" + routingKey
 		err := writeToRedis(label, json)
 		if err != nil {

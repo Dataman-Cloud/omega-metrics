@@ -25,6 +25,7 @@ type MasterMetrics struct {
 	DiskTotal  int     `json:"master/disk_total"`
 	MemUsed    int     `json:"master/mem_used"`
 	MemTotal   int     `json:"master/mem_total"`
+	Leader     int     `json:"master/elected"`
 }
 
 type MasterMetricsMar struct {
@@ -34,6 +35,7 @@ type MasterMetricsMar struct {
 	DiskTotal  int     `json:"diskTotal"`
 	DiskUsed   int     `json:"diskUsed"`
 	Timestamp  int64   `json:"timestamp"`
+	Leader     int     `json:"leader"`
 }
 
 type SlaveMetrics struct {
@@ -48,8 +50,8 @@ type SlaveMetrics struct {
 func Handler(routingKey string, messageBody []byte) {
 	switch routingKey {
 	case Master_metrics_routing:
-		nodeId, json := MasterMetricsJson(string(messageBody))
-		log.Infof("received message nodeId:%s json:%s", nodeId, json)
+		nodeId, leader, json := MasterMetricsJson(string(messageBody))
+		log.Infof("received message nodeId:%s leader:%d json:%s", nodeId, leader, json)
 	case Slave_metrics_routing:
 		nodeId, json := SlaveMetricsJson(string(messageBody))
 		log.Infof("received message nodeId:%s json:%s", nodeId, json)
@@ -75,7 +77,7 @@ func ReturnMessage(code string, strs []string, errMessage string) interface{} {
 	return s
 }
 
-func MasterMetricsJson(str string) (string, string) {
+func MasterMetricsJson(str string) (string, int, string) {
 	var mmm MasterMetricsMessage
 	var mm MasterMetrics
 	var ss MasterMetricsMar
@@ -88,14 +90,15 @@ func MasterMetricsJson(str string) (string, string) {
 	ss.MemUsed = mm.MemUsed
 	ss.DiskUsed = mm.DiskUsed
 	ss.DiskTotal = mm.DiskTotal
+	ss.Leader = mm.Leader
 	ss.Timestamp = mmm.Timestamp
 
 	ll, err := json.Marshal(ss)
 	if err != nil {
 		log.Error("Master Metrics parse failed", err)
-		return "", ""
+		return "", 0, ""
 	}
-	return clusterId, string(ll)
+	return clusterId, mm.Leader, string(ll)
 }
 
 func SlaveMetricsJson(str string) (string, string) {
