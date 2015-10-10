@@ -2,8 +2,17 @@ package util
 
 import (
 	"encoding/json"
+	"fmt"
 	log "github.com/Sirupsen/logrus"
 	"strconv"
+)
+
+const (
+	Deployment_success      = "deployment_success"
+	Deployment_failed       = "deployment_failed"
+	Deployment_info         = "deployment_info"
+	Deployment_step_success = "deployment_step_success"
+	Deployment_step_failure = "deployment_step_failure"
 )
 
 type Message struct {
@@ -12,7 +21,7 @@ type Message struct {
 	Err  string      `json:"error"`
 }
 
-type MasterMetricsMessage struct {
+type RabbitMqMessage struct {
 	ClusterId int    `json:"clusterId"`
 	NodeId    string `json:"nodeId"`
 	Message   string `json:"message"`
@@ -47,6 +56,27 @@ type SlaveMetrics struct {
 	Mem_total  int     `json:"slave/mem_total"`
 }
 
+type MarathonEvent struct {
+	EventType   string      `json:"eventType"`
+	Timestamp   string      `json:"timestamp"`
+	Id          string      `json:"id,omitempty"`
+	Plan        plan        `json:"plan,omitempty"`
+	CurrentStep currentStep `json:"currentStep,omitempty"`
+}
+
+type currentStep struct {
+	Actions []actions
+}
+
+type actions struct {
+	Type string
+	App  string
+}
+
+type plan struct {
+	Id string
+}
+
 func Handler(routingKey string, messageBody []byte) {
 	switch routingKey {
 	case Master_metrics_routing:
@@ -78,7 +108,7 @@ func ReturnMessage(code string, strs []string, errMessage string) interface{} {
 }
 
 func MasterMetricsJson(str string) (string, int, string) {
-	var mmm MasterMetricsMessage
+	var mmm RabbitMqMessage
 	var mm MasterMetrics
 	var ss MasterMetricsMar
 	json.Unmarshal([]byte(str), &mmm)
@@ -111,4 +141,30 @@ func SlaveMetricsJson(str string) (string, string) {
 		return "", ""
 	}
 	return nodeId, string(ll)
+}
+
+func MarathonEventJson(str string) (string, string, string, string) {
+	var rmm RabbitMqMessage
+	var me MarathonEvent
+	json.Unmarshal([]byte(str), &rmm)
+	clusterId := strconv.Itoa(rmm.ClusterId)
+	json.Unmarshal([]byte(rmm.Message), &me)
+	switch me.EventType {
+	case Deployment_info:
+		fmt.Println("&&&&&&&&&&&& deployment info: ", rmm.Message)
+		return me.EventType, clusterId, me.Plan.Id, me.CurrentStep.Actions[0].App
+	case Deployment_success:
+		fmt.Println("&&&&&&&&&&&& deployment success: ", rmm.Message)
+		return me.EventType, clusterId, me.Id, me.Timestamp
+	case Deployment_failed:
+		fmt.Println("&&&&&&&&&&&& deployment failed: ", rmm.Message)
+		return me.EventType, clusterId, me.Id, me.Timestamp
+	case Deployment_step_success:
+		fmt.Println("&&&&&&&&&&&& deployment step success: ", rmm.Message)
+		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp
+	case Deployment_step_failure:
+		fmt.Println("&&&&&&&&&&&& deployment step failure: ", rmm.Message)
+		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp
+	}
+	return "", "", "", ""
 }

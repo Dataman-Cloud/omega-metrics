@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/Dataman-Cloud/omega-metrics/cache"
 	"github.com/Dataman-Cloud/omega-metrics/config"
 	"github.com/Dataman-Cloud/omega-metrics/util"
@@ -18,6 +19,7 @@ func init() {
 func startC() {
 	log.Debug("start master metrics mq consumer")
 	util.MetricsSubscribe(util.Metrics_exchange, util.Master_metrics_routing, handler)
+	util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_event_routing, handler)
 }
 
 //function use to handle cross-domain requests
@@ -32,22 +34,112 @@ func SetHeader(ctx *gin.Context) {
 }
 
 func handler(routingKey string, messageBody []byte) {
-	var json, id string
+	var json, clusterId, idOrApp, eventType string
 	var leader int
 	switch routingKey {
 	case util.Master_metrics_routing:
-		id, leader, json = util.MasterMetricsJson(string(messageBody))
+		clusterId, leader, json = util.MasterMetricsJson(string(messageBody))
+		log.Infof("received message clusterId:%s leader:%d json:%s", clusterId, leader, json)
 	case util.Slave_metrics_routing:
-		id, json = util.SlaveMetricsJson(string(messageBody))
+		clusterId, json = util.SlaveMetricsJson(string(messageBody))
+		log.Infof("received message id:%s json:%s", clusterId, json)
+	case util.Marathon_event_routing: // 应用级别的部署监控
+		eventType, clusterId, idOrApp, json = util.MarathonEventJson(string(messageBody))
+		fmt.Println("**************** 1 ", util.Marathon_event_routing)
+		switch eventType {
+		case util.Deployment_info:
+			fmt.Println("************ eventtype ", eventType)
+			fmt.Println("************ 3 ", idOrApp+json)
+			if idOrApp != "" && json != "" {
+				label := clusterId + "_" + idOrApp
+				log.Info("deployment_info label: ", label)
+				err := writeToRedis2(label, json)
+				if err != nil {
+					log.Error("writeToRedis2 has err: ", err)
+				}
+			}
+		case util.Deployment_success:
+			fmt.Println("*********** eventtype ", eventType)
+			if idOrApp != "" && json != "" {
+				app, err := readFromRedis(idOrApp)
+				if err != nil {
+					log.Error("readFromRedis has err: ", err)
+				}
+				label := clusterId + "_" + app
+				log.Info("deployment_success label: ", label)
+				event := json + " " + app + " " + eventType
+				log.Info("deployment_success event: ", event)
+				err = writeToRedis(label, event)
+				if err != nil {
+					log.Error("marathon event writeToRedis has err: ", err)
+				}
+			}
+		case util.Deployment_failed:
+			fmt.Println("*********** eventType ", eventType)
+			if idOrApp != "" && json != "" {
+				app, err := readFromRedis(idOrApp)
+				if err != nil {
+					log.Error("readFromRedis has err: ", err)
+				}
+				label := clusterId + "_" + app
+				log.Info("deployment_failed label: ", label)
+				event := json + " " + app + " " + eventType
+				log.Info("deployment_failed event: ", event)
+				err = writeToRedis(label, event)
+				if err != nil {
+					log.Error("marathon event writeToRedis has err: ", err)
+				}
+			}
+		case util.Deployment_step_success:
+			fmt.Println("********** eventType ", eventType)
+			if idOrApp != "" && json != "" {
+				label := clusterId + "_" + idOrApp
+				log.Info("deployment_step_success label: ", label)
+				event := json + " " + idOrApp + " " + eventType
+				log.Debug("deployment_step_success event: ", event)
+				err := writeToRedis(label, event)
+				if err != nil {
+					log.Error("marathon event writeToRedis has err: ", err)
+				}
+			}
+		case util.Deployment_step_failure:
+			fmt.Println("********* eventType ", eventType)
+			if idOrApp != "" && json != "" {
+				label := clusterId + "_" + idOrApp
+				log.Info("deployment_step_failure label: ", label)
+				event := json + " " + idOrApp + " " + eventType
+				log.Debug("deployment_step_failure event: ", event)
+				err := writeToRedis(label, event)
+				if err != nil {
+					log.Error("marathon event writeToRedis has err: ", err)
+				}
+			}
+		}
 	}
 
-	if id != "" && json != "" && leader == 1 {
-		label := id + "_" + routingKey
+	if clusterId != "" && json != "" && leader == 1 {
+		label := clusterId + "_" + routingKey
 		err := writeToRedis(label, json)
 		if err != nil {
 			log.Error("writeToRedis has err: ", err)
 		}
 	}
+}
+
+func readFromRedis(id string) (string, error) {
+	conn := cache.Open()
+	defer conn.Close()
+	log.Debugf("redis Get key %s", id)
+	value, err := redis.String(conn.Do("GET", id))
+	return value, err
+}
+
+func writeToRedis2(id string, app string) error {
+	conn := cache.Open()
+	defer conn.Close()
+	log.Debugf("redis Set marathon event id %s, app %s", id, app)
+	_, err := conn.Do("SETEX", id, config.DefaultTimeout, app)
+	return err
 }
 
 func writeToRedis(id string, json string) error {
@@ -76,4 +168,23 @@ func masterMetrics(ctx *gin.Context) {
 	jsoninterface := util.ReturnMessage("0", strs, "")
 	log.Infof("Got master metrics %+v", jsoninterface)
 	ctx.JSON(http.StatusOK, jsoninterface)
+}
+
+func marathonEvent(ctx *gin.Context) {
+	conn := cache.Open()
+	defer conn.Close()
+	key := ctx.Param("cluster_id") + "_/" + ctx.Param("app")
+	strs, err := redis.Strings(conn.Do("LRANGE", key, 0, -1))
+	if err != nil {
+		log.Error("[Master Metrics] got error ", err)
+		//		jsoninterface := util.ReturnMessage("1", nil, "[MasterMetrics] got error")
+		ctx.JSON(http.StatusOK, "error")
+	}
+	//	jsoninterface := util.ReturnMessage("0", strs, "")
+	var str string
+	for _, value := range strs {
+		str += value
+	}
+	log.Infof("Got marathon event %+v", str)
+	ctx.String(http.StatusOK, str)
 }

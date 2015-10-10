@@ -3,7 +3,7 @@
 ## API List
   - [GET http://localhost:9005/](#healthCheck)  :healthCheck  检查服务是否正常运行
   - [GET http://localhost:9005/api/v1/metrics/cluster/{clusterID}](#get master mertrics) 获取ID 为`clusterID`的集群的集群资源消耗信息
-
+  - [GET http://localhost:9005/api/v1/event/{clusterID}/{appName}](#get marathon event) 获取`clusterID`的集群上`appName`应用的部署信息
 
 #### GET `http://localhost:9005/` 
 检查服务是否正常运行 (healthCheck)   </br>

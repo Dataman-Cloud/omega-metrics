@@ -10,11 +10,15 @@ import (
 )
 
 const (
-	Metrics_exchange       string = "cluster_info"
-	Master_metrics_routing string = "master_metrics"
-	Master_state_routing   string = "master_state"
-	Slave_metrics_routing  string = "slave_metrics"
-	Slave_state_routing    string = "slave_state"
+	Metrics_exchange             string = "cluster_info"
+	Master_metrics_routing       string = "master_metrics"
+	Master_state_routing         string = "master_state"
+	Slave_metrics_routing        string = "slave_metrics"
+	Slave_state_routing          string = "slave_state"
+	Marathon_event_routing       string = "marathon_event"
+	Marathon_apps_routing        string = "marathon_apps"
+	Marathon_metrics_routing     string = "marathon_metrics"
+	Marathon_deployments_routing string = "marathon_deployments"
 )
 
 func failOnError(err error, msg string) error {
