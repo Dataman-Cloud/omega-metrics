@@ -143,7 +143,7 @@ func SlaveMetricsJson(str string) (string, string) {
 	return nodeId, string(ll)
 }
 
-func MarathonEventJson(str string) (string, string, string, string) {
+func MarathonEventJson(str string) (string, string, string, string, string) {
 	var rmm RabbitMqMessage
 	var me MarathonEvent
 	json.Unmarshal([]byte(str), &rmm)
@@ -152,19 +152,19 @@ func MarathonEventJson(str string) (string, string, string, string) {
 	switch me.EventType {
 	case Deployment_info:
 		fmt.Println("&&&&&&&&&&&& deployment info: ", rmm.Message)
-		return me.EventType, clusterId, me.Plan.Id, me.CurrentStep.Actions[0].App
+		return me.EventType, clusterId, me.Plan.Id, me.CurrentStep.Actions[0].App, me.CurrentStep.Actions[0].Type
 	case Deployment_success:
 		fmt.Println("&&&&&&&&&&&& deployment success: ", rmm.Message)
-		return me.EventType, clusterId, me.Id, me.Timestamp
+		return me.EventType, clusterId, me.Id, me.Timestamp, ""
 	case Deployment_failed:
 		fmt.Println("&&&&&&&&&&&& deployment failed: ", rmm.Message)
-		return me.EventType, clusterId, me.Id, me.Timestamp
+		return me.EventType, clusterId, me.Id, me.Timestamp, ""
 	case Deployment_step_success:
 		fmt.Println("&&&&&&&&&&&& deployment step success: ", rmm.Message)
-		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp
+		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp, me.CurrentStep.Actions[0].Type
 	case Deployment_step_failure:
 		fmt.Println("&&&&&&&&&&&& deployment step failure: ", rmm.Message)
-		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp
+		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp, me.CurrentStep.Actions[0].Type
 	}
-	return "", "", "", ""
+	return "", clusterId, "", "", ""
 }

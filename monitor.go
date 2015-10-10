@@ -34,7 +34,7 @@ func SetHeader(ctx *gin.Context) {
 }
 
 func handler(routingKey string, messageBody []byte) {
-	var json, clusterId, idOrApp, eventType string
+	var json, clusterId, idOrApp, eventType, currentType string
 	var leader int
 	switch routingKey {
 	case util.Master_metrics_routing:
@@ -44,12 +44,12 @@ func handler(routingKey string, messageBody []byte) {
 		clusterId, json = util.SlaveMetricsJson(string(messageBody))
 		log.Infof("received message id:%s json:%s", clusterId, json)
 	case util.Marathon_event_routing: // 应用级别的部署监控
-		eventType, clusterId, idOrApp, json = util.MarathonEventJson(string(messageBody))
+		eventType, clusterId, idOrApp, json, currentType = util.MarathonEventJson(string(messageBody))
 		fmt.Println("**************** 1 ", util.Marathon_event_routing)
 		switch eventType {
 		case util.Deployment_info:
 			fmt.Println("************ eventtype ", eventType)
-			fmt.Println("************ 3 ", idOrApp+json)
+			fmt.Println("************ 3 ", idOrApp+" "+json)
 			if idOrApp != "" && json != "" {
 				label := clusterId + "_" + idOrApp
 				log.Info("deployment_info label: ", label)
@@ -92,10 +92,10 @@ func handler(routingKey string, messageBody []byte) {
 			}
 		case util.Deployment_step_success:
 			fmt.Println("********** eventType ", eventType)
-			if idOrApp != "" && json != "" {
+			if idOrApp != "" && json != "" && currentType != "" {
 				label := clusterId + "_" + idOrApp
 				log.Info("deployment_step_success label: ", label)
-				event := json + " " + idOrApp + " " + eventType
+				event := json + " " + idOrApp + " " + currentType + " " + eventType
 				log.Debug("deployment_step_success event: ", event)
 				err := writeToRedis(label, event)
 				if err != nil {
@@ -104,10 +104,10 @@ func handler(routingKey string, messageBody []byte) {
 			}
 		case util.Deployment_step_failure:
 			fmt.Println("********* eventType ", eventType)
-			if idOrApp != "" && json != "" {
+			if idOrApp != "" && json != "" && currentType != "" {
 				label := clusterId + "_" + idOrApp
 				log.Info("deployment_step_failure label: ", label)
-				event := json + " " + idOrApp + " " + eventType
+				event := json + " " + idOrApp + " " + currentType + " " + eventType
 				log.Debug("deployment_step_failure event: ", event)
 				err := writeToRedis(label, event)
 				if err != nil {
