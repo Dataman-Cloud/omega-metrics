@@ -2,9 +2,12 @@ package util
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	log "github.com/Sirupsen/logrus"
+	"reflect"
 	"strconv"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 const (
@@ -14,12 +17,6 @@ const (
 	Deployment_step_success = "deployment_step_success"
 	Deployment_step_failure = "deployment_step_failure"
 )
-
-type Message struct {
-	Code string      `json:"code"`
-	Data interface{} `json:"data"`
-	Err  string      `json:"error"`
-}
 
 type RabbitMqMessage struct {
 	ClusterId int    `json:"clusterId"`
@@ -37,16 +34,6 @@ type MasterMetrics struct {
 	Leader     int     `json:"master/elected"`
 }
 
-type MasterMetricsMar struct {
-	CpuPercent float64 `json:"cpuPercent"`
-	MemTotal   int     `json:"memTotal"`
-	MemUsed    int     `json:"memUsed"`
-	DiskTotal  int     `json:"diskTotal"`
-	DiskUsed   int     `json:"diskUsed"`
-	Timestamp  int64   `json:"timestamp"`
-	Leader     int     `json:"leader"`
-}
-
 type SlaveMetrics struct {
 	NodeId     string  `json:"nodeId"`
 	CpuPercent float64 `json:"slave/cpus_total"`
@@ -54,14 +41,6 @@ type SlaveMetrics struct {
 	Disk_total int     `json:"slave/disk_total"`
 	Mem_used   int     `json:"slave/mem_used"`
 	Mem_total  int     `json:"slave/mem_total"`
-}
-
-type MarathonEvent struct {
-	EventType   string      `json:"eventType"`
-	Timestamp   string      `json:"timestamp"`
-	Id          string      `json:"id,omitempty"`
-	Plan        plan        `json:"plan,omitempty"`
-	CurrentStep currentStep `json:"currentStep,omitempty"`
 }
 
 type currentStep struct {
@@ -77,6 +56,29 @@ type plan struct {
 	Id string
 }
 
+var parserTypeMappings map[string]reflect.Type
+
+func init() {
+	recognizedTypes := []interface{}{
+		MarathonEvent{},
+		MasterMetricsMar{},
+	}
+
+	parserTypeMappings = make(map[string]reflect.Type)
+	for _, recognizedType := range recognizedTypes {
+		parserTypeMappings[reflect.TypeOf(recognizedType).Name()] = reflect.TypeOf(recognizedType)
+	}
+}
+
+func NewOfType(typ string) (interface{}, bool) {
+	rtype, ok := parserTypeMappings[typ]
+	if !ok {
+		return nil, false
+	}
+
+	return reflect.New(rtype).Interface(), true
+}
+
 func Handler(routingKey string, messageBody []byte) {
 	switch routingKey {
 	case Master_metrics_routing:
@@ -88,23 +90,17 @@ func Handler(routingKey string, messageBody []byte) {
 	}
 }
 
-func ReturnMessage(code string, strs []string, errMessage string) interface{} {
-	var s Message
-	var ss MasterMetricsMar
-	var ls []interface{}
-	s.Code = code
-	s.Err = errMessage
+func ReturnMessage(typ string, strs []string) (*[]interface{}, error) {
+	monitorType, ok := NewOfType(typ)
+	if !ok {
+		return nil, errors.New(typ + " is not support type")
+	}
+	var monitorDatas []interface{}
 	for _, str := range strs {
-		json.Unmarshal([]byte(str), &ss)
-		ls = append(ls, ss)
+		json.Unmarshal([]byte(str), &monitorType)
+		monitorDatas = append(monitorDatas, monitorType)
 	}
-	s.Data = ls
-	_, err := json.Marshal(s)
-	if err != nil {
-		log.Error("[ReturnMessage] failed: ", err)
-		return ""
-	}
-	return s
+	return &monitorDatas, nil
 }
 
 func MasterMetricsJson(str string) (string, int, string) {
