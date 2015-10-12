@@ -68,3 +68,23 @@ curl  http://localhost:9005/api/v1/metrics/cluster/140
 说明:
 * 数据取自mesos-master metrics 磁盘 内存 和 CPU 数据均和直接查看主机数据不同
 
+#### GET `http://localhost:9005/api/v1/event/{clusterID}/{appName}`
+根据集群ID和appName, 获取事件的监控信息
+
+e.g :
+```shell
+curl  http://localhost:9005/api/v1/event/140/testapp
+```
+
+***Response***
+```json
+{
+    "code":"0",
+    "data":[
+        "2015-10-12T02:08:59.525Z /dataman-nginx-test2 ScaleApplication deployment_step_success",
+        "2015-10-12T02:08:39.514Z /dataman-nginx-test2 StartApplication deployment_step_success",
+        "2015-10-12T02:07:59.677Z /dataman-nginx-test2 StopApplication deployment_step_success"
+    ],
+    "error":""
+}
+```
