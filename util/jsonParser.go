@@ -91,12 +91,12 @@ func Handler(routingKey string, messageBody []byte) {
 }
 
 func ReturnMessage(typ string, strs []string) (*[]interface{}, error) {
-	monitorType, ok := NewOfType(typ)
-	if !ok {
-		return nil, errors.New(typ + " is not support type")
-	}
 	var monitorDatas []interface{}
 	for _, str := range strs {
+		monitorType, ok := NewOfType(typ)
+		if !ok {
+			return nil, errors.New(typ + " is not support type")
+		}
 		json.Unmarshal([]byte(str), &monitorType)
 		monitorDatas = append(monitorDatas, monitorType)
 	}
