@@ -159,32 +159,49 @@ func masterMetrics(ctx *gin.Context) {
 	defer conn.Close()
 	cluster_id := ctx.Param("cluster_id") + "_" + util.Master_metrics_routing
 	log.Debug("cluster_id ", cluster_id)
+
+	response := util.MonitorResponse{
+		Code: "1",
+		Data: nil,
+		Err:  "",
+	}
+
 	strs, err := redis.Strings(conn.Do("LRANGE", cluster_id, 0, -1))
 	if err != nil {
 		log.Error("[Master Metrics] got error ", err)
-		jsoninterface := util.ReturnMessage("1", nil, "[MasterMetrics] got error")
-		ctx.JSON(http.StatusOK, jsoninterface)
+		response.Err = "[Master Metrics] got error " + err.Error()
+		ctx.JSON(http.StatusOK, response)
 	}
-	jsoninterface := util.ReturnMessage("0", strs, "")
-	log.Infof("Got master metrics %+v", jsoninterface)
-	ctx.JSON(http.StatusOK, jsoninterface)
+	jsoninterface, err := util.ReturnMessage(util.MonitorMasterMetrics, strs)
+	if err != nil {
+		log.Error("[Master Metrics] analysis error ", err)
+		response.Err = "[Master Metrics] analysis error " + err.Error()
+		ctx.JSON(http.StatusOK, response)
+	}
+	response.Code = "0"
+	response.Data = *jsoninterface
+	ctx.JSON(http.StatusOK, response)
 }
 
 func marathonEvent(ctx *gin.Context) {
 	conn := cache.Open()
 	defer conn.Close()
+
+	response := util.MonitorResponse{
+		Code: "1",
+		Data: nil,
+		Err:  "",
+	}
+
 	key := ctx.Param("cluster_id") + "_/" + ctx.Param("app")
 	strs, err := redis.Strings(conn.Do("LRANGE", key, 0, -1))
 	if err != nil {
-		log.Error("[Master Metrics] got error ", err)
-		//		jsoninterface := util.ReturnMessage("1", nil, "[MasterMetrics] got error")
-		ctx.JSON(http.StatusOK, "error")
+		log.Error("[Marathon Event] got error ", err)
+		response.Err = "[Marathon Event] got error " + err.Error()
+		ctx.JSON(http.StatusOK, response)
 	}
-	//	jsoninterface := util.ReturnMessage("0", strs, "")
-	var str string
-	for _, value := range strs {
-		str += value
-	}
-	log.Infof("Got marathon event %+v", str)
-	ctx.String(http.StatusOK, str)
+
+	response.Data = strs
+	response.Code = "0"
+	ctx.JSON(http.StatusOK, response)
 }
