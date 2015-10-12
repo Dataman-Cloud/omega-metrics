@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	log "github.com/Sirupsen/logrus"
 )
@@ -16,6 +17,7 @@ const (
 	Deployment_info         = "deployment_info"
 	Deployment_step_success = "deployment_step_success"
 	Deployment_step_failure = "deployment_step_failure"
+	Status_update_event     = "status_update_event"
 )
 
 type RabbitMqMessage struct {
@@ -41,6 +43,15 @@ type SlaveMetrics struct {
 	Disk_total int     `json:"slave/disk_total"`
 	Mem_used   int     `json:"slave/mem_used"`
 	Mem_total  int     `json:"slave/mem_total"`
+}
+
+type StatusUpdate struct {
+	EventType  string `json:"eventType"`
+	Timestamp  string `json:"timestamp"`
+	AppId      string `json:"appId"`
+	Host       string `json:"host"`
+	Ports      []int  `json:"ports"`
+	TaskStatus string `json:"taskStatus"`
 }
 
 type currentStep struct {
@@ -77,17 +88,6 @@ func NewOfType(typ string) (interface{}, bool) {
 	}
 
 	return reflect.New(rtype).Interface(), true
-}
-
-func Handler(routingKey string, messageBody []byte) {
-	switch routingKey {
-	case Master_metrics_routing:
-		nodeId, leader, json := MasterMetricsJson(string(messageBody))
-		log.Infof("received message nodeId:%s leader:%d json:%s", nodeId, leader, json)
-	case Slave_metrics_routing:
-		nodeId, json := SlaveMetricsJson(string(messageBody))
-		log.Infof("received message nodeId:%s json:%s", nodeId, json)
-	}
 }
 
 func ReturnMessage(typ string, strs []string) (*[]interface{}, error) {
@@ -142,6 +142,8 @@ func SlaveMetricsJson(str string) (string, string) {
 func MarathonEventJson(str string) (string, string, string, string, string) {
 	var rmm RabbitMqMessage
 	var me MarathonEvent
+
+	var su StatusUpdate
 	json.Unmarshal([]byte(str), &rmm)
 	clusterId := strconv.Itoa(rmm.ClusterId)
 	json.Unmarshal([]byte(rmm.Message), &me)
@@ -161,6 +163,17 @@ func MarathonEventJson(str string) (string, string, string, string, string) {
 	case Deployment_step_failure:
 		fmt.Println("&&&&&&&&&&&& deployment step failure: ", rmm.Message)
 		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp, me.CurrentStep.Actions[0].Type
+	case Status_update_event:
+		fmt.Println("&&&&&&&&&&&& status update event: ", rmm.Message)
+		json.Unmarshal([]byte(rmm.Message), &su)
+		var portArray []string
+		for _, v := range su.Ports {
+			j := strconv.Itoa(v)
+			portArray = append(portArray, j)
+		}
+		portstr := strings.Join(portArray, ",")
+		msg := su.Host + ":" + portstr + " " + su.TaskStatus
+		return me.EventType, clusterId, su.AppId, su.Timestamp, msg
 	}
 	return "", clusterId, "", "", ""
 }

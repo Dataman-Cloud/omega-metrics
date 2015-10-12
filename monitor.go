@@ -114,6 +114,17 @@ func handler(routingKey string, messageBody []byte) {
 					log.Error("marathon event writeToRedis has err: ", err)
 				}
 			}
+		case util.Status_update_event:
+			fmt.Println("********* eventType ", eventType)
+			if idOrApp != "" && json != "" && currentType != "" {
+				label := clusterId + "_" + idOrApp
+				log.Info("status_update_event label: ", label)
+				event := json + " " + currentType
+				err := writeToRedis(label, event)
+				if err != nil {
+					log.Error("status update event writeToRedis has err: ", err)
+				}
+			}
 		}
 	}
 
