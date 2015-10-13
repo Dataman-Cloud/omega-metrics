@@ -18,6 +18,7 @@ const (
 	Deployment_step_success = "deployment_step_success"
 	Deployment_step_failure = "deployment_step_failure"
 	Status_update_event     = "status_update_event"
+	Destroy_app             = "destroy_app"
 )
 
 type RabbitMqMessage struct {
@@ -52,6 +53,12 @@ type StatusUpdate struct {
 	Host       string `json:"host"`
 	Ports      []int  `json:"ports"`
 	TaskStatus string `json:"taskStatus"`
+}
+
+type DestroyApp struct {
+	EventType string `json:"eventType"`
+	Timestamp string `json:"timestamp"`
+	AppId     string `json:"appId"`
 }
 
 type currentStep struct {
@@ -174,6 +181,11 @@ func MarathonEventJson(str string) (string, string, string, string, string) {
 		portstr := strings.Join(portArray, ",")
 		msg := su.Host + ":" + portstr + " " + su.TaskStatus
 		return me.EventType, clusterId, su.AppId, su.Timestamp, msg
+	case Destroy_app:
+		fmt.Println("&&&&&&&&&&& destroy app: ", rmm.Message)
+		var da DestroyApp
+		json.Unmarshal([]byte(rmm.Message), &da)
+		return me.EventType, clusterId, da.AppId, da.Timestamp, da.EventType
 	}
 	return "", clusterId, "", "", ""
 }

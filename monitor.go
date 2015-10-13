@@ -118,14 +118,26 @@ func handler(routingKey string, messageBody []byte) {
 			fmt.Println("********* eventType ", eventType)
 			if idOrApp != "" && json != "" && currentType != "" {
 				label := clusterId + "_" + idOrApp
-				log.Info("status_update_event label: ", label)
+				log.Info("[status_update_event] label: ", label)
 				event := json + " " + currentType
 				err := writeToRedis(label, event)
 				if err != nil {
-					log.Error("status update event writeToRedis has err: ", err)
+					log.Error("[status_update_event] writeToRedis has err: ", err)
 				}
 			}
+		case util.Destroy_app:
+			fmt.Println("******** eventType ", eventType)
+			if idOrApp != "" && clusterId != "" {
+				label := clusterId + "_" + idOrApp
+				log.Info("[destroy_app] label: ", label)
+				err := deleteKeyFromRedis(label)
+				if err != nil {
+					log.Error("[destroy_app] deleteKeyFromRedis has err: ", err)
+				}
+
+			}
 		}
+
 	}
 
 	if clusterId != "" && json != "" && leader == 1 {
@@ -135,6 +147,14 @@ func handler(routingKey string, messageBody []byte) {
 			log.Error("writeToRedis has err: ", err)
 		}
 	}
+}
+
+func deleteKeyFromRedis(id string) error {
+	conn := cache.Open()
+	defer conn.Close()
+	log.Debugf("redis delete key %s", id)
+	_, err := conn.Do("DEL", id)
+	return err
 }
 
 func readFromRedis(id string) (string, error) {
