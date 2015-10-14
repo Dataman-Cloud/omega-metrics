@@ -77,7 +77,7 @@ var parserTypeMappings map[string]reflect.Type
 
 func init() {
 	recognizedTypes := []interface{}{
-		MarathonEvent{},
+		MarathonEventMar{},
 		MasterMetricsMar{},
 	}
 
