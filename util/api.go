@@ -2,7 +2,7 @@ package util
 
 const (
 	MonitorMasterMetrics = "MasterMetricsMar"
-	MonitorMarathonEvent = "MarathonEvent"
+	MonitorMarathonEvent = "MarathonEventMar"
 )
 
 type MasterMetricsMar struct {
@@ -27,4 +27,11 @@ type MonitorResponse struct {
 	Code string      `json:"code"`
 	Data interface{} `json:"data"`
 	Err  string      `json:"error"`
+}
+
+type MarathonEventMar struct {
+	EventType   string `json:"eventType"`
+	Timestamp   string `json:"timestamp"`
+	IdOrApp     string `json:"idOrApp"`
+	CurrentType string `json:"timestamp,omitempty"`
 }

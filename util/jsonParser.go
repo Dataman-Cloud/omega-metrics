@@ -3,7 +3,6 @@ package util
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -146,6 +145,21 @@ func SlaveMetricsJson(str string) (string, string) {
 	return nodeId, string(ll)
 }
 
+func MarathonEventMarshal(eventType, timestamp, idOrApp, currentType string) string {
+	var mem MarathonEventMar
+	mem.EventType = eventType
+	mem.Timestamp = timestamp
+	mem.IdOrApp = idOrApp
+	mem.CurrentType = currentType
+
+	ll, err := json.Marshal(mem)
+	if err != nil {
+		log.Error("[MarathonEventMar] struct marshal failed", err)
+		return ""
+	}
+	return string(ll)
+}
+
 func MarathonEventJson(str string) (string, string, string, string, string) {
 	var rmm RabbitMqMessage
 	var me MarathonEvent
@@ -156,22 +170,22 @@ func MarathonEventJson(str string) (string, string, string, string, string) {
 	json.Unmarshal([]byte(rmm.Message), &me)
 	switch me.EventType {
 	case Deployment_info:
-		fmt.Println("&&&&&&&&&&&& deployment info: ", rmm.Message)
-		return me.EventType, clusterId, me.Plan.Id, me.CurrentStep.Actions[0].App, me.CurrentStep.Actions[0].Type
+		log.Info("[deployment info] message: ", rmm.Message)
+		return me.EventType, clusterId, me.Plan.Id, me.Timestamp, me.CurrentStep.Actions[0].App
 	case Deployment_success:
-		fmt.Println("&&&&&&&&&&&& deployment success: ", rmm.Message)
+		log.Info("[deployment success] message: ", rmm.Message)
 		return me.EventType, clusterId, me.Id, me.Timestamp, ""
 	case Deployment_failed:
-		fmt.Println("&&&&&&&&&&&& deployment failed: ", rmm.Message)
+		log.Info("[deployment failed] message: ", rmm.Message)
 		return me.EventType, clusterId, me.Id, me.Timestamp, ""
 	case Deployment_step_success:
-		fmt.Println("&&&&&&&&&&&& deployment step success: ", rmm.Message)
+		log.Info("[deployment step success] message: ", rmm.Message)
 		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp, me.CurrentStep.Actions[0].Type
 	case Deployment_step_failure:
-		fmt.Println("&&&&&&&&&&&& deployment step failure: ", rmm.Message)
+		log.Info("[deployment step failure] message: ", rmm.Message)
 		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp, me.CurrentStep.Actions[0].Type
 	case Status_update_event:
-		fmt.Println("&&&&&&&&&&&& status update event: ", rmm.Message)
+		log.Info("[status update event] message: ", rmm.Message)
 		json.Unmarshal([]byte(rmm.Message), &su)
 		var portArray []string
 		for _, v := range su.Ports {
@@ -179,10 +193,10 @@ func MarathonEventJson(str string) (string, string, string, string, string) {
 			portArray = append(portArray, j)
 		}
 		portstr := strings.Join(portArray, ",")
-		msg := su.Host + ":" + portstr + " " + su.TaskStatus
-		return me.EventType, clusterId, su.AppId, su.Timestamp, msg
+		appId := su.Host + ":" + portstr
+		return me.EventType, clusterId, appId, su.Timestamp, su.TaskStatus
 	case Destroy_app:
-		fmt.Println("&&&&&&&&&&& destroy app: ", rmm.Message)
+		log.Info("[destroy app] message: ", rmm.Message)
 		var da DestroyApp
 		json.Unmarshal([]byte(rmm.Message), &da)
 		return me.EventType, clusterId, da.AppId, da.Timestamp, da.EventType
