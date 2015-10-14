@@ -222,6 +222,7 @@ func marathonEvent(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, response)
 	}
 	jsoninterface, err := util.ReturnMessage(util.MonitorMarathonEvent, strs)
+	log.Info("################  jsoninterface", *jsoninterface)
 	if err != nil {
 		log.Error("[Marathon Event] analysis error ", err)
 		response.Err = "[Marathon Event] analysis error " + err.Error()
