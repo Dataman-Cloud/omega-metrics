@@ -33,7 +33,7 @@ func SetHeader(ctx *gin.Context) {
 }
 
 func handler(routingKey string, messageBody []byte) {
-	var json, clusterId, idOrApp, eventType, currentType string
+	var json, taskId, timestamp, clusterId, idOrApp, eventType, currentType string
 	var leader int
 	switch routingKey {
 	case util.Master_metrics_routing:
@@ -43,74 +43,75 @@ func handler(routingKey string, messageBody []byte) {
 		clusterId, json = util.SlaveMetricsJson(string(messageBody))
 		log.Infof("received message id:%s json:%s", clusterId, json)
 	case util.Marathon_event_routing: // 应用级别的部署监控
-		eventType, clusterId, idOrApp, json, currentType = util.MarathonEventJson(string(messageBody))
+		eventType, clusterId, idOrApp, timestamp, currentType, taskId = util.MarathonEventJson(string(messageBody))
 		switch eventType {
 		case util.Deployment_info:
-			if idOrApp != "" && json != "" {
+			if idOrApp != "" && timestamp != "" {
 				label := clusterId + "_" + idOrApp
-				log.Info("deployment_info label: ", label)
+				log.Info("[deployment_info] label: ", label)
 				err := writeToRedis2(label, currentType)
 				if err != nil {
 					log.Error("writeToRedis2 has err: ", err)
 				}
 			}
 		case util.Deployment_success:
-			if idOrApp != "" && json != "" {
+			if idOrApp != "" && timestamp != "" {
 				app, err := readFromRedis(idOrApp)
 				if err != nil {
 					log.Error("readFromRedis has err: ", err)
 				}
 				label := clusterId + "_" + app
-				log.Debug("deployment_success label: ", label)
-				event := util.MarathonEventMarshal(eventType, json, idOrApp, currentType)
-				log.Debug("deployment_success event: ", event)
+				log.Debug("[deployment_success] label: ", label)
+				event := util.MarathonEventMarshal(eventType, timestamp, idOrApp, currentType, taskId)
+				log.Debug("[deployment_success] event: ", event)
 				err = writeToRedis(label, event)
 				if err != nil {
 					log.Error("marathon event writeToRedis has err: ", err)
 				}
 			}
 		case util.Deployment_failed:
-			if idOrApp != "" && json != "" {
+			if idOrApp != "" && timestamp != "" {
 				app, err := readFromRedis(idOrApp)
 				if err != nil {
 					log.Error("readFromRedis has err: ", err)
 				}
 				label := clusterId + "_" + app
-				log.Debug("deployment_failed label: ", label)
-				event := util.MarathonEventMarshal(eventType, json, idOrApp, currentType)
-				log.Debug("deployment_failed event: ", event)
+				log.Debug("[deployment_failed] label: ", label)
+				event := util.MarathonEventMarshal(eventType, timestamp, idOrApp, currentType, taskId)
+				log.Debug("[deployment_failed] event: ", event)
 				err = writeToRedis(label, event)
 				if err != nil {
 					log.Error("marathon event writeToRedis has err: ", err)
 				}
 			}
 		case util.Deployment_step_success:
-			if idOrApp != "" && json != "" && currentType != "" {
+			if idOrApp != "" && timestamp != "" && currentType != "" {
 				label := clusterId + "_" + idOrApp
-				log.Debug("deployment_step_success label: ", label)
-				event := util.MarathonEventMarshal(eventType, json, idOrApp, currentType)
-				log.Debug("deployment_step_success event: ", event)
+				log.Debug("[deployment_step_success] label: ", label)
+				event := util.MarathonEventMarshal(eventType, timestamp, idOrApp, currentType, taskId)
+				log.Debug("[deployment_step_success] event: ", event)
 				err := writeToRedis(label, event)
 				if err != nil {
 					log.Error("marathon event writeToRedis has err: ", err)
 				}
 			}
 		case util.Deployment_step_failure:
-			if idOrApp != "" && json != "" && currentType != "" {
+			if idOrApp != "" && timestamp != "" && currentType != "" {
 				label := clusterId + "_" + idOrApp
-				log.Debug("deployment_step_failure label: ", label)
-				event := util.MarathonEventMarshal(eventType, json, idOrApp, currentType)
-				log.Debug("deployment_step_failure event: ", event)
+				log.Debug("[deployment_step_failure] label: ", label)
+				event := util.MarathonEventMarshal(eventType, timestamp, idOrApp, currentType, taskId)
+				log.Debug("[deployment_step_failure] event: ", event)
 				err := writeToRedis(label, event)
 				if err != nil {
 					log.Error("marathon event writeToRedis has err: ", err)
 				}
 			}
 		case util.Status_update_event:
-			if idOrApp != "" && json != "" && currentType != "" {
+			if idOrApp != "" && timestamp != "" && currentType != "" {
 				label := clusterId + "_" + idOrApp
-				log.Info("[status_update_event] label: ", label)
-				event := util.MarathonEventMarshal(eventType, json, idOrApp, currentType)
+				log.Debug("[status_update_event] label: ", label)
+				event := util.MarathonEventMarshal(eventType, timestamp, idOrApp, currentType, taskId)
+				log.Debug("[status_update_event] event: ", event)
 				err := writeToRedis(label, event)
 				if err != nil {
 					log.Error("[status_update_event] writeToRedis has err: ", err)
@@ -222,7 +223,6 @@ func marathonEvent(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, response)
 	}
 	jsoninterface, err := util.ReturnMessage(util.MonitorMarathonEvent, strs)
-	log.Info("################  jsoninterface", *jsoninterface)
 	if err != nil {
 		log.Error("[Marathon Event] analysis error ", err)
 		response.Err = "[Marathon Event] analysis error " + err.Error()

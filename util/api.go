@@ -33,5 +33,6 @@ type MarathonEventMar struct {
 	EventType   string `json:"eventType"`
 	Timestamp   string `json:"timestamp"`
 	IdOrApp     string `json:"idOrApp"`
-	CurrentType string `json:"currentType,omitempty"`
+	CurrentType string `json:"currentType"`
+	TaskId      string `json:"taskId"`
 }

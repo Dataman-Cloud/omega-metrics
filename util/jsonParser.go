@@ -145,12 +145,13 @@ func SlaveMetricsJson(str string) (string, string) {
 	return nodeId, string(ll)
 }
 
-func MarathonEventMarshal(eventType, timestamp, idOrApp, currentType string) string {
+func MarathonEventMarshal(eventType, timestamp, idOrApp, currentType, taskId string) string {
 	var mem MarathonEventMar
 	mem.EventType = eventType
 	mem.Timestamp = timestamp
 	mem.IdOrApp = idOrApp
 	mem.CurrentType = currentType
+	mem.TaskId = taskId
 
 	ll, err := json.Marshal(mem)
 	if err != nil {
@@ -160,7 +161,7 @@ func MarathonEventMarshal(eventType, timestamp, idOrApp, currentType string) str
 	return string(ll)
 }
 
-func MarathonEventJson(str string) (string, string, string, string, string) {
+func MarathonEventJson(str string) (string, string, string, string, string, string) {
 	var rmm RabbitMqMessage
 	var me MarathonEvent
 
@@ -171,19 +172,19 @@ func MarathonEventJson(str string) (string, string, string, string, string) {
 	switch me.EventType {
 	case Deployment_info:
 		log.Info("[deployment info] message: ", rmm.Message)
-		return me.EventType, clusterId, me.Plan.Id, me.Timestamp, me.CurrentStep.Actions[0].App
+		return me.EventType, clusterId, me.Plan.Id, me.Timestamp, me.CurrentStep.Actions[0].App, ""
 	case Deployment_success:
 		log.Info("[deployment success] message: ", rmm.Message)
-		return me.EventType, clusterId, me.Id, me.Timestamp, ""
+		return me.EventType, clusterId, me.Id, me.Timestamp, "", ""
 	case Deployment_failed:
 		log.Info("[deployment failed] message: ", rmm.Message)
-		return me.EventType, clusterId, me.Id, me.Timestamp, ""
+		return me.EventType, clusterId, me.Id, me.Timestamp, "", ""
 	case Deployment_step_success:
 		log.Info("[deployment step success] message: ", rmm.Message)
-		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp, me.CurrentStep.Actions[0].Type
+		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp, me.CurrentStep.Actions[0].Type, ""
 	case Deployment_step_failure:
 		log.Info("[deployment step failure] message: ", rmm.Message)
-		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp, me.CurrentStep.Actions[0].Type
+		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp, me.CurrentStep.Actions[0].Type, ""
 	case Status_update_event:
 		log.Info("[status update event] message: ", rmm.Message)
 		json.Unmarshal([]byte(rmm.Message), &su)
@@ -194,12 +195,12 @@ func MarathonEventJson(str string) (string, string, string, string, string) {
 		}
 		portstr := strings.Join(portArray, ",")
 		appId := su.Host + ":" + portstr
-		return me.EventType, clusterId, appId, su.Timestamp, su.TaskStatus
+		return me.EventType, clusterId, su.AppId, su.Timestamp, su.TaskStatus, appId
 	case Destroy_app:
 		log.Info("[destroy app] message: ", rmm.Message)
 		var da DestroyApp
 		json.Unmarshal([]byte(rmm.Message), &da)
-		return me.EventType, clusterId, da.AppId, da.Timestamp, da.EventType
+		return me.EventType, clusterId, da.AppId, da.Timestamp, da.EventType, ""
 	}
-	return "", clusterId, "", "", ""
+	return "", clusterId, "", "", "", ""
 }
