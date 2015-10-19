@@ -4,17 +4,11 @@ import (
 	"net/http"
 
 	"github.com/Dataman-Cloud/omega-metrics/cache"
-	"github.com/Dataman-Cloud/omega-metrics/config"
 	"github.com/Dataman-Cloud/omega-metrics/util"
 	log "github.com/cihub/seelog"
 	redis "github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"
 )
-
-func init() {
-	conn := cache.Open()
-	defer conn.Close()
-}
 
 func startC() {
 	log.Debug("start master metrics mq consumer")
@@ -50,14 +44,14 @@ func handler(routingKey string, messageBody []byte) {
 			if idOrApp != "" && timestamp != "" {
 				label := clusterId + "_" + idOrApp
 				log.Info("[deployment_info] label: ", label)
-				err := writeToRedis2(label, currentType)
+				err := cache.WriteStringToRedis(label, currentType)
 				if err != nil {
 					log.Error("writeToRedis2 has err: ", err)
 				}
 			}
 		case util.Deployment_success:
 			if idOrApp != "" && timestamp != "" {
-				app, err := readFromRedis(idOrApp)
+				app, err := cache.ReadFromRedis(idOrApp)
 				if err != nil {
 					log.Error("readFromRedis has err: ", err)
 				}
@@ -65,14 +59,14 @@ func handler(routingKey string, messageBody []byte) {
 				log.Debug("[deployment_success] label: ", label)
 				event := util.MarathonEventMarshal(eventType, timestamp, idOrApp, currentType, taskId)
 				log.Debug("[deployment_success] event: ", event)
-				err = writeToRedis(label, event)
+				err = cache.WriteListToRedis(label, event)
 				if err != nil {
 					log.Error("marathon event writeToRedis has err: ", err)
 				}
 			}
 		case util.Deployment_failed:
 			if idOrApp != "" && timestamp != "" {
-				app, err := readFromRedis(idOrApp)
+				app, err := cache.ReadFromRedis(idOrApp)
 				if err != nil {
 					log.Error("readFromRedis has err: ", err)
 				}
@@ -80,7 +74,7 @@ func handler(routingKey string, messageBody []byte) {
 				log.Debug("[deployment_failed] label: ", label)
 				event := util.MarathonEventMarshal(eventType, timestamp, idOrApp, currentType, taskId)
 				log.Debug("[deployment_failed] event: ", event)
-				err = writeToRedis(label, event)
+				err = cache.WriteListToRedis(label, event)
 				if err != nil {
 					log.Error("marathon event writeToRedis has err: ", err)
 				}
@@ -91,7 +85,7 @@ func handler(routingKey string, messageBody []byte) {
 				log.Debug("[deployment_step_success] label: ", label)
 				event := util.MarathonEventMarshal(eventType, timestamp, idOrApp, currentType, taskId)
 				log.Debug("[deployment_step_success] event: ", event)
-				err := writeToRedis(label, event)
+				err := cache.WriteListToRedis(label, event)
 				if err != nil {
 					log.Error("marathon event writeToRedis has err: ", err)
 				}
@@ -102,7 +96,7 @@ func handler(routingKey string, messageBody []byte) {
 				log.Debug("[deployment_step_failure] label: ", label)
 				event := util.MarathonEventMarshal(eventType, timestamp, idOrApp, currentType, taskId)
 				log.Debug("[deployment_step_failure] event: ", event)
-				err := writeToRedis(label, event)
+				err := cache.WriteListToRedis(label, event)
 				if err != nil {
 					log.Error("marathon event writeToRedis has err: ", err)
 				}
@@ -113,7 +107,7 @@ func handler(routingKey string, messageBody []byte) {
 				log.Debug("[status_update_event] label: ", label)
 				event := util.MarathonEventMarshal(eventType, timestamp, idOrApp, currentType, taskId)
 				log.Debug("[status_update_event] event: ", event)
-				err := writeToRedis(label, event)
+				err := cache.WriteListToRedis(label, event)
 				if err != nil {
 					log.Error("[status_update_event] writeToRedis has err: ", err)
 				}
@@ -122,7 +116,7 @@ func handler(routingKey string, messageBody []byte) {
 			if idOrApp != "" && clusterId != "" {
 				label := clusterId + "_" + idOrApp
 				log.Info("[destroy_app] label: ", label)
-				err := deleteKeyFromRedis(label)
+				err := cache.DeleteRedisByKey(label)
 				if err != nil {
 					log.Error("[destroy_app] deleteKeyFromRedis has err: ", err)
 				}
@@ -134,47 +128,11 @@ func handler(routingKey string, messageBody []byte) {
 
 	if clusterId != "" && json != "" && leader == 1 {
 		label := clusterId + "_" + routingKey
-		err := writeToRedis(label, json)
+		err := cache.WriteListToRedis(label, json)
 		if err != nil {
 			log.Error("writeToRedis has err: ", err)
 		}
 	}
-}
-
-func deleteKeyFromRedis(id string) error {
-	conn := cache.Open()
-	defer conn.Close()
-	log.Debugf("redis delete key %s", id)
-	_, err := conn.Do("DEL", id)
-	return err
-}
-
-func readFromRedis(id string) (string, error) {
-	conn := cache.Open()
-	defer conn.Close()
-	log.Debugf("redis Get key %s", id)
-	value, err := redis.String(conn.Do("GET", id))
-	return value, err
-}
-
-func writeToRedis2(id string, app string) error {
-	conn := cache.Open()
-	defer conn.Close()
-	log.Debugf("redis Set marathon event id %s, app %s", id, app)
-	_, err := conn.Do("SETEX", id, config.DefaultTimeout, app)
-	return err
-}
-
-func writeToRedis(id string, json string) error {
-	conn := cache.Open()
-	defer conn.Close()
-	conf := config.Pairs()
-	log.Debugf("redis LPUSH id %s, json %s", id, json)
-	conn.Send("LPUSH", id, json)
-	log.Debugf("redis EXPIRE id %s, json %s", id, json)
-	conn.Send("EXPIRE", id, config.DefaultTimeout)
-	_, err := conn.Do("LTRIM", id, 0, conf.Cache.Llen)
-	return err
 }
 
 func masterMetrics(ctx *gin.Context) {
