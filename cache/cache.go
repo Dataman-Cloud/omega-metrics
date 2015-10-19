@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/Dataman-Cloud/omega-metrics/config"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/cihub/seelog"
 	redis "github.com/garyburd/redigo/redis"
 )
 

@@ -14,12 +14,6 @@
 			"branch": "master"
 		},
 		{
-			"importpath": "github.com/Sirupsen/logrus",
-			"repository": "https://github.com/Sirupsen/logrus",
-			"revision": "418b41d23a1bf978c06faea5313ba194650ac088",
-			"branch": "master"
-		},
-		{
 			"importpath": "github.com/armon/consul-api",
 			"repository": "https://github.com/armon/consul-api",
 			"revision": "dcfedd50ed5334f96adee43fc88518a4f095e15c",
@@ -41,6 +35,12 @@
 			"importpath": "github.com/bugsnag/panicwrap",
 			"repository": "https://github.com/bugsnag/panicwrap",
 			"revision": "e5f9854865b9778a45169fc249e99e338d4d6f27",
+			"branch": "master"
+		},
+		{
+			"importpath": "github.com/cihub/seelog",
+			"repository": "https://github.com/cihub/seelog",
+			"revision": "5841159c495ad98691aac2bf90113c040e62bac2",
 			"branch": "master"
 		},
 		{
