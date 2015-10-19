@@ -6,7 +6,7 @@ import (
 
 	"github.com/Dataman-Cloud/omega-metrics/cache"
 	"github.com/Dataman-Cloud/omega-metrics/util"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/cihub/seelog"
 	redis "github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"
 )

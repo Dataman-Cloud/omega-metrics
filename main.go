@@ -12,13 +12,14 @@ import (
 
 	"github.com/Dataman-Cloud/omega-metrics/cache"
 	"github.com/Dataman-Cloud/omega-metrics/config"
+	"github.com/Dataman-Cloud/omega-metrics/logger"
 	"github.com/Dataman-Cloud/omega-metrics/util"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/cihub/seelog"
 	"github.com/gin-gonic/gin"
 )
 
 func init() {
-	util.InitLog()
+	logger.LoadLogConfig()
 	util.InitMQ()
 	cache.InitCache()
 
@@ -37,7 +38,7 @@ func destroy() {
 	log.Info("destroying ...")
 	cache.DestroyCache()
 	util.DestroyMQ()
-	util.DestroyLog()
+	log.Flush()
 }
 
 func main() {
@@ -81,7 +82,7 @@ func monitor() {
 	}
 	err := server.ListenAndServe()
 	if err != nil {
-		log.Fatal("Can't start monitor server: ", err)
+		log.Error("Can't start monitor server: ", err)
 		panic(-1)
 	}
 }

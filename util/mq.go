@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/Dataman-Cloud/omega-metrics/config"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/cihub/seelog"
 	"github.com/streadway/amqp"
 )
 
@@ -75,7 +75,7 @@ func InitMQ() {
 	mq, err = amqp.Dial(opts)
 	if err != nil {
 		log.Error("got err", err)
-		log.Fatal("can't dial mq server: ", opts)
+		log.Error("can't dial mq server: ", opts)
 		panic(-1)
 	}
 	log.Debug("initialized MQ")

@@ -13,6 +13,7 @@ const (
 	DefaultHost          = "localhost"
 	DefaultPort          = 9005
 	DefaultDebugging     = true
+	DefaultLogLevel      = "debug"
 )
 
 type Config struct {
@@ -29,7 +30,8 @@ type Config struct {
 type LogConfig struct {
 	Console   bool
 	File      string
-	MaxSize   int64
+	FileNum   int
+	FileSize  int
 	Level     string
 	Formatter string
 }
@@ -82,7 +84,6 @@ func init() {
 		jww.SetLogThreshold(jww.LevelError)
 		jww.SetStdoutThreshold(jww.LevelError)
 	}
-
 	log.Printf("initialized config pairs: %q\n", pairs)
 }
 

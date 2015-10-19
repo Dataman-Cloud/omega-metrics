@@ -7,8 +7,9 @@ log:
     console: true
     file: "./omega-metrics.log"
     level: "debug"
-    formatter: "text"
-    maxSize: 1024000
+    formatter: "%Date(2006-01-02 15:04:05Z07:00) [%LEVEL] %Msg%n"
+    fileSize: 5000000
+    fileNum: 10
 db:
     user: "oapp"
     password: "123456"
