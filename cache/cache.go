@@ -59,3 +59,46 @@ func DestroyCache() {
 		log.Info("cache was closed")
 	}
 }
+
+func WriteStringToRedis(key string, value string) error {
+	conn := Open()
+	defer conn.Close()
+	log.Debugf("redis Set marathon event id %s, app %s", key, value)
+	_, err := conn.Do("SETEX", key, config.DefaultTimeout, value)
+	return err
+}
+
+func WriteListToRedis(key string, value string) error {
+	conn := Open()
+	defer conn.Close()
+	var err error
+	conf := config.Pairs()
+	log.Debugf("redis LPUSH id %s, json %s", key, value)
+	if err = conn.Send("LPUSH", key, value); err != nil {
+		return err
+	}
+
+	log.Debugf("redis EXPIRE id %s, json %s", key, value)
+	if err = conn.Send("EXPIRE", key, config.DefaultTimeout); err != nil {
+		return err
+	}
+
+	_, err = conn.Do("LTRIM", key, 0, conf.Cache.Llen)
+	return err
+}
+
+func ReadFromRedis(key string) (string, error) {
+	conn := Open()
+	defer conn.Close()
+	log.Debugf("redis Get key %s", key)
+	value, err := redis.String(conn.Do("GET", key))
+	return value, err
+}
+
+func DeleteRedisByKey(key string) error {
+	conn := Open()
+	defer conn.Close()
+	log.Debugf("redis delete key %s", key)
+	_, err := conn.Do("DEL", key)
+	return err
+}
