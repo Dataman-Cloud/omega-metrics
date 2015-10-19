@@ -169,24 +169,19 @@ func MarathonEventJson(str string) (string, string, string, string, string, stri
 	json.Unmarshal([]byte(str), &rmm)
 	clusterId := strconv.Itoa(rmm.ClusterId)
 	json.Unmarshal([]byte(rmm.Message), &me)
+	log.Debugf("marathon event type: [%s] message %s", me.EventType, rmm.Message)
 	switch me.EventType {
 	case Deployment_info:
-		log.Info("[deployment info] message: ", rmm.Message)
 		return me.EventType, clusterId, me.Plan.Id, me.Timestamp, me.CurrentStep.Actions[0].App, ""
 	case Deployment_success:
-		log.Info("[deployment success] message: ", rmm.Message)
 		return me.EventType, clusterId, me.Id, me.Timestamp, "", ""
 	case Deployment_failed:
-		log.Info("[deployment failed] message: ", rmm.Message)
 		return me.EventType, clusterId, me.Id, me.Timestamp, "", ""
 	case Deployment_step_success:
-		log.Info("[deployment step success] message: ", rmm.Message)
 		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp, me.CurrentStep.Actions[0].Type, ""
 	case Deployment_step_failure:
-		log.Info("[deployment step failure] message: ", rmm.Message)
 		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp, me.CurrentStep.Actions[0].Type, ""
 	case Status_update_event:
-		log.Info("[status update event] message: ", rmm.Message)
 		json.Unmarshal([]byte(rmm.Message), &su)
 		var portArray []string
 		for _, v := range su.Ports {
@@ -197,7 +192,6 @@ func MarathonEventJson(str string) (string, string, string, string, string, stri
 		appId := su.Host + ":" + portstr
 		return me.EventType, clusterId, su.AppId, su.Timestamp, su.TaskStatus, appId
 	case Destroy_app:
-		log.Info("[destroy app] message: ", rmm.Message)
 		var da DestroyApp
 		json.Unmarshal([]byte(rmm.Message), &da)
 		return me.EventType, clusterId, da.AppId, da.Timestamp, da.EventType, ""

@@ -1,7 +1,6 @@
 package logger
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/Dataman-Cloud/omega-metrics/config"
@@ -50,8 +49,6 @@ func initLogger() {
 		formatString = "%Date(2006-01-02 15:04:05Z07:00) [%LEVEL] %Msg%n"
 	}
 
-	fmt.Println(fileSize)
-	fmt.Println(fileNum)
 	SetLevel(level)
 }
 
@@ -64,7 +61,6 @@ func SetLevel(logLevel string) {
 }
 
 func reloadLogConfig() {
-	fmt.Println(loggerConfig())
 	logger, err := seelog.LoggerFromConfigAsString(loggerConfig())
 
 	if err == nil {
