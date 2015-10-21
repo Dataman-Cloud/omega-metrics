@@ -87,6 +87,27 @@ func WriteListToRedis(key string, value string) error {
 	return err
 }
 
+func WriteHashToRedis(key, field, value string) error {
+	conn := Open()
+	defer conn.Close()
+	var err error
+	log.Debugf("redis HSET: %s, field: %s, value: %s", key, field, value)
+	if err = conn.Send("HSET", key, field, value); err != nil {
+		return err
+	}
+	_, err = conn.Do("EXPIRE", key, config.ContainerMonitorTimeout)
+	return err
+}
+
+func HashDelFromRedis(key, field string) error {
+	conn := Open()
+	defer conn.Close()
+	var err error
+	log.Debugf("redis HDEL: %s, field: %s", key, field)
+	_, err = conn.Do("HDEL", key, field)
+	return err
+}
+
 func ReadFromRedis(key string) (string, error) {
 	conn := Open()
 	defer conn.Close()

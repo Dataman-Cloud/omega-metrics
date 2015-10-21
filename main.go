@@ -69,6 +69,7 @@ func monitor() {
 	{
 		monitorGroup.GET("/metrics/cluster/:cluster_id", masterMetrics)
 		monitorGroup.GET("/event/:cluster_id/:app", marathonEvent)
+		monitorGroup.GET("/appmetrics/cluster/:cluster_id/app/:app", appMetrics)
 	}
 
 	conf := config.Pairs()
