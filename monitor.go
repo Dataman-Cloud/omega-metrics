@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/Dataman-Cloud/omega-metrics/cache"
@@ -14,6 +15,7 @@ func startC() {
 	log.Debug("start master metrics mq consumer")
 	util.MetricsSubscribe(util.Metrics_exchange, util.Master_metrics_routing, handler)
 	util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_event_routing, handler)
+	util.MetricsSubscribe(util.Metrics_exchange, util.Slave_state_routing, handler)
 }
 
 //function use to handle cross-domain requests
@@ -28,15 +30,27 @@ func SetHeader(ctx *gin.Context) {
 }
 
 func handler(routingKey string, messageBody []byte) {
-	var json, taskId, timestamp, clusterId, idOrApp, eventType, currentType string
+	var jsonstr, taskId, timestamp, clusterId, idOrApp, eventType, currentType string
 	var leader int
 	switch routingKey {
 	case util.Master_metrics_routing:
-		clusterId, leader, json = util.MasterMetricsJson(string(messageBody))
-		log.Infof("received message clusterId:%s leader:%d json:%s", clusterId, leader, json)
-	case util.Slave_metrics_routing:
-		clusterId, json = util.SlaveMetricsJson(string(messageBody))
-		log.Infof("received message id:%s json:%s", clusterId, json)
+		clusterId, leader, jsonstr = util.MasterMetricsJson(string(messageBody))
+		log.Infof("received message clusterId:%s leader:%d json:%s", clusterId, leader, jsonstr)
+	case util.Slave_state_routing:
+		log.Debugf("**************** slavestatejson message: %s", string(messageBody))
+		array := util.SlaveStateJson(string(messageBody))
+		if len(array) != 0 {
+			for _, v := range array {
+				key := v.ClusterId + "-" + v.App.AppName
+				field := v.App.AppId
+				value, _ := json.Marshal(v)
+				err := cache.WriteHashToRedis(key, field, string(value))
+				if err != nil {
+					log.Error("writeHashToRedis has err: ", err)
+				}
+			}
+		}
+		log.Infof("received slaveStateMessage array: %s", array)
 	case util.Marathon_event_routing: // 应用级别的部署监控
 		eventType, clusterId, idOrApp, timestamp, currentType, taskId = util.MarathonEventJson(string(messageBody))
 		switch eventType {
@@ -126,9 +140,9 @@ func handler(routingKey string, messageBody []byte) {
 
 	}
 
-	if clusterId != "" && json != "" && leader == 1 {
+	if clusterId != "" && jsonstr != "" && leader == 1 {
 		label := clusterId + "_" + routingKey
-		err := cache.WriteListToRedis(label, json)
+		err := cache.WriteListToRedis(label, jsonstr)
 		if err != nil {
 			log.Error("writeToRedis has err: ", err)
 		}
@@ -142,7 +156,7 @@ func masterMetrics(ctx *gin.Context) {
 	log.Debug("cluster_id ", cluster_id)
 
 	response := util.MonitorResponse{
-		Code: "1",
+		Code: 1,
 		Data: nil,
 		Err:  "",
 	}
@@ -159,7 +173,7 @@ func masterMetrics(ctx *gin.Context) {
 		response.Err = "[Master Metrics] analysis error " + err.Error()
 		ctx.JSON(http.StatusOK, response)
 	}
-	response.Code = "0"
+	response.Code = 0
 	response.Data = *jsoninterface
 	ctx.JSON(http.StatusOK, response)
 }
@@ -169,7 +183,7 @@ func marathonEvent(ctx *gin.Context) {
 	defer conn.Close()
 
 	response := util.MonitorResponse{
-		Code: "1",
+		Code: 1,
 		Data: nil,
 		Err:  "",
 	}
@@ -187,7 +201,35 @@ func marathonEvent(ctx *gin.Context) {
 		response.Err = "[Marathon Event] analysis error " + err.Error()
 		ctx.JSON(http.StatusOK, response)
 	}
-	response.Code = "0"
+	response.Code = 0
+	response.Data = *jsoninterface
+	ctx.JSON(http.StatusOK, response)
+}
+
+func appMetrics(ctx *gin.Context) {
+	conn := cache.Open()
+	defer conn.Close()
+
+	response := util.MonitorResponse{
+		Code: 1,
+		Data: nil,
+		Err:  "",
+	}
+
+	key := ctx.Param("cluster_id") + "-" + ctx.Param("app")
+	strs, err := redis.Strings(conn.Do("HVALS", key))
+	if err != nil {
+		log.Error("[App Metrics] got error ", err)
+		response.Err = "[App Metrics] got error " + err.Error()
+		ctx.JSON(http.StatusOK, response)
+	}
+	jsoninterface, err := util.ReturnMessage(util.MonitorAppMetrics, strs)
+	if err != nil {
+		log.Error("[App Metrics] analysis error ", err)
+		response.Err = "[App Metrics] analysis error " + err.Error()
+		ctx.JSON(http.StatusOK, response)
+	}
+	response.Code = 0
 	response.Data = *jsoninterface
 	ctx.JSON(http.StatusOK, response)
 }

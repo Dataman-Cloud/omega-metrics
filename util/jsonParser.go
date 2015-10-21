@@ -20,65 +20,13 @@ const (
 	Destroy_app             = "destroy_app"
 )
 
-type RabbitMqMessage struct {
-	ClusterId int    `json:"clusterId"`
-	NodeId    string `json:"nodeId"`
-	Message   string `json:"message"`
-	Timestamp int64  `json:"timestamp"`
-}
-
-type MasterMetrics struct {
-	CpuPercent float64 `json:"master/cpus_percent"`
-	DiskUsed   int     `json:"master/disk_used"`
-	DiskTotal  int     `json:"master/disk_total"`
-	MemUsed    int     `json:"master/mem_used"`
-	MemTotal   int     `json:"master/mem_total"`
-	Leader     int     `json:"master/elected"`
-}
-
-type SlaveMetrics struct {
-	NodeId     string  `json:"nodeId"`
-	CpuPercent float64 `json:"slave/cpus_total"`
-	Disk_used  int     `json:"slave/disk_used"`
-	Disk_total int     `json:"slave/disk_total"`
-	Mem_used   int     `json:"slave/mem_used"`
-	Mem_total  int     `json:"slave/mem_total"`
-}
-
-type StatusUpdate struct {
-	EventType  string `json:"eventType"`
-	Timestamp  string `json:"timestamp"`
-	AppId      string `json:"appId"`
-	Host       string `json:"host"`
-	Ports      []int  `json:"ports"`
-	TaskStatus string `json:"taskStatus"`
-}
-
-type DestroyApp struct {
-	EventType string `json:"eventType"`
-	Timestamp string `json:"timestamp"`
-	AppId     string `json:"appId"`
-}
-
-type currentStep struct {
-	Actions []actions
-}
-
-type actions struct {
-	Type string
-	App  string
-}
-
-type plan struct {
-	Id string
-}
-
 var parserTypeMappings map[string]reflect.Type
 
 func init() {
 	recognizedTypes := []interface{}{
 		MarathonEventMar{},
 		MasterMetricsMar{},
+		SlaveStateMar{},
 	}
 
 	parserTypeMappings = make(map[string]reflect.Type)
@@ -117,7 +65,7 @@ func MasterMetricsJson(str string) (string, int, string) {
 	clusterId := strconv.Itoa(mmm.ClusterId)
 	json.Unmarshal([]byte(mmm.Message), &mm)
 
-	ss.CpuPercent = mm.CpuPercent
+	ss.CpuPercent = mm.CpuPercent * 100
 	ss.MemTotal = mm.MemTotal
 	ss.MemUsed = mm.MemUsed
 	ss.DiskUsed = mm.DiskUsed
@@ -133,16 +81,96 @@ func MasterMetricsJson(str string) (string, int, string) {
 	return clusterId, mm.Leader, string(ll)
 }
 
-func SlaveMetricsJson(str string) (string, string) {
-	var s SlaveMetrics
-	json.Unmarshal([]byte(str), &s)
-	nodeId := s.NodeId
-	ll, err := json.Marshal(s)
-	if err != nil {
-		log.Error("Slave Metrics parse failed", err)
-		return "", ""
+func parseMesosPorts(str string) (string, error) {
+	if str == "" {
+		return "", nil
 	}
-	return nodeId, string(ll)
+	str1 := strings.Replace(str, "[", "", -1)
+	str2 := strings.Replace(str1, "]", "", -1)
+	arr := strings.Split(str2, "-")
+	start, err := strconv.Atoi(arr[0])
+	if err != nil {
+		return "", errors.New("string to int error: " + arr[0])
+	}
+	end, err := strconv.Atoi(arr[1])
+	if err != nil {
+		return "", errors.New("string to int error: " + arr[1])
+	}
+	var portsArr []string
+	for i := start; i <= end; i++ {
+		portsArr = append(portsArr, strconv.Itoa(i))
+	}
+	return strings.Join(portsArr, ","), nil
+
+}
+
+func SlaveStateJson(str string) []SlaveStateMar {
+	var js RabbitMqMessage
+	var message SlaveState
+	var s map[string]ContainerInfo
+	var array []SlaveStateMar
+
+	json.Unmarshal([]byte(str), &js)
+	clusterId := strconv.Itoa(js.ClusterId)
+	// parse "message"
+	json.Unmarshal([]byte(js.Message), &message)
+	ip := message.Flags.Ip
+	m := make(map[string]appNameAndId)
+	for _, v := range message.Frameworks {
+		if v.Name == "marathon" {
+			for _, exec := range v.Executors {
+				slaveId := strings.Split(exec.Directory, "/")[4]
+				key := "mesos-" + slaveId + "." + exec.Container
+				var value appNameAndId
+				lastindex := strings.LastIndex(exec.Id, ".")
+				value.AppName = exec.Id[:lastindex]
+				portstring, err := parseMesosPorts(exec.Resources.Ports)
+				if err != nil {
+					log.Error("parseMessosPorts error: ", err)
+				}
+				value.AppId = ip + ":" + portstring
+				m[key] = value
+
+			}
+		}
+	}
+
+	// parse "attached"
+	json.Unmarshal([]byte(js.Attached), &s)
+	for _, value := range s {
+		if len(value.Stats) != 2 {
+			log.Error("[slave state] length of Stats isn't 2, can't calc cpurate")
+			continue
+		}
+		var conInfo SlaveStateMar
+
+		flag := false
+		var app appNameAndId
+		var containerId string
+		for _, aliase := range value.Aliases {
+			_, ok := m[aliase]
+			if ok {
+				flag = true
+				containerId = aliase
+				app = m[aliase]
+			}
+		}
+		if flag == false {
+			continue
+		}
+		conInfo.ClusterId = clusterId
+		conInfo.App = app
+		conInfo.ContainerId = containerId
+		//      conInfo.Timestamp = value.Stats[1].Timestamp
+		conInfo.CpuUsed = int64(value.Stats[1].Cpu.Usage.Total - value.Stats[0].Cpu.Usage.Total)
+		conInfo.CpuTotal = (value.Stats[1].Timestamp.Sub(value.Stats[0].Timestamp).Nanoseconds())
+		conInfo.MemoryUsed = value.Stats[1].Memory.Usage
+		conInfo.MemoryTotal = value.Spec.Memory.Limit
+		ls, _ := json.Marshal(conInfo)
+		log.Debugf("AppMetrics: ", string(ls))
+		array = append(array, conInfo)
+	}
+	return array
 }
 
 func MarathonEventMarshal(eventType, timestamp, idOrApp, currentType, taskId string) string {

@@ -9,11 +9,12 @@ import (
 )
 
 const (
-	DefaultTimeout   int = 24 * 3600
-	DefaultHost          = "localhost"
-	DefaultPort          = 9005
-	DefaultDebugging     = true
-	DefaultLogLevel      = "debug"
+	ContainerMonitorTimeout int = 20
+	DefaultTimeout          int = 24 * 3600
+	DefaultHost                 = "localhost"
+	DefaultPort                 = 9005
+	DefaultDebugging            = true
+	DefaultLogLevel             = "debug"
 )
 
 type Config struct {
