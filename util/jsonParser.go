@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	log "github.com/cihub/seelog"
 )
@@ -176,7 +177,14 @@ func SlaveStateJson(str string) []SlaveStateMar {
 func MarathonEventMarshal(eventType, timestamp, idOrApp, currentType, taskId string) string {
 	var mem MarathonEventMar
 	mem.EventType = eventType
-	mem.Timestamp = timestamp
+	// 改变时间戳格式"2015-10-21T07:16:31.802Z" 为 "2015-10-21 07:16:31"
+	layout := "2006-01-02T15:04:05.999Z"
+	t, err := time.Parse(layout, timestamp)
+	if err != nil {
+		log.Error("[marathon event] timestamp parse error", err)
+		mem.Timestamp = timestamp
+	}
+	mem.Timestamp = t.Format("2006-01-02 15:04:05")
 	mem.IdOrApp = idOrApp
 	mem.CurrentType = currentType
 	mem.TaskId = taskId
