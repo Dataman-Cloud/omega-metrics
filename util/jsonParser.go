@@ -58,7 +58,7 @@ func ReturnMessage(typ string, strs []string) (*[]interface{}, error) {
 	return &monitorDatas, nil
 }
 
-func MasterMetricsJson(str string) (string, int, string) {
+func MasterMetricsJson(str string) MasterMetricsMar {
 	var mmm RabbitMqMessage
 	var mm MasterMetrics
 	var ss MasterMetricsMar
@@ -73,13 +73,8 @@ func MasterMetricsJson(str string) (string, int, string) {
 	ss.DiskTotal = mm.DiskTotal
 	ss.Leader = mm.Leader
 	ss.Timestamp = mmm.Timestamp
-
-	ll, err := json.Marshal(ss)
-	if err != nil {
-		log.Error("Master Metrics parse failed", err)
-		return "", 0, ""
-	}
-	return clusterId, mm.Leader, string(ll)
+	ss.ClusterId = clusterId
+	return ss
 }
 
 func parseMesosPorts(str string) (string, error) {
@@ -174,49 +169,61 @@ func SlaveStateJson(str string) []SlaveStateMar {
 	return array
 }
 
-func MarathonEventMarshal(eventType, timestamp, idOrApp, currentType, taskId string) string {
-	var mem MarathonEventMar
-	mem.EventType = eventType
+func marathonEventMarshal(timestamp string) string {
 	// 改变时间戳格式"2015-10-21T07:16:31.802Z" 为 "2015-10-21 07:16:31"
 	layout := "2006-01-02T15:04:05.999Z"
 	t, err := time.Parse(layout, timestamp)
 	if err != nil {
 		log.Error("[marathon event] timestamp parse error", err)
-		mem.Timestamp = timestamp
+		return timestamp
 	}
-	mem.Timestamp = t.Format("2006-01-02 15:04:05")
-	mem.IdOrApp = idOrApp
-	mem.CurrentType = currentType
-	mem.TaskId = taskId
-
-	ll, err := json.Marshal(mem)
-	if err != nil {
-		log.Error("[MarathonEventMar] struct marshal failed", err)
-		return ""
-	}
-	return string(ll)
+	return t.Format("2006-01-02 15:04:05")
 }
 
-func MarathonEventJson(str string) (string, string, string, string, string, string) {
+func MarathonEventJson(str string) MarathonEventMar {
 	var rmm RabbitMqMessage
 	var me MarathonEvent
+	var mem MarathonEventMar
 
 	var su StatusUpdate
 	json.Unmarshal([]byte(str), &rmm)
-	clusterId := strconv.Itoa(rmm.ClusterId)
+	mem.ClusterId = strconv.Itoa(rmm.ClusterId)
 	json.Unmarshal([]byte(rmm.Message), &me)
 	log.Debugf("marathon event type: [%s] message %s", me.EventType, rmm.Message)
 	switch me.EventType {
 	case Deployment_info:
-		return me.EventType, clusterId, me.Plan.Id, me.Timestamp, me.CurrentStep.Actions[0].App, ""
+		mem.EventType = me.EventType
+		mem.App.AppId = me.Plan.Id
+		mem.App.AppName = me.CurrentStep.Actions[0].App
+		mem.Timestamp = marathonEventMarshal(me.Timestamp)
+		return mem
+		//		return me.EventType, clusterId, me.Plan.Id, me.Timestamp, me.CurrentStep.Actions[0].App, ""
 	case Deployment_success:
-		return me.EventType, clusterId, me.Id, me.Timestamp, "", ""
+		mem.EventType = me.EventType
+		mem.App.AppId = me.Id
+		mem.Timestamp = marathonEventMarshal(me.Timestamp)
+		return mem
+		//		return me.EventType, clusterId, me.Id, me.Timestamp, "", ""
 	case Deployment_failed:
-		return me.EventType, clusterId, me.Id, me.Timestamp, "", ""
+		mem.EventType = me.EventType
+		mem.App.AppId = me.Id
+		mem.Timestamp = marathonEventMarshal(me.Timestamp)
+		return mem
+		//		return me.EventType, clusterId, me.Id, me.Timestamp, "", ""
 	case Deployment_step_success:
-		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp, me.CurrentStep.Actions[0].Type, ""
+		mem.EventType = me.EventType
+		mem.App.AppName = me.CurrentStep.Actions[0].App
+		mem.Timestamp = marathonEventMarshal(me.Timestamp)
+		mem.CurrentType = me.CurrentStep.Actions[0].Type
+		return mem
+		//		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp, me.CurrentStep.Actions[0].Type, ""
 	case Deployment_step_failure:
-		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp, me.CurrentStep.Actions[0].Type, ""
+		mem.EventType = me.EventType
+		mem.App.AppName = me.CurrentStep.Actions[0].App
+		mem.Timestamp = marathonEventMarshal(me.Timestamp)
+		mem.CurrentType = me.CurrentStep.Actions[0].Type
+		return mem
+		//		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp, me.CurrentStep.Actions[0].Type, ""
 	case Status_update_event:
 		json.Unmarshal([]byte(rmm.Message), &su)
 		var portArray []string
@@ -226,11 +233,22 @@ func MarathonEventJson(str string) (string, string, string, string, string, stri
 		}
 		portstr := strings.Join(portArray, ",")
 		appId := su.Host + ":" + portstr
-		return me.EventType, clusterId, su.AppId, su.Timestamp, su.TaskStatus, appId
+		mem.EventType = me.EventType
+		mem.App.AppId = su.AppId
+		mem.Timestamp = marathonEventMarshal(su.Timestamp)
+		mem.CurrentType = su.TaskStatus
+		mem.App.AppName = appId
+		return mem
+		//		return me.EventType, clusterId, su.AppId, su.Timestamp, su.TaskStatus, appId
 	case Destroy_app:
 		var da DestroyApp
 		json.Unmarshal([]byte(rmm.Message), &da)
-		return me.EventType, clusterId, da.AppId, da.Timestamp, da.EventType, ""
+		mem.EventType = me.EventType
+		mem.App.AppId = da.AppId
+		mem.Timestamp = marathonEventMarshal(da.Timestamp)
+		mem.CurrentType = da.EventType
+		return mem
+		//		return me.EventType, clusterId, da.AppId, da.Timestamp, da.EventType, ""
 	}
-	return "", clusterId, "", "", "", ""
+	return mem
 }

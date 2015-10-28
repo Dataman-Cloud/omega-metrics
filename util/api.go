@@ -42,6 +42,7 @@ type MasterMetricsMar struct {
 	DiskUsed   int     `json:"diskUsed"`
 	Timestamp  int64   `json:"timestamp"`
 	Leader     int     `json:"leader"`
+	ClusterId  string  `json:"clusterId"`
 }
 
 // marathon event
@@ -54,11 +55,12 @@ type MarathonEvent struct {
 }
 
 type MarathonEventMar struct {
-	EventType   string `json:"eventType"`
-	Timestamp   string `json:"timestamp"`
-	IdOrApp     string `json:"idOrApp"`
-	CurrentType string `json:"currentType"`
-	TaskId      string `json:"taskId"`
+	EventType   string       `json:"eventType"`
+	Timestamp   string       `json:"timestamp"`
+	App         appNameAndId `json:"app"`
+	CurrentType string       `json:"currentType"`
+	TaskId      string       `json:"taskId"`
+	ClusterId   string       `json:"clusterId"`
 }
 
 type StatusUpdate struct {
