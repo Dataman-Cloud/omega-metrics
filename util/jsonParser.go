@@ -194,7 +194,7 @@ func MarathonEventJson(str string) MarathonEventMar {
 	case Deployment_info:
 		mem.EventType = me.EventType
 		mem.App.AppId = me.Plan.Id
-		mem.App.AppName = me.CurrentStep.Actions[0].App
+		mem.App.AppName = strings.Replace(me.CurrentStep.Actions[0].App, "/", "", 1)
 		mem.Timestamp = marathonEventMarshal(me.Timestamp)
 		return mem
 		//		return me.EventType, clusterId, me.Plan.Id, me.Timestamp, me.CurrentStep.Actions[0].App, ""
@@ -212,14 +212,14 @@ func MarathonEventJson(str string) MarathonEventMar {
 		//		return me.EventType, clusterId, me.Id, me.Timestamp, "", ""
 	case Deployment_step_success:
 		mem.EventType = me.EventType
-		mem.App.AppName = me.CurrentStep.Actions[0].App
+		mem.App.AppName = strings.Replace(me.CurrentStep.Actions[0].App, "/", "", 1)
 		mem.Timestamp = marathonEventMarshal(me.Timestamp)
 		mem.CurrentType = me.CurrentStep.Actions[0].Type
 		return mem
 		//		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp, me.CurrentStep.Actions[0].Type, ""
 	case Deployment_step_failure:
 		mem.EventType = me.EventType
-		mem.App.AppName = me.CurrentStep.Actions[0].App
+		mem.App.AppName = strings.Replace(me.CurrentStep.Actions[0].App, "/", "", 1)
 		mem.Timestamp = marathonEventMarshal(me.Timestamp)
 		mem.CurrentType = me.CurrentStep.Actions[0].Type
 		return mem
@@ -234,17 +234,17 @@ func MarathonEventJson(str string) MarathonEventMar {
 		portstr := strings.Join(portArray, ",")
 		appId := su.Host + ":" + portstr
 		mem.EventType = me.EventType
-		mem.App.AppId = su.AppId
+		mem.App.AppName = strings.Replace(su.AppId, "/", "", 1)
 		mem.Timestamp = marathonEventMarshal(su.Timestamp)
 		mem.CurrentType = su.TaskStatus
-		mem.App.AppName = appId
+		mem.TaskId = appId
 		return mem
 		//		return me.EventType, clusterId, su.AppId, su.Timestamp, su.TaskStatus, appId
 	case Destroy_app:
 		var da DestroyApp
 		json.Unmarshal([]byte(rmm.Message), &da)
 		mem.EventType = me.EventType
-		mem.App.AppId = da.AppId
+		mem.App.AppName = strings.Replace(da.AppId, "/", "", 1)
 		mem.Timestamp = marathonEventMarshal(da.Timestamp)
 		mem.CurrentType = da.EventType
 		return mem
