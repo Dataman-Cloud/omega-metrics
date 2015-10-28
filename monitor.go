@@ -188,7 +188,7 @@ func marathonEvent(ctx *gin.Context) {
 		Err:  "",
 	}
 
-	key := ctx.Param("cluster_id") + "_/" + ctx.Param("app")
+	key := ctx.Param("cluster_id") + "_" + ctx.Param("app")
 	strs, err := redis.Strings(conn.Do("LRANGE", key, 0, -1))
 	if err != nil {
 		log.Error("[Marathon Event] got error ", err)

@@ -197,33 +197,28 @@ func MarathonEventJson(str string) MarathonEventMar {
 		mem.App.AppName = strings.Replace(me.CurrentStep.Actions[0].App, "/", "", 1)
 		mem.Timestamp = marathonEventMarshal(me.Timestamp)
 		return mem
-		//		return me.EventType, clusterId, me.Plan.Id, me.Timestamp, me.CurrentStep.Actions[0].App, ""
 	case Deployment_success:
 		mem.EventType = me.EventType
 		mem.App.AppId = me.Id
 		mem.Timestamp = marathonEventMarshal(me.Timestamp)
 		return mem
-		//		return me.EventType, clusterId, me.Id, me.Timestamp, "", ""
 	case Deployment_failed:
 		mem.EventType = me.EventType
 		mem.App.AppId = me.Id
 		mem.Timestamp = marathonEventMarshal(me.Timestamp)
 		return mem
-		//		return me.EventType, clusterId, me.Id, me.Timestamp, "", ""
 	case Deployment_step_success:
 		mem.EventType = me.EventType
 		mem.App.AppName = strings.Replace(me.CurrentStep.Actions[0].App, "/", "", 1)
 		mem.Timestamp = marathonEventMarshal(me.Timestamp)
 		mem.CurrentType = me.CurrentStep.Actions[0].Type
 		return mem
-		//		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp, me.CurrentStep.Actions[0].Type, ""
 	case Deployment_step_failure:
 		mem.EventType = me.EventType
 		mem.App.AppName = strings.Replace(me.CurrentStep.Actions[0].App, "/", "", 1)
 		mem.Timestamp = marathonEventMarshal(me.Timestamp)
 		mem.CurrentType = me.CurrentStep.Actions[0].Type
 		return mem
-		//		return me.EventType, clusterId, me.CurrentStep.Actions[0].App, me.Timestamp, me.CurrentStep.Actions[0].Type, ""
 	case Status_update_event:
 		json.Unmarshal([]byte(rmm.Message), &su)
 		var portArray []string
@@ -239,7 +234,6 @@ func MarathonEventJson(str string) MarathonEventMar {
 		mem.CurrentType = su.TaskStatus
 		mem.TaskId = appId
 		return mem
-		//		return me.EventType, clusterId, su.AppId, su.Timestamp, su.TaskStatus, appId
 	case Destroy_app:
 		var da DestroyApp
 		json.Unmarshal([]byte(rmm.Message), &da)
@@ -248,7 +242,6 @@ func MarathonEventJson(str string) MarathonEventMar {
 		mem.Timestamp = marathonEventMarshal(da.Timestamp)
 		mem.CurrentType = da.EventType
 		return mem
-		//		return me.EventType, clusterId, da.AppId, da.Timestamp, da.EventType, ""
 	}
 	return mem
 }
