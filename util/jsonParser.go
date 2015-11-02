@@ -181,7 +181,8 @@ func marathonEventMarshal(timestamp string) string {
 		log.Error("[marathon event] timestamp parse error", err)
 		return timestamp
 	}
-	return t.Format("2006-01-02 15:04:05")
+	nt := t.Add(time.Hour * 8)
+	return nt.Format("2006-01-02 15:04:05")
 }
 
 func MarathonEventJson(str string) MarathonEventMar {
