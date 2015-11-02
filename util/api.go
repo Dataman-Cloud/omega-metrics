@@ -97,8 +97,7 @@ type SlaveStateMar struct {
 	ClusterId     string       `json:"clusterId"`
 	App           appNameAndId `json:"app"`
 	ContainerId   string       `json:"containerId"`
-	CpuUsed       uint64       `json:"cpuUsed"`
-	CpuTotal      uint64       `json:"cpuTotal"`
+	CpuUsedCores  float64      `json:"cpuUsedCores"`
 	CpuShareCores float64      `json:"cpuShareCores"`
 	MemoryTotal   uint64       `json:"memoryTotal"`
 	MemoryUsed    uint64       `json:"memoryUsed"`
