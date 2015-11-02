@@ -158,8 +158,9 @@ func SlaveStateJson(str string) []SlaveStateMar {
 		conInfo.App = app
 		conInfo.ContainerId = containerId
 		//      conInfo.Timestamp = value.Stats[1].Timestamp
-		conInfo.CpuUsed = int64(value.Stats[1].Cpu.Usage.Total - value.Stats[0].Cpu.Usage.Total)
-		conInfo.CpuTotal = (value.Stats[1].Timestamp.Sub(value.Stats[0].Timestamp).Nanoseconds())
+		conInfo.CpuUsed = uint64(value.Stats[1].Cpu.Usage.Total - value.Stats[0].Cpu.Usage.Total)
+		conInfo.CpuTotal = uint64(value.Stats[1].Timestamp.Sub(value.Stats[0].Timestamp).Nanoseconds())
+		conInfo.CpuShareCores = float64(value.Spec.Cpu.Limit) / 1024
 		conInfo.MemoryUsed = value.Stats[1].Memory.Usage
 		conInfo.MemoryTotal = value.Spec.Memory.Limit
 		ls, _ := json.Marshal(conInfo)

@@ -93,14 +93,15 @@ type plan struct {
 
 // slave state
 type SlaveStateMar struct {
-	Timestamp   int64        `json:"timestamp"`
-	ClusterId   string       `json:"clusterId"`
-	App         appNameAndId `json:"app"`
-	ContainerId string       `json:"containerId"`
-	CpuUsed     int64        `json:"cpuUsed"`
-	CpuTotal    int64        `json:"cpuTotal"`
-	MemoryTotal uint64       `json:"memoryTotal"`
-	MemoryUsed  uint64       `json:"memoryUsed"`
+	Timestamp     int64        `json:"timestamp"`
+	ClusterId     string       `json:"clusterId"`
+	App           appNameAndId `json:"app"`
+	ContainerId   string       `json:"containerId"`
+	CpuUsed       uint64       `json:"cpuUsed"`
+	CpuTotal      uint64       `json:"cpuTotal"`
+	CpuShareCores float64      `json:"cpuShareCores"`
+	MemoryTotal   uint64       `json:"memoryTotal"`
+	MemoryUsed    uint64       `json:"memoryUsed"`
 }
 
 type SlaveState struct {
