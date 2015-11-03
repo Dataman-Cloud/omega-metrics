@@ -158,8 +158,12 @@ func SlaveStateJson(str string) []SlaveStateMar {
 		conInfo.App = app
 		conInfo.ContainerId = containerId
 		//      conInfo.Timestamp = value.Stats[1].Timestamp
-		conInfo.CpuUsed = int64(value.Stats[1].Cpu.Usage.Total - value.Stats[0].Cpu.Usage.Total)
-		conInfo.CpuTotal = (value.Stats[1].Timestamp.Sub(value.Stats[0].Timestamp).Nanoseconds())
+		cpuUsed := float64(value.Stats[1].Cpu.Usage.Total - value.Stats[0].Cpu.Usage.Total)
+		cpuTotal := float64(value.Stats[1].Timestamp.Sub(value.Stats[0].Timestamp).Nanoseconds())
+		cpuCores := float64(len(value.Stats[1].Cpu.Usage.PerCpu))
+		conInfo.CpuUsedCores = cpuUsed / cpuTotal * cpuCores
+
+		conInfo.CpuShareCores = float64(value.Spec.Cpu.Limit) / 1024
 		conInfo.MemoryUsed = value.Stats[1].Memory.Usage
 		conInfo.MemoryTotal = value.Spec.Memory.Limit
 		ls, _ := json.Marshal(conInfo)
@@ -177,7 +181,8 @@ func marathonEventMarshal(timestamp string) string {
 		log.Error("[marathon event] timestamp parse error", err)
 		return timestamp
 	}
-	return t.Format("2006-01-02 15:04:05")
+	nt := t.Add(time.Hour * 8)
+	return nt.Format("2006-01-02 15:04:05")
 }
 
 func MarathonEventJson(str string) MarathonEventMar {

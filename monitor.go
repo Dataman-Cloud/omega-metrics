@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/Dataman-Cloud/omega-metrics/cache"
+	"github.com/Dataman-Cloud/omega-metrics/config"
 	"github.com/Dataman-Cloud/omega-metrics/util"
 	log "github.com/cihub/seelog"
 	redis "github.com/garyburd/redigo/redis"
@@ -41,7 +42,7 @@ func handler(routingKey string, messageBody []byte) {
 		if jsonstr.ClusterId != "" && jsonstr.Leader == 1 {
 			label := jsonstr.ClusterId + "_" + routingKey
 			value, _ := json.Marshal(jsonstr)
-			err := cache.WriteListToRedis(label, string(value))
+			err := cache.WriteListToRedis(label, string(value), config.DefaultTimeout)
 			if err != nil {
 				log.Error("writeToRedis has err: ", err)
 			}
@@ -54,7 +55,7 @@ func handler(routingKey string, messageBody []byte) {
 				key := v.ClusterId + "-" + v.App.AppName
 				field := v.App.AppId
 				value, _ := json.Marshal(v)
-				err := cache.WriteHashToRedis(key, field, string(value))
+				err := cache.WriteHashToRedis(key, field, string(value), config.ContainerMonitorTimeout)
 				if err != nil {
 					log.Error("writeHashToRedis has err: ", err)
 				}
@@ -83,7 +84,7 @@ func handler(routingKey string, messageBody []byte) {
 				log.Debug("[deployment_success] label: ", label)
 				log.Debug("[deployment_success] event: ", jsonstr)
 				value, _ := json.Marshal(jsonstr)
-				err = cache.WriteListToRedis(label, string(value))
+				err = cache.WriteListToRedis(label, string(value), -1)
 				if err != nil {
 					log.Error("marathon event writeToRedis has err: ", err)
 				}
@@ -98,7 +99,7 @@ func handler(routingKey string, messageBody []byte) {
 				log.Debug("[deployment_failed] label: ", label)
 				log.Debug("[deployment_failed] event: ", jsonstr)
 				value, _ := json.Marshal(jsonstr)
-				err = cache.WriteListToRedis(label, string(value))
+				err = cache.WriteListToRedis(label, string(value), -1)
 				if err != nil {
 					log.Error("marathon event writeToRedis has err: ", err)
 				}
@@ -109,7 +110,7 @@ func handler(routingKey string, messageBody []byte) {
 				log.Debug("[deployment_step_success] label: ", label)
 				log.Debug("[deployment_step_success] event: ", jsonstr)
 				value, _ := json.Marshal(jsonstr)
-				err := cache.WriteListToRedis(label, string(value))
+				err := cache.WriteListToRedis(label, string(value), -1)
 				if err != nil {
 					log.Error("marathon event writeToRedis has err: ", err)
 				}
@@ -120,7 +121,7 @@ func handler(routingKey string, messageBody []byte) {
 				log.Debug("[deployment_step_failure] label: ", label)
 				log.Debug("[deployment_step_failure] event: ", jsonstr)
 				value, _ := json.Marshal(jsonstr)
-				err := cache.WriteListToRedis(label, string(value))
+				err := cache.WriteListToRedis(label, string(value), -1)
 				if err != nil {
 					log.Error("marathon event writeToRedis has err: ", err)
 				}
@@ -131,7 +132,7 @@ func handler(routingKey string, messageBody []byte) {
 				log.Debug("[status_update_event] label: ", label)
 				log.Debug("[status_update_event] event: ", jsonstr)
 				value, _ := json.Marshal(jsonstr)
-				err := cache.WriteListToRedis(label, string(value))
+				err := cache.WriteListToRedis(label, string(value), -1)
 				if err != nil {
 					log.Error("[status_update_event] writeToRedis has err: ", err)
 				}

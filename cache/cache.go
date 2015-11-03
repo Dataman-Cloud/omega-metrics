@@ -68,7 +68,7 @@ func WriteStringToRedis(key string, value string) error {
 	return err
 }
 
-func WriteListToRedis(key string, value string) error {
+func WriteListToRedis(key, value string, timeout int) error {
 	conn := Open()
 	defer conn.Close()
 	var err error
@@ -79,24 +79,31 @@ func WriteListToRedis(key string, value string) error {
 	}
 
 	log.Debugf("redis EXPIRE id %s, json %s", key, value)
-	if err = conn.Send("EXPIRE", key, config.DefaultTimeout); err != nil {
-		return err
+
+	if timeout != -1 {
+		if err = conn.Send("EXPIRE", key, timeout); err != nil {
+			return err
+		}
 	}
 
 	_, err = conn.Do("LTRIM", key, 0, conf.Cache.Llen)
 	return err
 }
 
-func WriteHashToRedis(key, field, value string) error {
+func WriteHashToRedis(key, field, value string, timeout int) error {
 	conn := Open()
 	defer conn.Close()
 	var err error
 	log.Debugf("redis HSET: %s, field: %s, value: %s", key, field, value)
-	if err = conn.Send("HSET", key, field, value); err != nil {
+	if _, err = conn.Do("HSET", key, field, value); err != nil {
 		return err
 	}
-	_, err = conn.Do("EXPIRE", key, config.ContainerMonitorTimeout)
-	return err
+
+	if timeout != -1 {
+		_, err = conn.Do("EXPIRE", key, timeout)
+		return err
+	}
+	return nil
 }
 
 func HashDelFromRedis(key, field string) error {
