@@ -27,8 +27,8 @@ type RabbitMqMessage struct {
 // master metrics
 type MasterMetrics struct {
 	CpuPercent float64 `json:"master/cpus_percent"`
-	CpuShare   int     `json:"master/cpus_used"`
-	CpuTotal   int     `json:"master/cpus_total"`
+	CpuShare   float64 `json:"master/cpus_used"`
+	CpuTotal   float64 `json:"master/cpus_total"`
 	DiskUsed   int     `json:"master/disk_used"`
 	DiskTotal  int     `json:"master/disk_total"`
 	MemUsed    int     `json:"master/mem_used"`
@@ -38,8 +38,8 @@ type MasterMetrics struct {
 
 type MasterMetricsMar struct {
 	CpuPercent float64 `json:"cpuPercent"`
-	CpuShare   int     `json:"cpuShare"`
-	CpuTotal   int     `json:"cpuTotal"`
+	CpuShare   float64 `json:"cpuShare"`
+	CpuTotal   float64 `json:"cpuTotal"`
 	MemTotal   int     `json:"memTotal"`
 	MemUsed    int     `json:"memUsed"`
 	DiskTotal  int     `json:"diskTotal"`
