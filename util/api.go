@@ -27,6 +27,8 @@ type RabbitMqMessage struct {
 // master metrics
 type MasterMetrics struct {
 	CpuPercent float64 `json:"master/cpus_percent"`
+	CpuShare   int     `json:"master/cpus_used"`
+	CpuTotal   int     `json:"master/cpus_total"`
 	DiskUsed   int     `json:"master/disk_used"`
 	DiskTotal  int     `json:"master/disk_total"`
 	MemUsed    int     `json:"master/mem_used"`
@@ -36,6 +38,8 @@ type MasterMetrics struct {
 
 type MasterMetricsMar struct {
 	CpuPercent float64 `json:"cpuPercent"`
+	CpuShare   int     `json:"cpuShare"`
+	CpuTotal   int     `json:"cpuTotal"`
 	MemTotal   int     `json:"memTotal"`
 	MemUsed    int     `json:"memUsed"`
 	DiskTotal  int     `json:"diskTotal"`
@@ -43,6 +47,36 @@ type MasterMetricsMar struct {
 	Timestamp  int64   `json:"timestamp"`
 	Leader     int     `json:"leader"`
 	ClusterId  string  `json:"clusterId"`
+}
+
+// cluster metrics
+type ClusterMetrics struct {
+	MasMetrics interface{}  `json:"masMetrics"`
+	AppMetrics []AppMetric  `json:"appMetrics"`
+}
+
+type AppMetric struct {
+	AppName     string  `json:"appName"`
+	AppCpuShare float64 `json:"appCpuShare"`
+	AppCpuUsed  float64 `json:"appCpuUsed"`
+	AppMemShare uint64  `json:"appMemShare"`
+	AppMemUsed  uint64  `json:"appMemUsed"`
+	Instances   int     `json:"instances"`
+}
+
+type AppListResponse struct {
+        Code int           `json:"code"`
+        Data []Application `json:"data"`
+        Err  string        `json:"error"`
+}
+
+type Application struct {
+        AppId     *int64     `json:"appId"`
+        AppName   *string    `json:"appName"`
+        AppStatus *uint8     `json:"appStatus"`
+        ClusterId *string    `json:"clusterId"`
+        Instances *int       `json:"containerNum"`
+        Update    *time.Time `json:"update"`
 }
 
 // marathon event

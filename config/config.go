@@ -23,6 +23,8 @@ type Config struct {
 	Host         string
 	Port         uint
 	Debugging    bool
+	Omega_app_host string
+	Omega_app_port int
 	Log          *LogConfig
 	Cache        *CacheConfig
 	Mq           *MqConfig

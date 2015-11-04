@@ -2,6 +2,8 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/Dataman-Cloud/omega-metrics/cache"
@@ -42,9 +44,9 @@ func handler(routingKey string, messageBody []byte) {
 		if jsonstr.ClusterId != "" && jsonstr.Leader == 1 {
 			label := jsonstr.ClusterId + "_" + routingKey
 			value, _ := json.Marshal(jsonstr)
-			err := cache.WriteListToRedis(label, string(value), config.DefaultTimeout)
+			err := cache.WriteStringToRedis(label, string(value), config.DefaultTimeout)
 			if err != nil {
-				log.Error("writeToRedis has err: ", err)
+				log.Error("writeStringToRedis has err: ", err)
 			}
 		}
 		log.Infof("received masterMetricsRouting message clusterId:%s leader:%d json:%s", jsonstr.ClusterId, jsonstr.Leader, jsonstr)
@@ -69,7 +71,7 @@ func handler(routingKey string, messageBody []byte) {
 			if jsonstr.App.AppId != "" && jsonstr.App.AppName != "" {
 				label := jsonstr.ClusterId + "_" + jsonstr.App.AppId
 				log.Info("[deployment_info] label: ", label)
-				err := cache.WriteStringToRedis(label, jsonstr.App.AppName)
+				err := cache.WriteStringToRedis(label, jsonstr.App.AppName, config.DefaultTimeout)
 				if err != nil {
 					log.Error("writeToRedis2 has err: ", err)
 				}
@@ -151,8 +153,12 @@ func handler(routingKey string, messageBody []byte) {
 }
 
 func masterMetrics(ctx *gin.Context) {
+	conf := config.Pairs()
 	conn := cache.Open()
 	defer conn.Close()
+
+	var httpstr util.AppListResponse
+	var cm util.ClusterMetrics
 	cluster_id := ctx.Param("cluster_id") + "_" + util.Master_metrics_routing
 	log.Debug("cluster_id ", cluster_id)
 
@@ -162,21 +168,90 @@ func masterMetrics(ctx *gin.Context) {
 		Err:  "",
 	}
 
-	strs, err := redis.Strings(conn.Do("LRANGE", cluster_id, 0, -1))
+	rs, err := cache.ReadFromRedis(cluster_id)
+        if err != nil {
+        	log.Error("readFromRedis has err: ", err)
+		response.Err = "[Master Metrics] read from redis error " + err.Error()
+		ctx.JSON(http.StatusOK, response)
+        }
+	masMet, err := util.ReturnData(util.MonitorMasterMetrics, rs)
+        if err != nil {
+                log.Error("[Master Metrics] analysis error ", err)
+                response.Err = "[Master Metrics] analysis error " + err.Error()
+                ctx.JSON(http.StatusOK, response)
+        }
+	cm.MasMetrics = *masMet
+
+	token := util.Header(ctx, HeaderToken)
+	client := &http.Client{}
+	addr := fmt.Sprintf("%s:%d/api/v1/applications/", conf.Omega_app_host, conf.Omega_app_port)
+	req, err := http.NewRequest("GET", addr, nil)
+	req.Header.Add("Authorization", token)
+	resp, err := client.Do(req)
+        if err != nil {
+                log.Error("http request error", err)
+		response.Err = err.Error()
+		ctx.JSON(http.StatusOK, response)
+        }
+        defer resp.Body.Close()
+        body, _ := ioutil.ReadAll(resp.Body)
+	err = json.Unmarshal([]byte(string(body)), &httpstr)
 	if err != nil {
-		log.Error("[Master Metrics] got error ", err)
-		response.Err = "[Master Metrics] got error " + err.Error()
+		log.Error("[Master Metrics] parse http response body error ", err)
+		response.Err = err.Error()
 		ctx.JSON(http.StatusOK, response)
 	}
-	jsoninterface, err := util.ReturnMessage(util.MonitorMasterMetrics, strs)
-	if err != nil {
-		log.Error("[Master Metrics] analysis error ", err)
-		response.Err = "[Master Metrics] analysis error " + err.Error()
-		ctx.JSON(http.StatusOK, response)
+	for _, v := range httpstr.Data {
+		appm, err := gatherApp(v)
+		if err != nil {
+			response.Err = err.Error()
+			ctx.JSON(http.StatusOK, response)
+		}
+		cm.AppMetrics = append(cm.AppMetrics, appm)
 	}
+	
 	response.Code = 0
-	response.Data = *jsoninterface
+	response.Data = cm
 	ctx.JSON(http.StatusOK, response)
+}
+
+func gatherApp(app util.Application) (util.AppMetric, error) {
+	conn := cache.Open()
+        defer conn.Close()
+
+	var result util.AppMetric
+	key := *app.ClusterId + "-" + *app.AppName
+	strs, err := redis.Strings(conn.Do("HVALS", key))
+        if err != nil {
+                log.Error("[gatherApp] redis error ", err)
+		return result, err
+        }
+	var cpuUsedSum float64
+	var cpuShareSum float64
+	var memUsedSum uint64
+	var memTotalSum uint64
+	for _, str := range strs {
+		var task util.SlaveStateMar
+		err := json.Unmarshal([]byte(str), &task)
+		if err != nil {
+			log.Error("[gatherApp] parse SlaveStateMar error ", err)
+			return result, err
+		}
+		cpuUsedSum += task.CpuUsedCores
+		cpuShareSum += task.CpuShareCores
+		memUsedSum += task.MemoryUsed
+		memTotalSum += task.MemoryTotal
+	}
+        result.AppName = *app.AppName
+        result.Instances = *app.Instances
+	fmt.Println("                  cpuUsedSum     ", cpuUsedSum)
+	fmt.Println("                  memTotalSum    ", memTotalSum)
+	result.AppCpuUsed = cpuUsedSum
+	result.AppCpuShare = cpuShareSum
+	result.AppMemUsed = memUsedSum
+	result.AppMemShare = memTotalSum
+	fmt.Println("                   result       ", result)
+	return result, nil
 }
 
 func marathonEvent(ctx *gin.Context) {
