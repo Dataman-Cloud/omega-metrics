@@ -63,7 +63,7 @@ func DestroyCache() {
 func WriteStringToRedis(key string, value string, timeout int) error {
 	conn := Open()
 	defer conn.Close()
-	log.Debugf("redis Set marathon event id %s, app %s", key, value)
+	log.Debugf("redis Set key %s, value %s", key, value)
 	if timeout != -1 {
 		_, err := conn.Do("SETEX", key, timeout, value)
 		return err
