@@ -58,6 +58,15 @@ func ReturnMessage(typ string, strs []string) (*[]interface{}, error) {
 	return &monitorDatas, nil
 }
 
+func ReturnData(typ, str string) (*interface{}, error) {
+	monitorType, ok := NewOfType(typ)
+	if !ok {
+		return nil, errors.New(typ + " is not support type")
+	}
+	json.Unmarshal([]byte(str), &monitorType)
+	return &monitorType, nil
+}
+
 func MasterMetricsJson(str string) MasterMetricsMar {
 	var mmm RabbitMqMessage
 	var mm MasterMetrics
@@ -67,6 +76,8 @@ func MasterMetricsJson(str string) MasterMetricsMar {
 	json.Unmarshal([]byte(mmm.Message), &mm)
 
 	ss.CpuPercent = mm.CpuPercent * 100
+	ss.CpuShare = mm.CpuShare
+	ss.CpuTotal = mm.CpuTotal
 	ss.MemTotal = mm.MemTotal
 	ss.MemUsed = mm.MemUsed
 	ss.DiskUsed = mm.DiskUsed
@@ -164,8 +175,8 @@ func SlaveStateJson(str string) []SlaveStateMar {
 		conInfo.CpuUsedCores = cpuUsed / cpuTotal * cpuCores
 
 		conInfo.CpuShareCores = float64(value.Spec.Cpu.Limit) / 1024
-		conInfo.MemoryUsed = value.Stats[1].Memory.Usage
-		conInfo.MemoryTotal = value.Spec.Memory.Limit
+		conInfo.MemoryUsed = value.Stats[1].Memory.Usage / (1024 * 1024)
+		conInfo.MemoryTotal = value.Spec.Memory.Limit / (1024 * 1024)
 		ls, _ := json.Marshal(conInfo)
 		log.Debugf("AppMetrics: ", string(ls))
 		array = append(array, conInfo)

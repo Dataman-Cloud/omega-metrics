@@ -3,6 +3,8 @@ numCPU: 1
 host: ""
 port: 9005
 debugging: false
+omega_app_host: "http://10.3.10.83"
+omega_app_port: 6080
 log:
     console: true
     file: "./omega-metrics.log"
