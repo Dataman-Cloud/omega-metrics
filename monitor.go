@@ -169,17 +169,17 @@ func masterMetrics(ctx *gin.Context) {
 	}
 
 	rs, err := cache.ReadFromRedis(cluster_id)
-        if err != nil {
-        	log.Error("readFromRedis has err: ", err)
+	if err != nil {
+		log.Error("readFromRedis has err: ", err)
 		response.Err = "[Master Metrics] read from redis error " + err.Error()
 		ctx.JSON(http.StatusOK, response)
-        }
+	}
 	masMet, err := util.ReturnData(util.MonitorMasterMetrics, rs)
-        if err != nil {
-                log.Error("[Master Metrics] analysis error ", err)
-                response.Err = "[Master Metrics] analysis error " + err.Error()
-                ctx.JSON(http.StatusOK, response)
-        }
+	if err != nil {
+		log.Error("[Master Metrics] analysis error ", err)
+		response.Err = "[Master Metrics] analysis error " + err.Error()
+		ctx.JSON(http.StatusOK, response)
+	}
 	cm.MasMetrics = *masMet
 
 	token := util.Header(ctx, HeaderToken)
@@ -188,13 +188,13 @@ func masterMetrics(ctx *gin.Context) {
 	req, err := http.NewRequest("GET", addr, nil)
 	req.Header.Add("Authorization", token)
 	resp, err := client.Do(req)
-        if err != nil {
-                log.Error("http request error", err)
+	if err != nil {
+		log.Error("http request error", err)
 		response.Err = err.Error()
 		ctx.JSON(http.StatusOK, response)
-        }
-        defer resp.Body.Close()
-        body, _ := ioutil.ReadAll(resp.Body)
+	}
+	defer resp.Body.Close()
+	body, _ := ioutil.ReadAll(resp.Body)
 	err = json.Unmarshal([]byte(string(body)), &httpstr)
 	if err != nil {
 		log.Error("[Master Metrics] parse http response body error ", err)
@@ -209,7 +209,7 @@ func masterMetrics(ctx *gin.Context) {
 		}
 		cm.AppMetrics = append(cm.AppMetrics, appm)
 	}
-	
+
 	response.Code = 0
 	response.Data = cm
 	ctx.JSON(http.StatusOK, response)
@@ -217,15 +217,15 @@ func masterMetrics(ctx *gin.Context) {
 
 func gatherApp(app util.Application) (util.AppMetric, error) {
 	conn := cache.Open()
-        defer conn.Close()
+	defer conn.Close()
 
 	var result util.AppMetric
 	key := *app.ClusterId + "-" + *app.AppName
 	strs, err := redis.Strings(conn.Do("HVALS", key))
-        if err != nil {
-                log.Error("[gatherApp] redis error ", err)
+	if err != nil {
+		log.Error("[gatherApp] redis error ", err)
 		return result, err
-        }
+	}
 	var cpuUsedSum float64
 	var cpuShareSum float64
 	var memUsedSum uint64
@@ -242,8 +242,8 @@ func gatherApp(app util.Application) (util.AppMetric, error) {
 		memUsedSum += task.MemoryUsed
 		memTotalSum += task.MemoryTotal
 	}
-        result.AppName = *app.AppName
-        result.Instances = *app.Instances
+	result.AppName = *app.AppName
+	result.Instances = *app.Instances
 	fmt.Println("                  cpuUsedSum     ", cpuUsedSum)
 	fmt.Println("                  memTotalSum    ", memTotalSum)
 	result.AppCpuUsed = cpuUsedSum
