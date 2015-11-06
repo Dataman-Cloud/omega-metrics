@@ -81,6 +81,7 @@ func handler(routingKey string, messageBody []byte) {
 				app, err := cache.ReadFromRedis(jsonstr.App.AppId)
 				if err != nil {
 					log.Error("readFromRedis has err: ", err)
+					return
 				}
 				label := jsonstr.ClusterId + "_" + app
 				log.Debug("[deployment_success] label: ", label)
@@ -96,6 +97,7 @@ func handler(routingKey string, messageBody []byte) {
 				app, err := cache.ReadFromRedis(jsonstr.App.AppId)
 				if err != nil {
 					log.Error("readFromRedis has err: ", err)
+					return
 				}
 				label := jsonstr.ClusterId + "_" + app
 				log.Debug("[deployment_failed] label: ", label)
@@ -173,43 +175,60 @@ func masterMetrics(ctx *gin.Context) {
 		log.Error("readFromRedis has err: ", err)
 		response.Err = "[Master Metrics] read from redis error " + err.Error()
 		ctx.JSON(http.StatusOK, response)
-	}
+		return
+        }
 	masMet, err := util.ReturnData(util.MonitorMasterMetrics, rs)
-	if err != nil {
-		log.Error("[Master Metrics] analysis error ", err)
-		response.Err = "[Master Metrics] analysis error " + err.Error()
-		ctx.JSON(http.StatusOK, response)
-	}
-	cm.MasMetrics = *masMet
+        if err != nil {
+                log.Error("[Master Metrics] analysis error ", err)
+                response.Err = "[Master Metrics] analysis error " + err.Error()
+                ctx.JSON(http.StatusOK, response)
+		return
+        }
 
 	token := util.Header(ctx, HeaderToken)
 	client := &http.Client{}
 	addr := fmt.Sprintf("%s:%d/api/v1/applications/", conf.Omega_app_host, conf.Omega_app_port)
 	req, err := http.NewRequest("GET", addr, nil)
+	if err != nil {
+		log.Error("[Master Metrics] creat new http request error: ", err)
+		response.Err = "[Master Metrics] creat new http request error: " +  err.Error()
+		ctx.JSON(http.StatusOK, response)
+		return
+	}
 	req.Header.Add("Authorization", token)
 	resp, err := client.Do(req)
-	if err != nil {
-		log.Error("http request error", err)
-		response.Err = err.Error()
+        if err != nil {
+                log.Error("http request error", err)
+		response.Err = "[Master Metrics] http request error: " + err.Error()
 		ctx.JSON(http.StatusOK, response)
+		return
+        }
+        defer resp.Body.Close()
+        body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Error("[Master Metrics] read response body error: ", err)
+		response.Err = "[Master Metrics] read response body error: " + err.Error()
+		ctx.JSON(http.StatusOK, response)
+		return
 	}
-	defer resp.Body.Close()
-	body, _ := ioutil.ReadAll(resp.Body)
 	err = json.Unmarshal([]byte(string(body)), &httpstr)
 	if err != nil {
 		log.Error("[Master Metrics] parse http response body error ", err)
 		response.Err = err.Error()
 		ctx.JSON(http.StatusOK, response)
+		return
 	}
 	for _, v := range httpstr.Data {
 		appm, err := gatherApp(v)
 		if err != nil {
 			response.Err = err.Error()
 			ctx.JSON(http.StatusOK, response)
+			return
 		}
 		cm.AppMetrics = append(cm.AppMetrics, appm)
 	}
 
+	cm.MasMetrics = *masMet
 	response.Code = 0
 	response.Data = cm
 	ctx.JSON(http.StatusOK, response)
@@ -242,15 +261,12 @@ func gatherApp(app util.Application) (util.AppMetric, error) {
 		memUsedSum += task.MemoryUsed
 		memTotalSum += task.MemoryTotal
 	}
-	result.AppName = *app.AppName
-	result.Instances = *app.Instances
-	fmt.Println("                  cpuUsedSum     ", cpuUsedSum)
-	fmt.Println("                  memTotalSum    ", memTotalSum)
+        result.AppName = *app.AppName
+        result.Instances = *app.Instances
 	result.AppCpuUsed = cpuUsedSum
 	result.AppCpuShare = cpuShareSum
 	result.AppMemUsed = memUsedSum
 	result.AppMemShare = memTotalSum
-	fmt.Println("                   result       ", result)
 	return result, nil
 }
 
@@ -270,12 +286,14 @@ func marathonEvent(ctx *gin.Context) {
 		log.Error("[Marathon Event] got error ", err)
 		response.Err = "[Marathon Event] got error " + err.Error()
 		ctx.JSON(http.StatusOK, response)
+		return
 	}
 	jsoninterface, err := util.ReturnMessage(util.MonitorMarathonEvent, strs)
 	if err != nil {
 		log.Error("[Marathon Event] analysis error ", err)
 		response.Err = "[Marathon Event] analysis error " + err.Error()
 		ctx.JSON(http.StatusOK, response)
+		return
 	}
 	response.Code = 0
 	response.Data = *jsoninterface
@@ -298,12 +316,14 @@ func appMetrics(ctx *gin.Context) {
 		log.Error("[App Metrics] got error ", err)
 		response.Err = "[App Metrics] got error " + err.Error()
 		ctx.JSON(http.StatusOK, response)
+		return
 	}
 	jsoninterface, err := util.ReturnMessage(util.MonitorAppMetrics, strs)
 	if err != nil {
 		log.Error("[App Metrics] analysis error ", err)
 		response.Err = "[App Metrics] analysis error " + err.Error()
 		ctx.JSON(http.StatusOK, response)
+		return
 	}
 	response.Code = 0
 	response.Data = *jsoninterface
