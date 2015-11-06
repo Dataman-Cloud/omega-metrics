@@ -198,13 +198,13 @@ func masterMetrics(ctx *gin.Context) {
 	req.Header.Add("Authorization", token)
 	resp, err := client.Do(req)
         if err != nil {
-                log.Error("http request error", err)
+		log.Error("http request error", err)
 		response.Err = "[Master Metrics] http request error: " + err.Error()
 		ctx.JSON(http.StatusOK, response)
 		return
-        }
-        defer resp.Body.Close()
-        body, err := ioutil.ReadAll(resp.Body)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Error("[Master Metrics] read response body error: ", err)
 		response.Err = "[Master Metrics] read response body error: " + err.Error()
@@ -214,11 +214,15 @@ func masterMetrics(ctx *gin.Context) {
 	err = json.Unmarshal([]byte(string(body)), &httpstr)
 	if err != nil {
 		log.Error("[Master Metrics] parse http response body error ", err)
-		response.Err = err.Error()
+		response.Err = "[Master Metrics] parse http response body error: " + err.Error()
 		ctx.JSON(http.StatusOK, response)
 		return
 	}
 	for _, v := range httpstr.Data {
+		// 判断app所属集群
+		if *v.ClusterId != ctx.Param("cluster_id") {
+			continue
+		}
 		appm, err := gatherApp(v)
 		if err != nil {
 			response.Err = err.Error()
