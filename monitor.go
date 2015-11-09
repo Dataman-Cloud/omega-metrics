@@ -176,14 +176,14 @@ func masterMetrics(ctx *gin.Context) {
 		response.Err = "[Master Metrics] read from redis error " + err.Error()
 		ctx.JSON(http.StatusOK, response)
 		return
-        }
+	}
 	masMet, err := util.ReturnData(util.MonitorMasterMetrics, rs)
-        if err != nil {
-                log.Error("[Master Metrics] analysis error ", err)
-                response.Err = "[Master Metrics] analysis error " + err.Error()
-                ctx.JSON(http.StatusOK, response)
+	if err != nil {
+		log.Error("[Master Metrics] analysis error ", err)
+		response.Err = "[Master Metrics] analysis error " + err.Error()
+		ctx.JSON(http.StatusOK, response)
 		return
-        }
+	}
 
 	token := util.Header(ctx, HeaderToken)
 	client := &http.Client{}
@@ -191,13 +191,13 @@ func masterMetrics(ctx *gin.Context) {
 	req, err := http.NewRequest("GET", addr, nil)
 	if err != nil {
 		log.Error("[Master Metrics] creat new http request error: ", err)
-		response.Err = "[Master Metrics] creat new http request error: " +  err.Error()
+		response.Err = "[Master Metrics] creat new http request error: " + err.Error()
 		ctx.JSON(http.StatusOK, response)
 		return
 	}
 	req.Header.Add("Authorization", token)
 	resp, err := client.Do(req)
-        if err != nil {
+	if err != nil {
 		log.Error("http request error", err)
 		response.Err = "[Master Metrics] http request error: " + err.Error()
 		ctx.JSON(http.StatusOK, response)
@@ -265,8 +265,8 @@ func gatherApp(app util.Application) (util.AppMetric, error) {
 		memUsedSum += task.MemoryUsed
 		memTotalSum += task.MemoryTotal
 	}
-        result.AppName = *app.AppName
-        result.Instances = *app.Instances
+	result.AppName = *app.AppName
+	result.Instances = *app.Instances
 	result.AppCpuUsed = cpuUsedSum
 	result.AppCpuShare = cpuShareSum
 	result.AppMemUsed = memUsedSum
