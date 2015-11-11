@@ -137,10 +137,11 @@ func SlaveStateJson(str string) []SlaveStateMar {
 					log.Error("parseMessosPorts error: ", err)
 				}
 				if portstring == "" {
-					value.AppId = ip + ":" + string(num)
+					value.AppId = ip + "-" + strconv.Itoa(num)
 					num += 1
+				} else {
+					value.AppId = ip + ":" + portstring
 				}
-				value.AppId = ip + ":" + portstring
 				m[key] = value
 
 			}
