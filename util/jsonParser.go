@@ -125,6 +125,7 @@ func SlaveStateJson(str string) []SlaveStateMar {
 	m := make(map[string]appNameAndId)
 	for _, v := range message.Frameworks {
 		if v.Name == "marathon" {
+			var num int = 0
 			for _, exec := range v.Executors {
 				slaveId := strings.Split(exec.Directory, "/")[4]
 				key := "mesos-" + slaveId + "." + exec.Container
@@ -135,7 +136,12 @@ func SlaveStateJson(str string) []SlaveStateMar {
 				if err != nil {
 					log.Error("parseMessosPorts error: ", err)
 				}
-				value.AppId = ip + ":" + portstring
+				if portstring == "" {
+					value.AppId = ip + "-" + strconv.Itoa(num)
+					num += 1
+				} else {
+					value.AppId = ip + ":" + portstring
+				}
 				m[key] = value
 
 			}
