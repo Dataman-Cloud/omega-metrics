@@ -163,7 +163,7 @@ func handler(routingKey string, messageBody []byte) {
 					log.Error("[destroy_app] deleteKeyFromRedis has err: ", err)
 				}
 				log.Info("[Destroy_app] label: ", label2)
-				err := cache.DeleteRedisByKey(label2)
+				err = cache.DeleteRedisByKey(label2)
 				if err != nil {
 					log.Error("[Destroy_app] deleteKeyFromRedis has err: ", err)
 				}
