@@ -89,12 +89,12 @@ type MarathonEvent struct {
 }
 
 type MarathonEventMar struct {
-	EventType   string       `json:"eventType"`
-	Timestamp   string       `json:"timestamp"`
-	App         appNameAndId `json:"app"`
-	CurrentType string       `json:"currentType"`
-	TaskId      string       `json:"taskId"`
-	ClusterId   string       `json:"clusterId"`
+	EventType   string  `json:"eventType"`
+	Timestamp   string  `json:"timestamp"`
+	App         appInfo `json:"app"`
+	CurrentType string  `json:"currentType"`
+	TaskId      string  `json:"taskId"`
+	ClusterId   string  `json:"clusterId"`
 }
 
 type StatusUpdate struct {
@@ -127,14 +127,14 @@ type plan struct {
 
 // slave state
 type SlaveStateMar struct {
-	Timestamp     int64        `json:"timestamp"`
-	ClusterId     string       `json:"clusterId"`
-	App           appNameAndId `json:"app"`
-	ContainerId   string       `json:"containerId"`
-	CpuUsedCores  float64      `json:"cpuUsedCores"`
-	CpuShareCores float64      `json:"cpuShareCores"`
-	MemoryTotal   uint64       `json:"memoryTotal"`
-	MemoryUsed    uint64       `json:"memoryUsed"`
+	Timestamp     int64   `json:"timestamp"`
+	ClusterId     string  `json:"clusterId"`
+	App           appInfo `json:"app"`
+	ContainerId   string  `json:"containerId"`
+	CpuUsedCores  float64 `json:"cpuUsedCores"`
+	CpuShareCores float64 `json:"cpuShareCores"`
+	MemoryTotal   uint64  `json:"memoryTotal"`
+	MemoryUsed    uint64  `json:"memoryUsed"`
 }
 
 type SlaveState struct {
@@ -158,17 +158,27 @@ type framework struct {
 type executor struct {
 	Container string    `json:"container"`
 	Id        string    `json:"id"`
-	Directory string    `json:"directory"`
+//	Directory string    `json:"directory"`
+	Tasks     []tasks   `json:"tasks"`
+}
+
+type tasks struct {
+	Name      string    `json:"name"`
+	Slave_id  string    `json:"slave_id"`
 	Resources resources `json:"resources"`
 }
 
 type resources struct {
-	Ports string `json:"ports,omitempty"`
+	Cpus  float64 `json:"cpus"`
+	Disk  uint64  `json:"disk"`
+	Mem   uint64  `json:"mem"`
+	Ports string  `json:"ports,omitempty"`
 }
 
-type appNameAndId struct {
-	AppName string `json:"appName"`
-	AppId   string `json:"appId"`
+type appInfo struct {
+	AppName string      `json:"appName"`
+	AppId   string      `json:"appId"`
+	Resources resources `json:"resources"`
 }
 
 // cadivsor
