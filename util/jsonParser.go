@@ -76,67 +76,67 @@ func ReturnData(typ, str string) (*interface{}, error) {
 }
 
 func MasterMetricsJson(str string) MasterMetricsMar {
-	var mmm RabbitMqMessage
-	var mm MasterMetrics
-	var ss MasterMetricsMar
-	err := json.Unmarshal([]byte(str), &mmm)
+	var rabbitMessage RabbitMqMessage
+	var masMet MasterMetrics
+	var masMetMar MasterMetricsMar
+	err := json.Unmarshal([]byte(str), &rabbitMessage)
 	if err != nil {
 		log.Error("[MasterMetrics] unmarshal RabbitMqMessage error ", err)
-		return ss
+		return masMetMar
 	}
-	clusterId := strconv.Itoa(mmm.ClusterId)
-	err = json.Unmarshal([]byte(mmm.Message), &mm)
+	clusterId := strconv.Itoa(rabbitMessage.ClusterId)
+	err = json.Unmarshal([]byte(rabbitMessage.Message), &masMet)
 	if err != nil {
 		log.Error("[MasterMetrics] unmarshal MasterMetrics error ", err)
-		return ss
+		return masMetMar
 	}
-	ss.CpuPercent = mm.CpuPercent * 100
-	ss.CpuShare = mm.CpuShare
-	ss.CpuTotal = mm.CpuTotal
-	ss.MemTotal = mm.MemTotal
-	ss.MemUsed = mm.MemUsed
-	ss.DiskUsed = mm.DiskUsed
-	ss.DiskTotal = mm.DiskTotal
-	ss.Leader = mm.Leader
-	ss.Timestamp = mmm.Timestamp
-	ss.ClusterId = clusterId
-	return ss
+	masMetMar.CpuPercent = masMet.CpuPercent * 100
+	masMetMar.CpuShare = masMet.CpuShare
+	masMetMar.CpuTotal = masMet.CpuTotal
+	masMetMar.MemTotal = masMet.MemTotal
+	masMetMar.MemUsed = masMet.MemUsed
+	masMetMar.DiskUsed = masMet.DiskUsed
+	masMetMar.DiskTotal = masMet.DiskTotal
+	masMetMar.Leader = masMet.Leader
+	masMetMar.Timestamp = rabbitMessage.Timestamp
+	masMetMar.ClusterId = clusterId
+	return masMetMar
 }
 
 func MasterStateJson(str string) MasterStateMar {
-	var mmm RabbitMqMessage
-	var ms MasterState
-	var msm MasterStateMar
-	err := json.Unmarshal([]byte(str), &mmm)
+	var rabbitMessage RabbitMqMessage
+	var masSta MasterState
+	var masStaMar MasterStateMar
+	err := json.Unmarshal([]byte(str), &rabbitMessage)
 	if err != nil {
 		log.Error("[MasterState] unmarshal RabbitMqMessage error ", err)
-		return msm
+		return masStaMar
 	}
-	clusterId := strconv.Itoa(mmm.ClusterId)
-	err = json.Unmarshal([]byte(mmm.Message), &ms)
+	clusterId := strconv.Itoa(rabbitMessage.ClusterId)
+	err = json.Unmarshal([]byte(rabbitMessage.Message), &masSta)
 	if err != nil {
 		log.Error("[MasterState] unmarshal MasterState error ", err)
-		return msm
+		return masStaMar
 	}
-	msm.Timestamp = mmm.Timestamp
-	msm.ClusterId = clusterId
+	masStaMar.Timestamp = rabbitMessage.Timestamp
+	masStaMar.ClusterId = clusterId
 
-	if len(ms.Frameworks) == 0 {
-		msm.Leader = 0
-		return msm
+	if len(masSta.Frameworks) == 0 {
+		masStaMar.Leader = 0
+		return masStaMar
 	}
-	for _, v := range ms.Frameworks {
+	for _, v := range masSta.Frameworks {
                 if v.Name == "marathon" {
                         for _, task := range v.Tasks {
 				var apps AppAndTasks
 				apps.TaskId = task.Id
 				apps.AppName = task.Name
-				msm.AppAndTasks = append(msm.AppAndTasks, apps)
+				masStaMar.AppAndTasks = append(masStaMar.AppAndTasks, apps)
                         }
                 }
         }
-	msm.Leader = 1
-	return msm
+	masStaMar.Leader = 1
+	return masStaMar
 }
 
 func parseMesosPorts(str string) (string, error) {
@@ -163,19 +163,19 @@ func parseMesosPorts(str string) (string, error) {
 }
 
 func SlaveStateJson(str string) []SlaveStateMar {
-	var js RabbitMqMessage
+	var rabbitMessage RabbitMqMessage
 	var message SlaveState
-	var s map[string]ContainerInfo
+	var cadInfo map[string]ContainerInfo
 	var array []SlaveStateMar
 
-	err := json.Unmarshal([]byte(str), &js)
+	err := json.Unmarshal([]byte(str), &rabbitMessage)
 	if err != nil {
 		log.Error("[SlaveState] unmarshal RabbitMqMessage error ", err)
 		return array
 	}
-	clusterId := strconv.Itoa(js.ClusterId)
+	clusterId := strconv.Itoa(rabbitMessage.ClusterId)
 	// parse "message"
-	err = json.Unmarshal([]byte(js.Message), &message)
+	err = json.Unmarshal([]byte(rabbitMessage.Message), &message)
 	if err != nil {
 		log.Error("[SlaveState] unmarshal SlaveState error ", err)
 		return array
@@ -210,12 +210,12 @@ func SlaveStateJson(str string) []SlaveStateMar {
 	}
 
 	// parse "attached"
-	err = json.Unmarshal([]byte(js.Attached), &s)
+	err = json.Unmarshal([]byte(rabbitMessage.Attached), &cadInfo)
 	if err != nil {
 		log.Error("[SlaveState] unmarshal cadvisor containerInfo error ", err)
 		return array
 	}
-	for _, value := range s {
+	for _, value := range cadInfo {
 		if len(value.Stats) != 2 {
 			log.Error("[slave state] length of Stats isn't 2, can't calc cpurate")
 			continue
@@ -268,83 +268,83 @@ func marathonEventMarshal(timestamp string) string {
 }
 
 func MarathonEventJson(str string) MarathonEventMar {
-	var rmm RabbitMqMessage
-	var me MarathonEvent
-	var mem MarathonEventMar
+	var rabbitMessage RabbitMqMessage
+	var marEvent MarathonEvent
+	var marEventMar MarathonEventMar
 
-	var su StatusUpdate
-	err := json.Unmarshal([]byte(str), &rmm)
+	var statusUpdate StatusUpdate
+	err := json.Unmarshal([]byte(str), &rabbitMessage)
 	if err != nil {
 		log.Error("[MarathonEvent] unmarshal RabbitMqMessage error ", err)
-		return mem
+		return marEventMar
 	}
-	mem.ClusterId = strconv.Itoa(rmm.ClusterId)
-	err = json.Unmarshal([]byte(rmm.Message), &me)
+	marEventMar.ClusterId = strconv.Itoa(rabbitMessage.ClusterId)
+	err = json.Unmarshal([]byte(rabbitMessage.Message), &marEvent)
 	if err != nil {
 		log.Error("[MarathonEvent] unmarshal MarathonEvent error ", err)
-		return mem
+		return marEventMar
 	}
-	log.Debugf("marathon event type: [%s] message %s", me.EventType, rmm.Message)
-	switch me.EventType {
+	log.Debugf("marathon event type: [%s] message %s", marEvent.EventType, rabbitMessage.Message)
+	switch marEvent.EventType {
 	case Deployment_info:
-		mem.EventType = me.EventType
-		mem.App.AppId = me.Plan.Id
-		mem.App.AppName = strings.Replace(me.CurrentStep.Actions[0].App, "/", "", 1)
-		mem.Timestamp = marathonEventMarshal(me.Timestamp)
-		return mem
+		marEventMar.EventType = marEvent.EventType
+		marEventMar.App.AppId = marEvent.Plan.Id
+		marEventMar.App.AppName = strings.Replace(marEvent.CurrentStep.Actions[0].App, "/", "", 1)
+		marEventMar.Timestamp = marathonEventMarshal(marEvent.Timestamp)
+		return marEventMar
 	case Deployment_success:
-		mem.EventType = me.EventType
-		mem.App.AppId = me.Id
-		mem.Timestamp = marathonEventMarshal(me.Timestamp)
-		return mem
+		marEventMar.EventType = marEvent.EventType
+		marEventMar.App.AppId = marEvent.Id
+		marEventMar.Timestamp = marathonEventMarshal(marEvent.Timestamp)
+		return marEventMar
 	case Deployment_failed:
-		mem.EventType = me.EventType
-		mem.App.AppId = me.Id
-		mem.Timestamp = marathonEventMarshal(me.Timestamp)
-		return mem
+		marEventMar.EventType = marEvent.EventType
+		marEventMar.App.AppId = marEvent.Id
+		marEventMar.Timestamp = marathonEventMarshal(marEvent.Timestamp)
+		return marEventMar
 	case Deployment_step_success:
-		mem.EventType = me.EventType
-		mem.App.AppName = strings.Replace(me.CurrentStep.Actions[0].App, "/", "", 1)
-		mem.Timestamp = marathonEventMarshal(me.Timestamp)
-		mem.CurrentType = me.CurrentStep.Actions[0].Type
-		return mem
+		marEventMar.EventType = marEvent.EventType
+		marEventMar.App.AppName = strings.Replace(marEvent.CurrentStep.Actions[0].App, "/", "", 1)
+		marEventMar.Timestamp = marathonEventMarshal(marEvent.Timestamp)
+		marEventMar.CurrentType = marEvent.CurrentStep.Actions[0].Type
+		return marEventMar
 	case Deployment_step_failure:
-		mem.EventType = me.EventType
-		mem.App.AppName = strings.Replace(me.CurrentStep.Actions[0].App, "/", "", 1)
-		mem.Timestamp = marathonEventMarshal(me.Timestamp)
-		mem.CurrentType = me.CurrentStep.Actions[0].Type
-		return mem
+		marEventMar.EventType = marEvent.EventType
+		marEventMar.App.AppName = strings.Replace(marEvent.CurrentStep.Actions[0].App, "/", "", 1)
+		marEventMar.Timestamp = marathonEventMarshal(marEvent.Timestamp)
+		marEventMar.CurrentType = marEvent.CurrentStep.Actions[0].Type
+		return marEventMar
 	case Status_update_event:
-		err = json.Unmarshal([]byte(rmm.Message), &su)
+		err = json.Unmarshal([]byte(rabbitMessage.Message), &statusUpdate)
 		if err != nil {
 			log.Error("[MarathonEvent] unmarshal StatusUpdate error ", err)
-			return mem
+			return marEventMar
 		}
 		var portArray []string
-		for _, v := range su.Ports {
+		for _, v := range statusUpdate.Ports {
 			j := strconv.Itoa(v)
 			portArray = append(portArray, j)
 		}
 		portstr := strings.Join(portArray, ",")
-		appId := su.Host + ":" + portstr
-		mem.EventType = me.EventType
-		mem.App.AppName = strings.Replace(su.AppId, "/", "", 1)
-		mem.Timestamp = marathonEventMarshal(su.Timestamp)
-		mem.CurrentType = su.TaskStatus
-		mem.TaskId = appId
-		return mem
+		appId := statusUpdate.Host + ":" + portstr
+		marEventMar.EventType = marEvent.EventType
+		marEventMar.App.AppName = strings.Replace(statusUpdate.AppId, "/", "", 1)
+		marEventMar.Timestamp = marathonEventMarshal(statusUpdate.Timestamp)
+		marEventMar.CurrentType = statusUpdate.TaskStatus
+		marEventMar.TaskId = appId
+		return marEventMar
 	case Destroy_app:
-		var da DestroyApp
-		err = json.Unmarshal([]byte(rmm.Message), &da)
+		var destroyApp DestroyApp
+		err = json.Unmarshal([]byte(rabbitMessage.Message), &destroyApp)
 		if err != nil {
 			log.Error("[MarathonEvent] unmarshal DestroyApp error ", err)
-			return mem
+			return marEventMar
 		}
-		mem.EventType = me.EventType
-		mem.App.AppName = strings.Replace(da.AppId, "/", "", 1)
-		mem.Timestamp = marathonEventMarshal(da.Timestamp)
-		mem.CurrentType = da.EventType
-		return mem
+		marEventMar.EventType = marEvent.EventType
+		marEventMar.App.AppName = strings.Replace(destroyApp.AppId, "/", "", 1)
+		marEventMar.Timestamp = marathonEventMarshal(destroyApp.Timestamp)
+		marEventMar.CurrentType = destroyApp.EventType
+		return marEventMar
 	}
-	return mem
+	return marEventMar
 }
