@@ -88,6 +88,34 @@ func MasterMetricsJson(str string) MasterMetricsMar {
 	return ss
 }
 
+func MasterStateJson(str string) MasterStateMar {
+	var mmm RabbitMqMessage
+	var ms MasterState
+	var msm MasterStateMar
+	json.Unmarshal([]byte(str), &mmm)
+	clusterId := strconv.Itoa(mmm.ClusterId)
+	json.Unmarshal([]byte(mmm.Message), &ms)
+	msm.Timestamp = mmm.Timestamp
+	msm.ClusterId = clusterId
+
+	if len(ms.Frameworks) == 0 {
+		msm.Leader = 0
+		return msm
+	}
+	for _, v := range ms.Frameworks {
+                if v.Name == "marathon" {
+                        for _, task := range v.Tasks {
+				var apps AppAndTasks
+				apps.TaskId = task.Id
+				apps.AppName = task.Name
+				msm.AppAndTasks = append(msm.AppAndTasks, apps)
+                        }
+                }
+        }
+	msm.Leader = 1
+	return msm
+}
+
 func parseMesosPorts(str string) (string, error) {
 	if str == "" {
 		return "", nil
@@ -127,10 +155,11 @@ func SlaveStateJson(str string) []SlaveStateMar {
 		if v.Name == "marathon" {
 			var num int = 0
 			for _, exec := range v.Executors {
-				//slaveId := strings.Split(exec.Directory, "/")[4]
 				slaveId := exec.Tasks[0].Slave_id
 				key := "mesos-" + slaveId + "." + exec.Container
 				var value appInfo
+				value.Task_id = exec.Id
+				value.Slave_id = slaveId
 				value.AppName = exec.Tasks[0].Name
 				value.Resources = exec.Tasks[0].Resources
 				portstring, err := parseMesosPorts(exec.Tasks[0].Resources.Ports)

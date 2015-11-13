@@ -125,10 +125,30 @@ type plan struct {
 	Id string
 }
 
+// master state
+type MasterStateMar struct {
+	Timestamp   int64         `json:"timestamp"`
+	ClusterId   string        `json:"clusterId"`
+	Leader      int           `json:"leader"`
+	AppAndTasks []AppAndTasks `json:"appAndTasks"`
+}
+
+type AppAndTasks struct {
+	AppName string `json:"appName"`
+	TaskId  string `json:"taskId"`
+}
+
+type MasterState struct {
+	HostName   string      `json:"hostname"`
+	Frameworks []framework `json:"frameworks"`
+	Leader     string      `json:"leader"`
+}
+
 // slave state
 type SlaveStateMar struct {
 	Timestamp     int64   `json:"timestamp"`
 	ClusterId     string  `json:"clusterId"`
+	Slave_id      string  `json:"slave_id"`
 	App           appInfo `json:"app"`
 	ContainerId   string  `json:"containerId"`
 	CpuUsedCores  float64 `json:"cpuUsedCores"`
@@ -153,16 +173,17 @@ type framework struct {
 	Name      string     `json:"name"`
 	Hostname  string     `json:"hostname"`
 	Executors []executor `json:"executors"`
+	Tasks     []tasks    `json:"tasks,omitempty"`
 }
 
 type executor struct {
 	Container string    `json:"container"`
 	Id        string    `json:"id"`
-//	Directory string    `json:"directory"`
 	Tasks     []tasks   `json:"tasks"`
 }
 
 type tasks struct {
+	Id        string    `json:"id"`
 	Name      string    `json:"name"`
 	Slave_id  string    `json:"slave_id"`
 	Resources resources `json:"resources"`
@@ -176,8 +197,10 @@ type resources struct {
 }
 
 type appInfo struct {
-	AppName string      `json:"appName"`
-	AppId   string      `json:"appId"`
+	AppName   string    `json:"appName"`
+	AppId     string    `json:"appId"`
+	Task_id   string    `json:"task_id"`
+	Slave_id  string    `json:"slave_id"`
 	Resources resources `json:"resources"`
 }
 

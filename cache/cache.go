@@ -72,6 +72,24 @@ func WriteStringToRedis(key string, value string, timeout int) error {
 	return err
 }
 
+func WriteSetToRedis(key, value string, timeout int) error {
+	conn := Open()
+	defer conn.Close()
+	var err error
+	log.Debugf("redis SADD key %s, value %s", key, value)
+	if _, err = conn.Do("SADD", key, value); err != nil {
+		return err
+	}
+
+	log.Debugf("redis EXPIRE key %s, value %s", key, value)
+
+	if timeout != -1 {
+                _, err = conn.Do("EXPIRE", key, timeout)
+                return err
+        }
+        return nil
+}
+
 func WriteListToRedis(key, value string, timeout int) error {
 	conn := Open()
 	defer conn.Close()
