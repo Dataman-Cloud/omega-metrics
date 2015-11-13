@@ -12,14 +12,6 @@ log:
     formatter: "%Date(2006-01-02 15:04:05Z07:00) [%LEVEL] %Msg%n"
     fileSize: 5000000
     fileNum: 10
-db:
-    user: "oapp"
-    password: "123456"
-    host: "localhost"
-    port: 3306
-    name: "oapp"
-    maxIdleConns: 5
-    maxOpenConns: 50
 cache:
     host: "dev.dataman.io"
     port: 6379
