@@ -88,6 +88,34 @@ func MasterMetricsJson(str string) MasterMetricsMar {
 	return ss
 }
 
+func MasterStateJson(str string) MasterStateMar {
+	var mmm RabbitMqMessage
+	var ms MasterState
+	var msm MasterStateMar
+	json.Unmarshal([]byte(str), &mmm)
+	clusterId := strconv.Itoa(mmm.ClusterId)
+	json.Unmarshal([]byte(mmm.Message), &ms)
+	msm.Timestamp = mmm.Timestamp
+	msm.ClusterId = clusterId
+
+	if len(ms.Frameworks) == 0 {
+		msm.Leader = 0
+		return msm
+	}
+	for _, v := range ms.Frameworks {
+                if v.Name == "marathon" {
+                        for _, task := range v.Tasks {
+				var apps AppAndTasks
+				apps.TaskId = task.Id
+				apps.AppName = task.Name
+				msm.AppAndTasks = append(msm.AppAndTasks, apps)
+                        }
+                }
+        }
+	msm.Leader = 1
+	return msm
+}
+
 func parseMesosPorts(str string) (string, error) {
 	if str == "" {
 		return "", nil
@@ -122,17 +150,19 @@ func SlaveStateJson(str string) []SlaveStateMar {
 	// parse "message"
 	json.Unmarshal([]byte(js.Message), &message)
 	ip := message.Flags.Ip
-	m := make(map[string]appNameAndId)
+	m := make(map[string]appInfo)
 	for _, v := range message.Frameworks {
 		if v.Name == "marathon" {
 			var num int = 0
 			for _, exec := range v.Executors {
-				slaveId := strings.Split(exec.Directory, "/")[4]
+				slaveId := exec.Tasks[0].Slave_id
 				key := "mesos-" + slaveId + "." + exec.Container
-				var value appNameAndId
-				lastindex := strings.LastIndex(exec.Id, ".")
-				value.AppName = exec.Id[:lastindex]
-				portstring, err := parseMesosPorts(exec.Resources.Ports)
+				var value appInfo
+				value.Task_id = exec.Id
+				value.Slave_id = slaveId
+				value.AppName = exec.Tasks[0].Name
+				value.Resources = exec.Tasks[0].Resources
+				portstring, err := parseMesosPorts(exec.Tasks[0].Resources.Ports)
 				if err != nil {
 					log.Error("parseMessosPorts error: ", err)
 				}
@@ -158,7 +188,7 @@ func SlaveStateJson(str string) []SlaveStateMar {
 		var conInfo SlaveStateMar
 
 		flag := false
-		var app appNameAndId
+		var app appInfo
 		var containerId string
 		for _, aliase := range value.Aliases {
 			_, ok := m[aliase]
@@ -180,9 +210,9 @@ func SlaveStateJson(str string) []SlaveStateMar {
 		cpuCores := float64(len(value.Stats[1].Cpu.Usage.PerCpu))
 		conInfo.CpuUsedCores = cpuUsed / cpuTotal * cpuCores
 
-		conInfo.CpuShareCores = float64(value.Spec.Cpu.Limit) / 1024
+		conInfo.CpuShareCores = app.Resources.Cpus
 		conInfo.MemoryUsed = value.Stats[1].Memory.Usage / (1024 * 1024)
-		conInfo.MemoryTotal = value.Spec.Memory.Limit / (1024 * 1024)
+		conInfo.MemoryTotal = app.Resources.Mem
 		ls, _ := json.Marshal(conInfo)
 		log.Debugf("AppMetrics: ", string(ls))
 		array = append(array, conInfo)
