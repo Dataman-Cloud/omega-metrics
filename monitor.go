@@ -50,7 +50,7 @@ func handler(routingKey string, messageBody []byte) {
 				log.Error("[Master_metrics] writeStringToRedis has err: ", err)
 			}
 		}
-		log.Infof("received masterMetricsRouting message clusterId:%s leader:%d json:%s", jsonstr.ClusterId, jsonstr.Leader, jsonstr)
+		log.Infof("received masterMetricsRouting message clusterId:%s leader:%d json:%+v", jsonstr.ClusterId, jsonstr.Leader, jsonstr)
 	case util.Master_state_routing:
 		jsonstr := util.MasterStateJson(string(messageBody))
 		if jsonstr.ClusterId != "" && jsonstr.Leader == 1 {
@@ -62,14 +62,14 @@ func handler(routingKey string, messageBody []byte) {
 				}
 			}
 		}
-		log.Infof("received masterStateRouting message clusterId: %s, leader: %d, json: %s", jsonstr.ClusterId, jsonstr.Leader, jsonstr)
+		log.Infof("received masterStateRouting message clusterId: %s, leader: %d, json: %+v", jsonstr.ClusterId, jsonstr.Leader, jsonstr)
 	case util.Slave_state_routing:
 		array := util.SlaveStateJson(string(messageBody))
 		if len(array) != 0 {
 			for _, v := range array {
 				key := v.App.Task_id
 				value, _ := json.Marshal(v)
-				err := cache.WriteStringToRedis(key,  string(value), config.ContainerMonitorTimeout)
+				err := cache.WriteStringToRedis(key, string(value), config.ContainerMonitorTimeout)
 				if err != nil {
 					log.Error("[Slave_state] writeHashToRedis has err: ", err)
 				}
@@ -96,8 +96,7 @@ func handler(routingKey string, messageBody []byte) {
 					return
 				}
 				label := jsonstr.ClusterId + "_" + app
-				log.Debug("[deployment_success] label: ", label)
-				log.Debug("[deployment_success] event: ", jsonstr)
+				log.Debugf("[deployment_success] label: %s event: %+v", label, jsonstr)
 				value, _ := json.Marshal(jsonstr)
 				err = cache.WriteListToRedis(label, string(value), -1)
 				if err != nil {
@@ -112,8 +111,7 @@ func handler(routingKey string, messageBody []byte) {
 					return
 				}
 				label := jsonstr.ClusterId + "_" + app
-				log.Debug("[deployment_failed] label: ", label)
-				log.Debug("[deployment_failed] event: ", jsonstr)
+				log.Debugf("[deployment_failed] label: %s event: %+v", label, jsonstr)
 				value, _ := json.Marshal(jsonstr)
 				err = cache.WriteListToRedis(label, string(value), -1)
 				if err != nil {
@@ -123,8 +121,7 @@ func handler(routingKey string, messageBody []byte) {
 		case util.Deployment_step_success:
 			if jsonstr.App.AppName != "" && jsonstr.Timestamp != "" && jsonstr.CurrentType != "" {
 				label := jsonstr.ClusterId + "_" + jsonstr.App.AppName
-				log.Debug("[deployment_step_success] label: ", label)
-				log.Debug("[deployment_step_success] event: ", jsonstr)
+				log.Debugf("[deployment_step_success] label: %s event: %+v", label, jsonstr)
 				value, _ := json.Marshal(jsonstr)
 				err := cache.WriteListToRedis(label, string(value), -1)
 				if err != nil {
@@ -134,8 +131,7 @@ func handler(routingKey string, messageBody []byte) {
 		case util.Deployment_step_failure:
 			if jsonstr.App.AppName != "" && jsonstr.Timestamp != "" && jsonstr.CurrentType != "" {
 				label := jsonstr.ClusterId + "_" + jsonstr.App.AppName
-				log.Debug("[deployment_step_failure] label: ", label)
-				log.Debug("[deployment_step_failure] event: ", jsonstr)
+				log.Debugf("[deployment_step_failure] label: %s event: %+v", label, jsonstr)
 				value, _ := json.Marshal(jsonstr)
 				err := cache.WriteListToRedis(label, string(value), -1)
 				if err != nil {
@@ -145,8 +141,7 @@ func handler(routingKey string, messageBody []byte) {
 		case util.Status_update_event:
 			if jsonstr.App.AppName != "" && jsonstr.Timestamp != "" && jsonstr.CurrentType != "" {
 				label := jsonstr.ClusterId + "_" + jsonstr.App.AppName
-				log.Debug("[status_update_event] label: ", label)
-				log.Debug("[status_update_event] event: ", jsonstr)
+				log.Debugf("[status_update_event] label: %s event %+v", label, jsonstr)
 				value, _ := json.Marshal(jsonstr)
 				err := cache.WriteListToRedis(label, string(value), -1)
 				if err != nil {
@@ -216,7 +211,7 @@ func masterMetrics(ctx *gin.Context) {
 	req.Header.Add("Authorization", token)
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Error("http request error", err)
+		log.Error("http request error: ", err)
 		response.Err = "[Master Metrics] http request error: " + err.Error()
 		ctx.JSON(http.StatusOK, response)
 		return
@@ -268,16 +263,16 @@ func gatherApp(app util.Application) (util.AppMetric, error) {
 		return result, err
 	}
 	var strs []string
-        for _, smem := range smems {
-                str, err := cache.ReadFromRedis(smem)
-                if err != nil {
-                        log.Error("[App Metrics] ReadFromRedis error ", err)
-                        return result, err
-                }
+	for _, smem := range smems {
+		str, err := cache.ReadFromRedis(smem)
+		if err != nil {
+			log.Error("[App Metrics] ReadFromRedis error ", err)
+			return result, err
+		}
 		if err == nil && str != "" {
-                        strs = append(strs, str)
-                }
-        }
+			strs = append(strs, str)
+		}
+	}
 	var cpuUsedSum float64
 	var cpuShareSum float64
 	var memUsedSum uint64
