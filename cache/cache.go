@@ -44,12 +44,10 @@ func InitCache() {
 	defer conn.Close()
 	pong, err := conn.Do("ping")
 	if err != nil {
-		log.Error("got err", err)
-		log.Error("can't connect cache server: ", conf.Cache)
+		log.Errorf("initcache has error: %s, can't connect cache server: %+v", err.Error(), *conf.Cache)
 		panic(-1)
 	}
-	log.Debug("reach cache server ", pong)
-	log.Debug("initialized cache: ", conf.Cache)
+	log.Debugf("reach cache server: %s initialized cache: %+v ", pong, *conf.Cache)
 }
 
 func DestroyCache() {
@@ -84,10 +82,10 @@ func WriteSetToRedis(key, value string, timeout int) error {
 	log.Debugf("redis EXPIRE key %s, value %s", key, value)
 
 	if timeout != -1 {
-                _, err = conn.Do("EXPIRE", key, timeout)
-                return err
-        }
-        return nil
+		_, err = conn.Do("EXPIRE", key, timeout)
+		return err
+	}
+	return nil
 }
 
 func WriteListToRedis(key, value string, timeout int) error {
