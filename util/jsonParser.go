@@ -126,15 +126,15 @@ func MasterStateJson(str string) MasterStateMar {
 		return masStaMar
 	}
 	for _, v := range masSta.Frameworks {
-                if v.Name == "marathon" {
-                        for _, task := range v.Tasks {
+		if v.Name == "marathon" {
+			for _, task := range v.Tasks {
 				var apps AppAndTasks
 				apps.TaskId = task.Id
 				apps.AppName = task.Name
 				masStaMar.AppAndTasks = append(masStaMar.AppAndTasks, apps)
-                        }
-                }
-        }
+			}
+		}
+	}
 	masStaMar.Leader = 1
 	return masStaMar
 }

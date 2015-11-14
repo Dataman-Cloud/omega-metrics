@@ -4,12 +4,13 @@ package demo_test
  *   https://github.com/smartystreets/goconvey
  */
 import (
-	. "github.com/smartystreets/goconvey/convey"
-	"testing"
-	"net/http"
-	"net/http/httptest"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 // run go test -v demo_test.go in command line to test the whole file
@@ -52,13 +53,13 @@ func shouldScareGophersMoreThan(actual interface{}, expected ...interface{}) str
 	}
 }
 
-func TestUserDefinedFunction(t *testing.T){
-	Convey("All caps always makes text more meaningful",t, func(){
-		So("BOO!", shouldScareGophersMoreThan,"boo")
+func TestUserDefinedFunction(t *testing.T) {
+	Convey("All caps always makes text more meaningful", t, func() {
+		So("BOO!", shouldScareGophersMoreThan, "boo")
 	})
 }
 
-func TestHttpRecorder(t *testing.T){
+func TestHttpRecorder(t *testing.T) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "something failed", http.StatusInternalServerError)
 	}
@@ -72,12 +73,12 @@ func TestHttpRecorder(t *testing.T){
 
 	handler(w, req)
 
-	Convey("the response code is 500", t, func(){
+	Convey("the response code is 500", t, func() {
 		So(w.Code, ShouldEqual, 500)
 	})
 
-	Convey("the response body is 'something failed'", t, func(){
-		So(w.Body.String(), ShouldEqual, "something failed" )
+	Convey("the response body is 'something failed'", t, func() {
+		So(w.Body.String(), ShouldEqual, "something failed")
 	})
 }
 
@@ -97,7 +98,7 @@ func TestHttpServer(t *testing.T) {
 	if err != nil {
 		fmt.Println(err.Error())
 	}
-	Convey("receive 'hello, client' from Server",t, func(){
+	Convey("receive 'hello, client' from Server", t, func() {
 		So(string(text), ShouldEqual, "hello, client")
 	})
 }

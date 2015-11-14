@@ -18,16 +18,16 @@ const (
 )
 
 type Config struct {
-	CacheTimeout int
-	NumCPU       int
-	Host         string
-	Port         uint
-	Debugging    bool
+	CacheTimeout   int
+	NumCPU         int
+	Host           string
+	Port           uint
+	Debugging      bool
 	Omega_app_host string
 	Omega_app_port int
-	Log          *LogConfig
-	Cache        *CacheConfig
-	Mq           *MqConfig
+	Log            *LogConfig
+	Cache          *CacheConfig
+	Mq             *MqConfig
 }
 
 type LogConfig struct {
