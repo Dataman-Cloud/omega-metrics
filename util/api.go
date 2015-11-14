@@ -51,8 +51,8 @@ type MasterMetricsMar struct {
 
 // cluster metrics
 type ClusterMetrics struct {
-	MasMetrics interface{}  `json:"masMetrics"`
-	AppMetrics []AppMetric  `json:"appMetrics"`
+	MasMetrics interface{} `json:"masMetrics"`
+	AppMetrics []AppMetric `json:"appMetrics"`
 }
 
 type AppMetric struct {
@@ -65,18 +65,18 @@ type AppMetric struct {
 }
 
 type AppListResponse struct {
-        Code int           `json:"code"`
-        Data []Application `json:"data"`
-        Err  string        `json:"error"`
+	Code int           `json:"code"`
+	Data []Application `json:"data"`
+	Err  string        `json:"error"`
 }
 
 type Application struct {
-        AppId     *int64     `json:"appId"`
-        AppName   *string    `json:"appName"`
-        AppStatus *uint8     `json:"appStatus"`
-        ClusterId *string    `json:"clusterId"`
-        Instances *int       `json:"containerNum"`
-        Update    *time.Time `json:"update"`
+	AppId     *int64     `json:"appId"`
+	AppName   *string    `json:"appName"`
+	AppStatus *uint8     `json:"appStatus"`
+	ClusterId *string    `json:"clusterId"`
+	Instances *int       `json:"containerNum"`
+	Update    *time.Time `json:"update"`
 }
 
 // marathon event
@@ -177,9 +177,9 @@ type framework struct {
 }
 
 type executor struct {
-	Container string    `json:"container"`
-	Id        string    `json:"id"`
-	Tasks     []tasks   `json:"tasks"`
+	Container string  `json:"container"`
+	Id        string  `json:"id"`
+	Tasks     []tasks `json:"tasks"`
 }
 
 type tasks struct {
