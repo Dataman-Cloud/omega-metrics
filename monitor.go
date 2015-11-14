@@ -356,9 +356,7 @@ func appMetrics(ctx *gin.Context) {
 		str, err := cache.ReadFromRedis(smem)
 		if err != nil {
 			log.Error("[App Metrics] ReadFromRedis error ", err)
-			response.Err = "[App Metrics] ReadFromRedis error " + err.Error()
-			ctx.JSON(http.StatusOK, response)
-			return
+			continue
 		}
 		if err == nil && str != "" {
 			strs = append(strs, str)
