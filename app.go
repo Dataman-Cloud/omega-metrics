@@ -34,12 +34,6 @@ type Application struct {
 	Updated time.Time
 }
 
-func init() {
-	conn := cache.Open()
-	defer conn.Close()
-	conn.Do("HSET", Key, "123456", "user123")
-}
-
 func authenticate(ctx *gin.Context) {
 	authenticated := false
 	token := util.Header(ctx, HeaderToken)
@@ -54,14 +48,13 @@ func authenticate(ctx *gin.Context) {
 			ctx.Set("uid", uid)
 			log.Debug("uid: ", uid)
 		} else if err != redis.ErrNil {
-			log.Error("[app] got error1 ", err)
+			log.Error("[app] got a redis error: ", err)
 		} else {
-			log.Error("[app] got err2 ", err)
+			log.Error("[app] got redis errnil: ", err)
 		}
 	}
 
 	log.Debug("header: ", ctx.Request.Header)
-	log.Debug("token: ", token)
 
 	if authenticated {
 		ctx.Next()
