@@ -90,17 +90,19 @@ func MasterMetricsJson(str string) MasterMetricsMar {
 		log.Error("[MasterMetrics] unmarshal MasterMetrics error ", err)
 		return masMetMar
 	}
-	masMetMar.CpuPercent = masMet.CpuPercent * 100
-	masMetMar.CpuShare = masMet.CpuShare
-	masMetMar.CpuTotal = masMet.CpuTotal
-	masMetMar.MemTotal = masMet.MemTotal
-	masMetMar.MemUsed = masMet.MemUsed
-	masMetMar.DiskUsed = masMet.DiskUsed
-	masMetMar.DiskTotal = masMet.DiskTotal
-	masMetMar.Leader = masMet.Leader
-	masMetMar.Timestamp = rabbitMessage.Timestamp
-	masMetMar.ClusterId = clusterId
-	return masMetMar
+	return MasterMetricsMar{
+		CpuPercent: masMet.CpuPercent * 100,
+		CpuShare:   masMet.CpuShare,
+		CpuTotal:   masMet.CpuTotal,
+		MemTotal:   masMet.MemTotal,
+		MemUsed:    masMet.MemUsed,
+		DiskUsed:   masMet.DiskUsed,
+		DiskTotal:  masMet.DiskTotal,
+		Leader:     masMet.Leader,
+		Timestamp:  rabbitMessage.Timestamp,
+		ClusterId:  clusterId,
+	}
+
 }
 
 func MasterStateJson(str string) MasterStateMar {
@@ -292,23 +294,12 @@ func MarathonEventJson(str string) MarathonEventMar {
 		marEventMar.App.AppName = strings.Replace(marEvent.CurrentStep.Actions[0].App, "/", "", 1)
 		marEventMar.Timestamp = marathonEventMarshal(marEvent.Timestamp)
 		return marEventMar
-	case Deployment_success:
+	case Deployment_success, Deployment_failed:
 		marEventMar.EventType = marEvent.EventType
 		marEventMar.App.AppId = marEvent.Id
 		marEventMar.Timestamp = marathonEventMarshal(marEvent.Timestamp)
 		return marEventMar
-	case Deployment_failed:
-		marEventMar.EventType = marEvent.EventType
-		marEventMar.App.AppId = marEvent.Id
-		marEventMar.Timestamp = marathonEventMarshal(marEvent.Timestamp)
-		return marEventMar
-	case Deployment_step_success:
-		marEventMar.EventType = marEvent.EventType
-		marEventMar.App.AppName = strings.Replace(marEvent.CurrentStep.Actions[0].App, "/", "", 1)
-		marEventMar.Timestamp = marathonEventMarshal(marEvent.Timestamp)
-		marEventMar.CurrentType = marEvent.CurrentStep.Actions[0].Type
-		return marEventMar
-	case Deployment_step_failure:
+	case Deployment_step_success, Deployment_step_failure:
 		marEventMar.EventType = marEvent.EventType
 		marEventMar.App.AppName = strings.Replace(marEvent.CurrentStep.Actions[0].App, "/", "", 1)
 		marEventMar.Timestamp = marathonEventMarshal(marEvent.Timestamp)
