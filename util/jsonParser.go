@@ -62,6 +62,16 @@ func ReturnMessage(typ string, strs []string) (*[]interface{}, error) {
 	return &monitorDatas, nil
 }
 
+func ParserMqClusterMessage(messgae []byte) *RabbitMqMessage {
+	var mqMessage *RabbitMqMessage = &RabbitMqMessage{}
+	err := json.Unmarshal(messgae, mqMessage)
+	if err != nil {
+		log.Error("Parser mq message has error: ", err)
+		return nil
+	}
+	return mqMessage
+}
+
 func ReturnData(typ, str string) (*interface{}, error) {
 	monitorType, ok := NewOfType(typ)
 	if !ok {
@@ -75,21 +85,16 @@ func ReturnData(typ, str string) (*interface{}, error) {
 	return &monitorType, nil
 }
 
-func MasterMetricsJson(str string) MasterMetricsMar {
-	var rabbitMessage RabbitMqMessage
+func MasterMetricsJson(rabbitMessage RabbitMqMessage) MasterMetricsMar {
 	var masMet MasterMetrics
 	var masMetMar MasterMetricsMar
-	err := json.Unmarshal([]byte(str), &rabbitMessage)
-	if err != nil {
-		log.Error("[MasterMetrics] unmarshal RabbitMqMessage error ", err)
-		return masMetMar
-	}
 	clusterId := strconv.Itoa(rabbitMessage.ClusterId)
-	err = json.Unmarshal([]byte(rabbitMessage.Message), &masMet)
+	err := json.Unmarshal([]byte(rabbitMessage.Message), &masMet)
 	if err != nil {
 		log.Error("[MasterMetrics] unmarshal MasterMetrics error ", err)
 		return masMetMar
 	}
+
 	return MasterMetricsMar{
 		CpuPercent: masMet.CpuPercent * 100,
 		CpuShare:   masMet.CpuShare,
@@ -102,20 +107,13 @@ func MasterMetricsJson(str string) MasterMetricsMar {
 		Timestamp:  rabbitMessage.Timestamp,
 		ClusterId:  clusterId,
 	}
-
 }
 
-func MasterStateJson(str string) MasterStateMar {
-	var rabbitMessage RabbitMqMessage
+func MasterStateJson(rabbitMessage RabbitMqMessage) MasterStateMar {
 	var masSta MasterState
 	var masStaMar MasterStateMar
-	err := json.Unmarshal([]byte(str), &rabbitMessage)
-	if err != nil {
-		log.Error("[MasterState] unmarshal RabbitMqMessage error ", err)
-		return masStaMar
-	}
 	clusterId := strconv.Itoa(rabbitMessage.ClusterId)
-	err = json.Unmarshal([]byte(rabbitMessage.Message), &masSta)
+	err := json.Unmarshal([]byte(rabbitMessage.Message), &masSta)
 	if err != nil {
 		log.Error("[MasterState] unmarshal MasterState error ", err)
 		return masStaMar
@@ -164,20 +162,14 @@ func parseMesosPorts(str string) (string, error) {
 
 }
 
-func SlaveStateJson(str string) []SlaveStateMar {
-	var rabbitMessage RabbitMqMessage
+func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 	var message SlaveState
 	var cadInfo map[string]ContainerInfo
 	var array []SlaveStateMar
 
-	err := json.Unmarshal([]byte(str), &rabbitMessage)
-	if err != nil {
-		log.Error("[SlaveState] unmarshal RabbitMqMessage error ", err)
-		return array
-	}
 	clusterId := strconv.Itoa(rabbitMessage.ClusterId)
 	// parse "message"
-	err = json.Unmarshal([]byte(rabbitMessage.Message), &message)
+	err := json.Unmarshal([]byte(rabbitMessage.Message), &message)
 	if err != nil {
 		log.Error("[SlaveState] unmarshal SlaveState error ", err)
 		return array
@@ -269,19 +261,13 @@ func marathonEventMarshal(timestamp string) string {
 	return nt.Format("2006-01-02 15:04:05")
 }
 
-func MarathonEventJson(str string) MarathonEventMar {
-	var rabbitMessage RabbitMqMessage
+func MarathonEventJson(rabbitMessage RabbitMqMessage) MarathonEventMar {
 	var marEvent MarathonEvent
 	var marEventMar MarathonEventMar
-
 	var statusUpdate StatusUpdate
-	err := json.Unmarshal([]byte(str), &rabbitMessage)
-	if err != nil {
-		log.Error("[MarathonEvent] unmarshal RabbitMqMessage error ", err)
-		return marEventMar
-	}
+
 	marEventMar.ClusterId = strconv.Itoa(rabbitMessage.ClusterId)
-	err = json.Unmarshal([]byte(rabbitMessage.Message), &marEvent)
+	err := json.Unmarshal([]byte(rabbitMessage.Message), &marEvent)
 	if err != nil {
 		log.Error("[MarathonEvent] unmarshal MarathonEvent error ", err)
 		return marEventMar
@@ -306,7 +292,7 @@ func MarathonEventJson(str string) MarathonEventMar {
 		marEventMar.CurrentType = marEvent.CurrentStep.Actions[0].Type
 		return marEventMar
 	case Status_update_event:
-		err = json.Unmarshal([]byte(rabbitMessage.Message), &statusUpdate)
+		err := json.Unmarshal([]byte(rabbitMessage.Message), &statusUpdate)
 		if err != nil {
 			log.Error("[MarathonEvent] unmarshal StatusUpdate error ", err)
 			return marEventMar
@@ -326,7 +312,7 @@ func MarathonEventJson(str string) MarathonEventMar {
 		return marEventMar
 	case Destroy_app:
 		var destroyApp DestroyApp
-		err = json.Unmarshal([]byte(rabbitMessage.Message), &destroyApp)
+		err := json.Unmarshal([]byte(rabbitMessage.Message), &destroyApp)
 		if err != nil {
 			log.Error("[MarathonEvent] unmarshal DestroyApp error ", err)
 			return marEventMar
