@@ -39,9 +39,14 @@ func SetHeader(ctx *gin.Context) {
 }
 
 func handler(routingKey string, messageBody []byte) {
+	mqMessage := util.ParserMqClusterMessage(messageBody)
+	if mqMessage == nil {
+		return
+	}
+
 	switch routingKey {
 	case util.Master_metrics_routing:
-		jsonstr := util.MasterMetricsJson(string(messageBody))
+		jsonstr := util.MasterMetricsJson(*mqMessage)
 		if jsonstr.ClusterId != "" && jsonstr.Leader == 1 {
 			label := jsonstr.ClusterId + "_" + routingKey
 			value, _ := json.Marshal(jsonstr)
@@ -52,7 +57,7 @@ func handler(routingKey string, messageBody []byte) {
 		}
 		log.Infof("received masterMetricsRouting message clusterId:%s leader:%d json:%+v", jsonstr.ClusterId, jsonstr.Leader, jsonstr)
 	case util.Master_state_routing:
-		jsonstr := util.MasterStateJson(string(messageBody))
+		jsonstr := util.MasterStateJson(*mqMessage)
 		if jsonstr.ClusterId != "" && jsonstr.Leader == 1 {
 			for _, task := range jsonstr.AppAndTasks {
 				label := jsonstr.ClusterId + "-" + task.AppName
@@ -64,7 +69,7 @@ func handler(routingKey string, messageBody []byte) {
 		}
 		log.Infof("received masterStateRouting message clusterId: %s, leader: %d, json: %+v", jsonstr.ClusterId, jsonstr.Leader, jsonstr)
 	case util.Slave_state_routing:
-		array := util.SlaveStateJson(string(messageBody))
+		array := util.SlaveStateJson(*mqMessage)
 		if len(array) != 0 {
 			for _, v := range array {
 				key := v.App.Task_id
@@ -77,7 +82,7 @@ func handler(routingKey string, messageBody []byte) {
 		}
 		log.Infof("received slaveStateMessage array: %s", array)
 	case util.Marathon_event_routing: // 应用级别的部署监控
-		jsonstr := util.MarathonEventJson(string(messageBody))
+		jsonstr := util.MarathonEventJson(*mqMessage)
 		switch jsonstr.EventType {
 		case util.Deployment_info:
 			if jsonstr.App.AppId != "" && jsonstr.App.AppName != "" {
