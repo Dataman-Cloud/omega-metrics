@@ -105,7 +105,7 @@ func handler(routingKey string, messageBody []byte) {
 				value, _ := json.Marshal(jsonstr)
 				err = cache.WriteListToRedis(label, string(value), -1)
 				if err != nil {
-					log.Error("[Marathon_event deployment success] writeToRedis has err: ", err)
+					log.Errorf("[Marathon_event %s ] writeToRedis has err: %s\n", jsonstr.EventType, err.Error())
 				}
 			}
 		case util.Deployment_step_success, util.Deployment_step_failure:
@@ -115,7 +115,7 @@ func handler(routingKey string, messageBody []byte) {
 				value, _ := json.Marshal(jsonstr)
 				err := cache.WriteListToRedis(label, string(value), -1)
 				if err != nil {
-					log.Error("[Marathon_event deployment step success] writeToRedis has err: ", err)
+					log.Errorf("[Marathon_event %s ] writeToRedis has err: %s\n", jsonstr.EventType, err.Error())
 				}
 			}
 		case util.Status_update_event:
