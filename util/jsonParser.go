@@ -180,6 +180,10 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 		if v.Name == "marathon" {
 			var num int = 0
 			for _, exec := range v.Executors {
+				if len(exec.Tasks) == 0 {
+					log.Debug("[SlaveState] Executors.Tasks length is 0, Message is : ", message)
+					continue
+				}
 				slaveId := exec.Tasks[0].Slave_id
 				key := "mesos-" + slaveId + "." + exec.Container
 				var value appInfo
