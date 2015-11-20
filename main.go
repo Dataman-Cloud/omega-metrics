@@ -18,9 +18,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var exitChan = make(chan bool, 1)
+
 func init() {
 	logger.LoadLogConfig()
-	util.InitMQ()
+	util.InitMQ(exitChan, handler)
 	cache.InitCache()
 
 	signals := make(chan os.Signal, 1)
@@ -55,7 +57,6 @@ func initEnv() {
 }
 
 func monitor() {
-	startC()
 	gin.SetMode(gin.ReleaseMode)
 	log.Info("[monitor] is up")
 	router := gin.New()
