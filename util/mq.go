@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Dataman-Cloud/omega-metrics/config"
 	log "github.com/cihub/seelog"
@@ -29,16 +30,16 @@ func failOnError(err error, msg string) error {
 }
 
 var mq *amqp.Connection
+var killChan <-chan bool
+var defaultHandlers func(string, []byte)
+var reconChan chan *amqp.Error = make(chan *amqp.Error)
 
 func MQ() *amqp.Connection {
 	if mq != nil {
 		return mq
 	}
 
-	mutex := sync.Mutex{}
-	mutex.Lock()
-	InitMQ()
-	defer mutex.Unlock()
+	InitMQ(killChan, defaultHandlers)
 
 	return mq
 }
@@ -67,7 +68,13 @@ func MetricsSubscribe(exchange string, routingkey string, handler func(string, [
 	return nil
 }
 
-func InitMQ() {
+func InitMQ(exitChan <-chan bool, handler func(string, []byte)) {
+	mutex := sync.Mutex{}
+	mutex.Lock()
+	defer mutex.Unlock()
+	killChan = exitChan
+	defaultHandlers = handler
+
 	conf := config.Pairs()
 	opts := fmt.Sprintf("amqp://%s:%s@%s:%d/",
 		conf.Mq.User, conf.Mq.Password, conf.Mq.Host, conf.Mq.Port)
@@ -78,7 +85,39 @@ func InitMQ() {
 		log.Error("can't dial mq server: ", opts)
 		panic(-1)
 	}
+
+	go onNotifyClose()
+	mq.NotifyClose(reconChan)
+
+	startC(handler)
+
 	log.Debug("initialized MQ")
+}
+
+func onNotifyClose() {
+	for {
+		select {
+		case err := <-reconChan:
+			log.Error("mq connect closed with error", err)
+			time.Sleep(time.Second * 3)
+			InitMQ(killChan, defaultHandlers)
+		case <-killChan:
+			log.Info("close mq reconnector")
+		}
+	}
+}
+
+func startC(handler func(string, []byte)) {
+	log.Debug("start master metrics mq consumer")
+	MetricsSubscribe(Metrics_exchange, Master_metrics_routing, handler)
+	MetricsSubscribe(Metrics_exchange, Marathon_event_routing, handler)
+	MetricsSubscribe(Metrics_exchange, Slave_state_routing, handler)
+	MetricsSubscribe(Metrics_exchange, Master_state_routing, handler)
+	MetricsSubscribe(Metrics_exchange, Slave_metrics_routing, func(routingKey string, messageBody []byte) {})
+	MetricsSubscribe(Metrics_exchange, Marathon_apps_routing, func(routingKey string, messageBody []byte) {})
+	MetricsSubscribe(Metrics_exchange, Marathon_metrics_routing, func(routingKey string, messageBody []byte) {})
+	MetricsSubscribe(Metrics_exchange, Marathon_deployments_routing, func(routingKey string, messageBody []byte) {})
+
 }
 
 func DestroyMQ() {
