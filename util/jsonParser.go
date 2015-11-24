@@ -19,6 +19,14 @@ const (
 	Deployment_step_failure = "deployment_step_failure"
 	Status_update_event     = "status_update_event"
 	Destroy_app             = "destroy_app"
+	ScaleApplication        = "ScaleApplication"
+	StartApplication        = "StartApplication"
+	Task_running            = "TASK_RUNNING"
+	Task_finished           = "TASK_FINISHED"
+	Task_failed             = "TASK_FAILED"
+	Task_killed             = "TASK_KILLED"
+	Task_lost               = "TASK_LOST"
+	Task_staging            = "TASK_STAGING"
 )
 
 var parserTypeMappings map[string]reflect.Type
@@ -296,7 +304,7 @@ func MarathonEventJson(rabbitMessage RabbitMqMessage) MarathonEventMar {
 		marEventMar.EventType = marEvent.EventType
 		marEventMar.App.AppName = strings.Replace(marEvent.CurrentStep.Actions[0].App, "/", "", 1)
 		marEventMar.Timestamp = marathonEventMarshal(marEvent.Timestamp)
-		marEventMar.CurrentType = marEvent.CurrentStep.Actions[0].Type
+		marEventMar.CurrentType = MarathonEventMapping(marEvent.CurrentStep.Actions[0].Type)
 		return marEventMar
 	case Status_update_event:
 		err := json.Unmarshal([]byte(rabbitMessage.Message), &statusUpdate)
@@ -314,7 +322,7 @@ func MarathonEventJson(rabbitMessage RabbitMqMessage) MarathonEventMar {
 		marEventMar.EventType = marEvent.EventType
 		marEventMar.App.AppName = strings.Replace(statusUpdate.AppId, "/", "", 1)
 		marEventMar.Timestamp = marathonEventMarshal(statusUpdate.Timestamp)
-		marEventMar.CurrentType = statusUpdate.TaskStatus
+		marEventMar.CurrentType = MarathonEventMapping(statusUpdate.TaskStatus)
 		marEventMar.TaskId = appId
 		return marEventMar
 	case Destroy_app:
@@ -327,8 +335,41 @@ func MarathonEventJson(rabbitMessage RabbitMqMessage) MarathonEventMar {
 		marEventMar.EventType = marEvent.EventType
 		marEventMar.App.AppName = strings.Replace(destroyApp.AppId, "/", "", 1)
 		marEventMar.Timestamp = marathonEventMarshal(destroyApp.Timestamp)
-		marEventMar.CurrentType = destroyApp.EventType
+		marEventMar.CurrentType = MarathonEventMapping(destroyApp.EventType)
 		return marEventMar
 	}
 	return marEventMar
+}
+
+func MarathonEventMapping(event string) string {
+	switch event {
+	case Deployment_success:
+		return "部署成功"
+	case Deployment_failed:
+		return "部署失败"
+	case Deployment_step_success:
+		return "实例部署成功"
+	case Deployment_step_failure:
+		return "实例部署失败"
+	case Status_update_event:
+		return "实例状态"
+	case Destroy_app:
+		return "应用删除"
+	case ScaleApplication:
+		return "应用扩展"
+	case StartApplication:
+		return "应用部署"
+	case Task_running:
+		return "实例正在运行"
+	case Task_finished:
+		return "实例已经完成"
+	case Task_failed:
+		return "实例启动失败"
+	case Task_killed:
+		return "实例已被杀死"
+	case Task_lost:
+		return "实例已经丢失"
+	default:
+		return event
+	}
 }

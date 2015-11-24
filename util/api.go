@@ -19,6 +19,7 @@ type MonitorResponse struct {
 type RabbitMqMessage struct {
 	ClusterId int    `json:"clusterId"`
 	NodeId    string `json:"nodeId"`
+	Type      string `json:"type"`
 	Message   string `json:"message"`
 	Attached  string `json:"attached"`
 	Timestamp int64  `json:"timestamp"`
