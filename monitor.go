@@ -95,11 +95,13 @@ func handler(routingKey string, messageBody []byte) {
 			}
 		case util.Deployment_success, util.Deployment_failed:
 			if jsonstr.App.AppId != "" && jsonstr.Timestamp != "" {
-				app, err := cache.ReadFromRedis(jsonstr.App.AppId)
+				key := jsonstr.ClusterId + "_" + jsonstr.App.AppId
+				app, err := cache.ReadFromRedis(key)
 				if err != nil {
 					log.Error("readFromRedis has err: ", err)
 					return
 				}
+				jsonstr.App.AppName = app
 				label := jsonstr.ClusterId + "_" + app
 				log.Debugf("[deployment_success] label: %s event: %+v", label, jsonstr)
 				value, _ := json.Marshal(jsonstr)
