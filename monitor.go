@@ -95,7 +95,8 @@ func handler(routingKey string, messageBody []byte) {
 			}
 		case util.Deployment_success, util.Deployment_failed:
 			if jsonstr.App.AppId != "" && jsonstr.Timestamp != "" {
-				app, err := cache.ReadFromRedis(jsonstr.App.AppId)
+				key := jsonstr.ClusterId + "_" + jsonstr.App.AppId
+				app, err := cache.ReadFromRedis(key)
 				if err != nil {
 					log.Error("readFromRedis has err: ", err)
 					return
