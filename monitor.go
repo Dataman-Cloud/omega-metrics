@@ -101,8 +101,10 @@ func handler(routingKey string, messageBody []byte) {
 					log.Error("readFromRedis has err: ", err)
 					return
 				}
+				jsonstr.App.AppName = app
 				label := jsonstr.ClusterId + "_" + app
 				log.Debugf("[deployment_success] label: %s event: %+v", label, jsonstr)
+				jsonstr.EventType = util.MarathonEventMapping(jsonstr.EventType)
 				value, _ := json.Marshal(jsonstr)
 				err = cache.WriteListToRedis(label, string(value), -1)
 				if err != nil {
@@ -113,6 +115,7 @@ func handler(routingKey string, messageBody []byte) {
 			if jsonstr.App.AppName != "" && jsonstr.Timestamp != "" && jsonstr.CurrentType != "" {
 				label := jsonstr.ClusterId + "_" + jsonstr.App.AppName
 				log.Debugf("[deployment_step_success] label: %s event: %+v", label, jsonstr)
+				jsonstr.EventType = util.MarathonEventMapping(jsonstr.EventType)
 				value, _ := json.Marshal(jsonstr)
 				err := cache.WriteListToRedis(label, string(value), -1)
 				if err != nil {
@@ -123,6 +126,7 @@ func handler(routingKey string, messageBody []byte) {
 			if jsonstr.App.AppName != "" && jsonstr.Timestamp != "" && jsonstr.CurrentType != "" {
 				label := jsonstr.ClusterId + "_" + jsonstr.App.AppName
 				log.Debugf("[status_update_event] label: %s event %+v", label, jsonstr)
+				jsonstr.EventType = util.MarathonEventMapping(jsonstr.EventType)
 				value, _ := json.Marshal(jsonstr)
 				err := cache.WriteListToRedis(label, string(value), -1)
 				if err != nil {

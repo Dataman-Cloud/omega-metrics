@@ -290,21 +290,21 @@ func MarathonEventJson(rabbitMessage RabbitMqMessage) MarathonEventMar {
 	log.Debugf("marathon event type: [%s] message %s", marEvent.EventType, rabbitMessage.Message)
 	switch marEvent.EventType {
 	case Deployment_info:
-		marEventMar.EventType = marathonEventMapping(marEvent.EventType)
+		marEventMar.EventType = marEvent.EventType
 		marEventMar.App.AppId = marEvent.Plan.Id
 		marEventMar.App.AppName = strings.Replace(marEvent.CurrentStep.Actions[0].App, "/", "", 1)
 		marEventMar.Timestamp = marathonEventMarshal(marEvent.Timestamp)
 		return marEventMar
 	case Deployment_success, Deployment_failed:
-		marEventMar.EventType = marathonEventMapping(marEvent.EventType)
+		marEventMar.EventType = marEvent.EventType
 		marEventMar.App.AppId = marEvent.Id
 		marEventMar.Timestamp = marathonEventMarshal(marEvent.Timestamp)
 		return marEventMar
 	case Deployment_step_success, Deployment_step_failure:
-		marEventMar.EventType = marathonEventMapping(marEvent.EventType)
+		marEventMar.EventType = marEvent.EventType
 		marEventMar.App.AppName = strings.Replace(marEvent.CurrentStep.Actions[0].App, "/", "", 1)
 		marEventMar.Timestamp = marathonEventMarshal(marEvent.Timestamp)
-		marEventMar.CurrentType = marathonEventMapping(marEvent.CurrentStep.Actions[0].Type)
+		marEventMar.CurrentType = MarathonEventMapping(marEvent.CurrentStep.Actions[0].Type)
 		return marEventMar
 	case Status_update_event:
 		err := json.Unmarshal([]byte(rabbitMessage.Message), &statusUpdate)
@@ -319,10 +319,10 @@ func MarathonEventJson(rabbitMessage RabbitMqMessage) MarathonEventMar {
 		}
 		portstr := strings.Join(portArray, ",")
 		appId := statusUpdate.Host + ":" + portstr
-		marEventMar.EventType = marathonEventMapping(marEvent.EventType)
+		marEventMar.EventType = marEvent.EventType
 		marEventMar.App.AppName = strings.Replace(statusUpdate.AppId, "/", "", 1)
 		marEventMar.Timestamp = marathonEventMarshal(statusUpdate.Timestamp)
-		marEventMar.CurrentType = marathonEventMapping(statusUpdate.TaskStatus)
+		marEventMar.CurrentType = MarathonEventMapping(statusUpdate.TaskStatus)
 		marEventMar.TaskId = appId
 		return marEventMar
 	case Destroy_app:
@@ -332,16 +332,16 @@ func MarathonEventJson(rabbitMessage RabbitMqMessage) MarathonEventMar {
 			log.Error("[MarathonEvent] unmarshal DestroyApp error ", err)
 			return marEventMar
 		}
-		marEventMar.EventType = marathonEventMapping(marEvent.EventType)
+		marEventMar.EventType = marEvent.EventType
 		marEventMar.App.AppName = strings.Replace(destroyApp.AppId, "/", "", 1)
 		marEventMar.Timestamp = marathonEventMarshal(destroyApp.Timestamp)
-		marEventMar.CurrentType = marathonEventMapping(destroyApp.EventType)
+		marEventMar.CurrentType = MarathonEventMapping(destroyApp.EventType)
 		return marEventMar
 	}
 	return marEventMar
 }
 
-func marathonEventMapping(event string) string {
+func MarathonEventMapping(event string) string {
 	switch event {
 	case Deployment_success:
 		return "部署成功"
