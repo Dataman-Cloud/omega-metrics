@@ -17,7 +17,7 @@ const (
 	Slave_state_routing      string = "slave_state"
 	Marathon_event_routing   string = "marathon_event"
 	Marathon_metrics_routing string = "marathon_metrics"
-	Marathon_info_routing    string = "marathonInfo"
+	Marathon_info_routing    string = "marathon_info"
 )
 
 func failOnError(err error, msg string) error {
