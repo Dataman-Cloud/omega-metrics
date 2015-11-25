@@ -21,9 +21,8 @@ func startC() {
 	util.MetricsSubscribe(util.Metrics_exchange, util.Slave_state_routing, handler)
 	util.MetricsSubscribe(util.Metrics_exchange, util.Master_state_routing, handler)
 	util.MetricsSubscribe(util.Metrics_exchange, util.Slave_metrics_routing, func(routingKey string, messageBody []byte) {})
-	util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_apps_routing, func(routingKey string, messageBody []byte) {})
+	util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_info_routing, func(routingKey string, messageBody []byte) {})
 	util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_metrics_routing, func(routingKey string, messageBody []byte) {})
-	util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_deployments_routing, func(routingKey string, messageBody []byte) {})
 
 }
 
