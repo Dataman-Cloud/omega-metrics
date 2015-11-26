@@ -213,11 +213,13 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 	if err != nil {
 		log.Error("[SlaveState] unmarshal cadvisor containerInfo error ", err)
 		log.Error("[SlaveState] cadvisor Message is : ", rabbitMessage.Attached)
+		log.Debug("[SlaveState] SlaveState cadvisor message : ", rabbitMessage.Attached)
 		return array
 	}
 	for _, value := range cadInfo {
 		if len(value.Stats) != 2 {
-			log.Error("[slave state] length of Stats isn't 2, can't calc cpurate")
+			log.Error("[SlaveState] length of Stats isn't 2, can't calc cpurate")
+			log.Debug("[SlaveState] SlaveState cadvisor message : ", rabbitMessage.Attached)
 			continue
 		}
 		var conInfo SlaveStateMar
