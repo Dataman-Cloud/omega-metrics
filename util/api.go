@@ -71,12 +71,14 @@ type AppListResponse struct {
 }
 
 type Application struct {
-	AppId     *int64     `json:"appId"`
-	AppName   *string    `json:"appName"`
-	AppStatus *uint8     `json:"appStatus"`
-	ClusterId *string    `json:"clusterId"`
-	Instances *int       `json:"containerNum"`
-	Update    *time.Time `json:"update"`
+	Id        int64
+	Uid       string
+	Cid       string
+	Name      string
+	Instances int
+	Status    uint8
+	Created   time.Time
+	Updated   time.Time
 }
 
 // marathon event

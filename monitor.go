@@ -2,8 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"net/http"
 
 	"github.com/Dataman-Cloud/omega-metrics/cache"
@@ -148,11 +146,9 @@ func handler(routingKey string, messageBody []byte) {
 }
 
 func masterMetrics(ctx *gin.Context) {
-	conf := config.Pairs()
 	conn := cache.Open()
 	defer conn.Close()
 
-	var httpstr util.AppListResponse
 	var cm util.ClusterMetrics
 	cluster_id := ctx.Param("cluster_id") + "_" + util.Master_metrics_routing
 	log.Debug("cluster_id ", cluster_id)
@@ -170,6 +166,7 @@ func masterMetrics(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, response)
 		return
 	}
+
 	masMet, err := util.ReturnData(util.MonitorMasterMetrics, rs)
 	if err != nil {
 		log.Error("[Master Metrics] analysis error ", err)
@@ -178,51 +175,27 @@ func masterMetrics(ctx *gin.Context) {
 		return
 	}
 
-	token := util.Header(ctx, HeaderToken)
-	client := &http.Client{}
-	addr := fmt.Sprintf("%s:%d/api/v1/applications/", conf.Omega_app_host, conf.Omega_app_port)
-	req, err := http.NewRequest("GET", addr, nil)
+	cid := ctx.Param("cluster_id")
+	log.Debug("cid=======", cid)
+	applications, err := util.GetApps(cid)
 	if err != nil {
-		log.Error("[Master Metrics] creat new http request error: ", err)
-		response.Err = "[Master Metrics] creat new http request error: " + err.Error()
+		response.Err = err.Error()
 		ctx.JSON(http.StatusOK, response)
 		return
 	}
-	req.Header.Add("Authorization", token)
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Error("http request error: ", err)
-		response.Err = "[Master Metrics] http request error: " + err.Error()
-		ctx.JSON(http.StatusOK, response)
-		return
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Error("[Master Metrics] read response body error: ", err)
-		response.Err = "[Master Metrics] read response body error: " + err.Error()
-		ctx.JSON(http.StatusOK, response)
-		return
-	}
-	err = json.Unmarshal([]byte(string(body)), &httpstr)
-	if err != nil {
-		log.Error("[Master Metrics] parse http response body error ", err)
-		response.Err = "[Master Metrics] parse http response body error: " + err.Error()
-		ctx.JSON(http.StatusOK, response)
-		return
-	}
-	for _, v := range httpstr.Data {
-		// 判断app所属集群
-		if *v.ClusterId != ctx.Param("cluster_id") {
-			continue
-		}
-		appm, err := gatherApp(v)
+
+	for _, app := range applications {
+		log.Debug("appName============== ", app.Name)
+		log.Debug("cid============== ", app.Cid)
+
+		appm, err := gatherApp(app)
 		if err != nil {
 			response.Err = err.Error()
 			ctx.JSON(http.StatusOK, response)
 			return
 		}
 		cm.AppMetrics = append(cm.AppMetrics, appm)
+
 	}
 
 	cm.MasMetrics = *masMet
@@ -236,7 +209,7 @@ func gatherApp(app util.Application) (util.AppMetric, error) {
 	defer conn.Close()
 
 	var result util.AppMetric
-	key := *app.ClusterId + "-" + *app.AppName
+	key := app.Cid + "-" + app.Name
 	smems, err := redis.Strings(conn.Do("SMEMBERS", key))
 	if err != nil {
 		log.Error("[gatherApp] redis error ", err)
@@ -246,8 +219,9 @@ func gatherApp(app util.Application) (util.AppMetric, error) {
 	for _, smem := range smems {
 		str, err := cache.ReadFromRedis(smem)
 		if err != nil {
-			log.Error("[App Metrics] ReadFromRedis error ", err)
-			return result, err
+			log.Debug("[App Metrics] ReadFromRedis error ", err)
+			log.Debug("mem ", smem)
+			//return result, err
 		}
 		if err == nil && str != "" {
 			strs = append(strs, str)
@@ -269,8 +243,8 @@ func gatherApp(app util.Application) (util.AppMetric, error) {
 		memUsedSum += task.MemoryUsed
 		memTotalSum += task.MemoryTotal
 	}
-	result.AppName = *app.AppName
-	result.Instances = *app.Instances
+	result.AppName = app.Name
+	result.Instances = app.Instances
 	result.AppCpuUsed = cpuUsedSum
 	result.AppCpuShare = cpuShareSum
 	result.AppMemUsed = memUsedSum
@@ -319,6 +293,7 @@ func appMetrics(ctx *gin.Context) {
 	}
 
 	key := ctx.Param("cluster_id") + "-" + ctx.Param("app")
+	log.Debug("key:==========", key)
 	smems, err := redis.Strings(conn.Do("SMEMBERS", key))
 	if err != nil {
 		log.Error("[App Metrics] SMEMBERS error ", err)
@@ -328,6 +303,7 @@ func appMetrics(ctx *gin.Context) {
 	}
 	var strs []string
 	for _, smem := range smems {
+		log.Debug("smen==========", smem)
 		str, err := cache.ReadFromRedis(smem)
 		if err != nil {
 			log.Error("[App Metrics] ReadFromRedis error ", err)

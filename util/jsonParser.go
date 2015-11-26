@@ -172,6 +172,7 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 	err := json.Unmarshal([]byte(rabbitMessage.Message), &message)
 	if err != nil {
 		log.Error("[SlaveState] unmarshal SlaveState error ", err)
+		log.Error("[SlaveState] SlaveState message is : ", rabbitMessage.Message)
 		return array
 	}
 	ip := message.Flags.Ip
@@ -211,6 +212,7 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 	err = json.Unmarshal([]byte(rabbitMessage.Attached), &cadInfo)
 	if err != nil {
 		log.Error("[SlaveState] unmarshal cadvisor containerInfo error ", err)
+		log.Error("[SlaveState] cadvisor Message is : ", rabbitMessage.Attached)
 		return array
 	}
 	for _, value := range cadInfo {
