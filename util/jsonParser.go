@@ -172,6 +172,7 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 	err := json.Unmarshal([]byte(rabbitMessage.Message), &message)
 	if err != nil {
 		log.Error("[SlaveState] unmarshal SlaveState error ", err)
+		log.Debug("[SlaveState] SlaveState Message : ", rabbitMessage.Message)
 		return array
 	}
 	ip := message.Flags.Ip
@@ -180,6 +181,10 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 		if v.Name == "marathon" {
 			var num int = 0
 			for _, exec := range v.Executors {
+				if len(exec.Tasks) == 0 {
+					log.Debug("[SlaveState] Executors.Tasks length is 0, Message is : ", message)
+					continue
+				}
 				slaveId := exec.Tasks[0].Slave_id
 				key := "mesos-" + slaveId + "." + exec.Container
 				var value appInfo
@@ -207,11 +212,13 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 	err = json.Unmarshal([]byte(rabbitMessage.Attached), &cadInfo)
 	if err != nil {
 		log.Error("[SlaveState] unmarshal cadvisor containerInfo error ", err)
+		log.Debug("[SlaveState] SlaveState cadvisor message : ", rabbitMessage.Attached)
 		return array
 	}
 	for _, value := range cadInfo {
 		if len(value.Stats) != 2 {
-			log.Error("[slave state] length of Stats isn't 2, can't calc cpurate")
+			log.Error("[SlaveState] length of Stats isn't 2, can't calc cpurate")
+			log.Debug("[SlaveState] SlaveState cadvisor message : ", rabbitMessage.Attached)
 			continue
 		}
 		var conInfo SlaveStateMar

@@ -21,9 +21,8 @@ func startC() {
 	util.MetricsSubscribe(util.Metrics_exchange, util.Slave_state_routing, handler)
 	util.MetricsSubscribe(util.Metrics_exchange, util.Master_state_routing, handler)
 	util.MetricsSubscribe(util.Metrics_exchange, util.Slave_metrics_routing, func(routingKey string, messageBody []byte) {})
-	util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_apps_routing, func(routingKey string, messageBody []byte) {})
+	util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_info_routing, func(routingKey string, messageBody []byte) {})
 	util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_metrics_routing, func(routingKey string, messageBody []byte) {})
-	util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_deployments_routing, func(routingKey string, messageBody []byte) {})
 
 }
 
@@ -93,54 +92,31 @@ func handler(routingKey string, messageBody []byte) {
 					log.Error("[Marathon_event deployment info] writeToRedis2 has err: ", err)
 				}
 			}
-		case util.Deployment_success:
+		case util.Deployment_success, util.Deployment_failed:
 			if jsonstr.App.AppId != "" && jsonstr.Timestamp != "" {
-				app, err := cache.ReadFromRedis(jsonstr.App.AppId)
+				key := jsonstr.ClusterId + "_" + jsonstr.App.AppId
+				app, err := cache.ReadFromRedis(key)
 				if err != nil {
 					log.Error("readFromRedis has err: ", err)
 					return
 				}
+				jsonstr.App.AppName = app
 				label := jsonstr.ClusterId + "_" + app
 				log.Debugf("[deployment_success] label: %s event: %+v", label, jsonstr)
 				value, _ := json.Marshal(jsonstr)
 				err = cache.WriteListToRedis(label, string(value), -1)
 				if err != nil {
-					log.Error("[Marathon_event deployment success] writeToRedis has err: ", err)
+					log.Errorf("[Marathon_event %s ] writeToRedis has err: %s\n", jsonstr.EventType, err.Error())
 				}
 			}
-		case util.Deployment_failed:
-			if jsonstr.App.AppId != "" && jsonstr.Timestamp != "" {
-				app, err := cache.ReadFromRedis(jsonstr.App.AppId)
-				if err != nil {
-					log.Error("readFromRedis has err: ", err)
-					return
-				}
-				label := jsonstr.ClusterId + "_" + app
-				log.Debugf("[deployment_failed] label: %s event: %+v", label, jsonstr)
-				value, _ := json.Marshal(jsonstr)
-				err = cache.WriteListToRedis(label, string(value), -1)
-				if err != nil {
-					log.Error("[Marathon_event deployment failed] writeToRedis has err: ", err)
-				}
-			}
-		case util.Deployment_step_success:
+		case util.Deployment_step_success, util.Deployment_step_failure:
 			if jsonstr.App.AppName != "" && jsonstr.Timestamp != "" && jsonstr.CurrentType != "" {
 				label := jsonstr.ClusterId + "_" + jsonstr.App.AppName
 				log.Debugf("[deployment_step_success] label: %s event: %+v", label, jsonstr)
 				value, _ := json.Marshal(jsonstr)
 				err := cache.WriteListToRedis(label, string(value), -1)
 				if err != nil {
-					log.Error("[Marathon_event deployment step success] writeToRedis has err: ", err)
-				}
-			}
-		case util.Deployment_step_failure:
-			if jsonstr.App.AppName != "" && jsonstr.Timestamp != "" && jsonstr.CurrentType != "" {
-				label := jsonstr.ClusterId + "_" + jsonstr.App.AppName
-				log.Debugf("[deployment_step_failure] label: %s event: %+v", label, jsonstr)
-				value, _ := json.Marshal(jsonstr)
-				err := cache.WriteListToRedis(label, string(value), -1)
-				if err != nil {
-					log.Error("[Marathon_event deployment step failure] writeToRedis has err: ", err)
+					log.Errorf("[Marathon_event %s ] writeToRedis has err: %s\n", jsonstr.EventType, err.Error())
 				}
 			}
 		case util.Status_update_event:
