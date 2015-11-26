@@ -166,7 +166,7 @@ func masterMetrics(ctx *gin.Context) {
 
 	rs, err := cache.ReadFromRedis(cluster_id)
 	if err != nil {
-		log.Error("readFromRedis has err: ", err)
+		log.Errorf("[Master Metrics] read key %v FromRedis has err: %v", cluster_id, err)
 		response.Err = "[Master Metrics] read from redis error " + err.Error()
 		ctx.JSON(http.StatusOK, response)
 		return
@@ -247,8 +247,8 @@ func gatherApp(app util.Application) (util.AppMetric, error) {
 	for _, smem := range smems {
 		str, err := cache.ReadFromRedis(smem)
 		if err != nil {
-			log.Error("[App Metrics] ReadFromRedis error ", err)
-			return result, err
+			log.Errorf("[App Metrics] Read key %v FromRedis error %v", smem, err)
+			continue
 		}
 		if err == nil && str != "" {
 			strs = append(strs, str)
@@ -331,7 +331,7 @@ func appMetrics(ctx *gin.Context) {
 	for _, smem := range smems {
 		str, err := cache.ReadFromRedis(smem)
 		if err != nil {
-			log.Error("[App Metrics] ReadFromRedis error ", err)
+			log.Errorf("[App Metrics] Read key %v FromRedis error %v ", smem, err)
 			continue
 		}
 		if err == nil && str != "" {
