@@ -32,6 +32,7 @@ type Config struct {
 	Log            *LogConfig
 	Cache          *CacheConfig
 	Mq             *MqConfig
+	Db             *DbConfig
 }
 
 type LogConfig struct {
@@ -57,6 +58,16 @@ type MqConfig struct {
 	Password string
 	Host     string
 	Port     int64
+}
+
+type DbConfig struct {
+	User         string
+	Password     string
+	Host         string
+	Port         string
+	Name         string
+	MaxIdleConns int
+	MaxOpenConns int
 }
 
 var pairs Config
