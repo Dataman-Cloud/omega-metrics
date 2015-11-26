@@ -14,6 +14,7 @@ import (
 
 func AutoScale(token string) error {
 	log.Debug("into AutoScale")
+	conf := config.Pairs()
 	applications, err := util.GetAllApps()
 	if err != nil {
 		log.Error(err)
@@ -27,18 +28,25 @@ func AutoScale(token string) error {
 		log.Debug("appCpuShare: ", appMonitor.AppCpuShare)
 		cpuUsedPercent := appMonitor.AppCpuUsed / appMonitor.AppCpuShare
 		memUsedPercent := float64(appMonitor.AppMemUsed) / float64(appMonitor.AppMemShare)
-		log.Debug("cpuUsedPercent=============", cpuUsedPercent)
-		log.Debug("menUsedPercent=============", memUsedPercent)
-		if cpuUsedPercent > 0.8 || memUsedPercent > 0.7 {
+		log.Debug("cpuUsedPercent:  ", cpuUsedPercent)
+		log.Debug("menUsedPercent:  ", memUsedPercent)
+		log.Debug("MaxMemPercent:  ", conf.MaxMemPercent)
+		log.Debug("MinCpuPercent:  ", conf.MinCpuPercent)
+		if cpuUsedPercent > conf.MaxCpuPercent || memUsedPercent > conf.MaxMemPercent {
 			// 调用扩容接口
 			err := AppRest(token, app.Instances+1, fmt.Sprintf("%d", app.Id))
 			if err != nil {
 				log.Error(err)
 			}
 		}
-		if cpuUsedPercent < 0.1 || memUsedPercent < 0.2 {
-			// 调用扩容接口
-			//	err := AppRest(token, app.Instances-1, fmt.Sprintf("%d", app.Id))
+		if app.Instances > 1 {
+			if cpuUsedPercent < conf.MinCpuPercent || memUsedPercent < conf.MinMemPercent {
+				// 调用扩接口
+				err := AppRest(token, app.Instances-1, fmt.Sprintf("%d", app.Id))
+				if err != nil {
+					log.Error(err)
+				}
+			}
 		}
 	}
 	return nil

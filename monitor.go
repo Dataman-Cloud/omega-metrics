@@ -293,6 +293,11 @@ func appMetrics(ctx *gin.Context) {
 		Err:  "",
 	}
 
+	token := util.Header(ctx, HeaderToken)
+	err := cache.SetAutoScaleToken(token)
+	if err != nil {
+		log.Error("[App Metrics] set autoscaleToken error: ", err)
+	}
 	key := ctx.Param("cluster_id") + "-" + ctx.Param("app")
 	log.Debug("key:==========", key)
 	smems, err := redis.Strings(conn.Do("SMEMBERS", key))

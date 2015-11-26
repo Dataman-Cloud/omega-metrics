@@ -25,6 +25,10 @@ type Config struct {
 	Debugging      bool
 	Omega_app_host string
 	Omega_app_port int
+	MaxMemPercent  float64
+	MaxCpuPercent  float64
+	MinMemPercent  float64
+	MinCpuPercent  float64
 	Log            *LogConfig
 	Cache          *CacheConfig
 	Mq             *MqConfig

@@ -150,3 +150,14 @@ func DeleteRedisByKey(key string) error {
 	_, err := conn.Do("DEL", key)
 	return err
 }
+
+func SetAutoScaleToken(token string) error {
+	conn := Open()
+	defer conn.Close()
+	_, err := conn.Do("set", "AutoScaleToken", token)
+	if err != nil {
+		log.Error("[operation] setAutoScaleToken error: ", err)
+		return err
+	}
+	return nil
+}
