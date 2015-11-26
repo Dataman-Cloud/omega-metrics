@@ -1,7 +1,7 @@
 package util
 
 import (
-	log "github.com/Sirupsen/logrus"
+	log "github.com/cihub/seelog"
 )
 
 func GetApps(clusterId string) ([]Application, error) {

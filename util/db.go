@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/Dataman-Cloud/omega-app/src/config"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/cihub/seelog"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 )
@@ -37,7 +37,7 @@ func InitDB() {
 
 	err = db.Ping()
 	if err != nil {
-		log.Fatal("can't ping db: ", url, " err: ", err)
+		log.Error("can't ping db: ", url, " err: ", err)
 		panic(-1)
 	}
 	db.SetMaxIdleConns(conf.Db.MaxIdleConns)
