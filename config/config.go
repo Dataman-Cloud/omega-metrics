@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	ContainerMonitorTimeout int = 20
+	ContainerMonitorTimeout int = 30
 	DefaultTimeout          int = 24 * 3600
 	DefaultHost                 = "localhost"
 	DefaultPort                 = 9005

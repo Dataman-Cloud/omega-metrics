@@ -21,9 +21,8 @@ func startC() {
 	util.MetricsSubscribe(util.Metrics_exchange, util.Slave_state_routing, handler)
 	util.MetricsSubscribe(util.Metrics_exchange, util.Master_state_routing, handler)
 	util.MetricsSubscribe(util.Metrics_exchange, util.Slave_metrics_routing, func(routingKey string, messageBody []byte) {})
-	util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_apps_routing, func(routingKey string, messageBody []byte) {})
+	util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_info_routing, func(routingKey string, messageBody []byte) {})
 	util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_metrics_routing, func(routingKey string, messageBody []byte) {})
-	util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_deployments_routing, func(routingKey string, messageBody []byte) {})
 
 }
 
@@ -95,11 +94,13 @@ func handler(routingKey string, messageBody []byte) {
 			}
 		case util.Deployment_success, util.Deployment_failed:
 			if jsonstr.App.AppId != "" && jsonstr.Timestamp != "" {
-				app, err := cache.ReadFromRedis(jsonstr.App.AppId)
+				key := jsonstr.ClusterId + "_" + jsonstr.App.AppId
+				app, err := cache.ReadFromRedis(key)
 				if err != nil {
 					log.Error("readFromRedis has err: ", err)
 					return
 				}
+				jsonstr.App.AppName = app
 				label := jsonstr.ClusterId + "_" + app
 				log.Debugf("[deployment_success] label: %s event: %+v", label, jsonstr)
 				value, _ := json.Marshal(jsonstr)
@@ -165,7 +166,7 @@ func masterMetrics(ctx *gin.Context) {
 
 	rs, err := cache.ReadFromRedis(cluster_id)
 	if err != nil {
-		log.Error("readFromRedis has err: ", err)
+		log.Errorf("[Master Metrics] read key %v FromRedis has err: %v", cluster_id, err)
 		response.Err = "[Master Metrics] read from redis error " + err.Error()
 		ctx.JSON(http.StatusOK, response)
 		return
@@ -246,8 +247,8 @@ func gatherApp(app util.Application) (util.AppMetric, error) {
 	for _, smem := range smems {
 		str, err := cache.ReadFromRedis(smem)
 		if err != nil {
-			log.Error("[App Metrics] ReadFromRedis error ", err)
-			return result, err
+			log.Errorf("[App Metrics] Read key %v FromRedis error %v", smem, err)
+			continue
 		}
 		if err == nil && str != "" {
 			strs = append(strs, str)
@@ -330,7 +331,7 @@ func appMetrics(ctx *gin.Context) {
 	for _, smem := range smems {
 		str, err := cache.ReadFromRedis(smem)
 		if err != nil {
-			log.Error("[App Metrics] ReadFromRedis error ", err)
+			log.Errorf("[App Metrics] Read key %v FromRedis error %v ", smem, err)
 			continue
 		}
 		if err == nil && str != "" {
