@@ -60,6 +60,9 @@ func AutoScale(token string) error {
 							log.Error(err)
 						}
 					}
+				} else {
+					overMaxTimes = 0
+					checkUpTimes = 0
 				}
 			}
 
@@ -76,6 +79,9 @@ func AutoScale(token string) error {
 							log.Error(err)
 						}
 					}
+				} else {
+					overMinTimes = 0
+					checkDownTimes = 0
 				}
 			}
 		}
