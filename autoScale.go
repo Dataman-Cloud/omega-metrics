@@ -8,6 +8,7 @@ import (
 	"github.com/Dataman-Cloud/omega-metrics/config"
 	"github.com/Dataman-Cloud/omega-metrics/util"
 	log "github.com/cihub/seelog"
+	redis "github.com/garyburd/redigo/redis"
 	"io/ioutil"
 	"net/http"
 )
@@ -20,7 +21,13 @@ var overMinTimes int = 0
 func AutoScale(token string) error {
 	log.Debug("into AutoScale")
 	conf := config.Pairs()
-	applications, err := util.GetAllApps()
+	conn := cache.Open()
+	uid, err := redis.String(conn.Do("HGET", "s:"+token, "user_id"))
+	if err != nil {
+		log.Error(err)
+	}
+	log.Debug("uid: ", uid)
+	applications, err := util.GetAllApps(uid)
 	if err != nil {
 		log.Error(err)
 	}

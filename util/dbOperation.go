@@ -38,10 +38,10 @@ func GetApps(clusterId string) ([]Application, error) {
 	return applications, nil
 }
 
-func GetAllApps() ([]Application, error) {
+func GetAllApps(uid string) ([]Application, error) {
 	db := DB()
 	applications := []Application{}
-	rows, err := db.Query("select id, uid, cid, name, instances, status from application")
+	rows, err := db.Query("select id, uid, cid, name, instances, status from application where uid = ?", uid)
 	if err != nil {
 		log.Error(err)
 		return applications, err
