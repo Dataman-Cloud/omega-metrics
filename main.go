@@ -22,6 +22,7 @@ import (
 func init() {
 	logger.LoadLogConfig()
 	util.InitMQ()
+	util.InitDB()
 	cache.InitCache()
 
 	signals := make(chan os.Signal, 1)

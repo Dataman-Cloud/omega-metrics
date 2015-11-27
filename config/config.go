@@ -64,7 +64,7 @@ type DbConfig struct {
 	User         string
 	Password     string
 	Host         string
-	Port         string
+	Port         uint
 	Name         string
 	MaxIdleConns int
 	MaxOpenConns int
