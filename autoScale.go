@@ -12,6 +12,11 @@ import (
 	"net/http"
 )
 
+var checkUpTimes int = 0
+var checkDownTimes int = 0
+var overMaxTimes int = 0
+var overMinTimes int = 0
+
 func AutoScale(token string) error {
 	log.Debug("into AutoScale")
 	conf := config.Pairs()
@@ -19,10 +24,6 @@ func AutoScale(token string) error {
 	if err != nil {
 		log.Error(err)
 	}
-	var checkUpTimes int = 0
-	var checkDownTimes int = 0
-	var overMaxTimes int = 0
-	var overMinTimes int = 0
 	for _, app := range applications {
 		appMonitor, err := gatherApp(app)
 		if err != nil {
