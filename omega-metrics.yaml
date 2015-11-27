@@ -1,0 +1,41 @@
+---
+numCPU: 1
+host: "zhguo.dataman.io"
+port: 9005
+debugging: false
+omega_app_host: "http://10.3.10.36"
+omega_app_port: 6080
+MaxMemPercent: 0.7
+MaxCpuPercent: 0.7
+MinMemPercent: 0.2
+MinCpuPercent: 0.2
+WaitCheckTimes: 3
+MaxInstances: 20
+MinInstances: 6
+
+log:
+    console: true
+    file: "./omega-metrics.log"
+    level: "debug"
+    formatter: "%Date(2006-01-02 15:04:05Z07:00) [%LEVEL] %Msg%n"
+    fileSize: 5000000
+    fileNum: 10
+cache:
+    host: "172.17.0.2"
+    port: 6379
+    password: ""
+    db: 0
+    llen: 178
+mq:
+    user: "guest"
+    password: "guest"
+    host: "172.17.0.3"
+    port: 5672
+db:
+    user: "oapp"
+    password: "123456"
+    host: "localhost"
+    port: 3306
+    name: "oapp"
+    maxIdleConns: 5
+    maxOpenConns: 50
