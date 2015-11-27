@@ -32,19 +32,21 @@ func AutoScale(token string) error {
 		log.Debug("menUsedPercent:  ", memUsedPercent)
 		log.Debug("MaxMemPercent:  ", conf.MaxMemPercent)
 		log.Debug("MinCpuPercent:  ", conf.MinCpuPercent)
-		if cpuUsedPercent > conf.MaxCpuPercent || memUsedPercent > conf.MaxMemPercent {
-			// 调用扩容接口
-			err := AppRest(token, app.Instances+1, fmt.Sprintf("%d", app.Id))
-			if err != nil {
-				log.Error(err)
-			}
-		}
-		if app.Instances > 1 {
-			if cpuUsedPercent < conf.MinCpuPercent || memUsedPercent < conf.MinMemPercent {
-				// 调用扩接口
-				err := AppRest(token, app.Instances-1, fmt.Sprintf("%d", app.Id))
+		if appMonitor.AppCpuShare != 0 && appMonitor.AppMemShare != 0 {
+			if cpuUsedPercent > conf.MaxCpuPercent || memUsedPercent > conf.MaxMemPercent {
+				// 调用扩容接口
+				err := AppRest(token, app.Instances+1, fmt.Sprintf("%d", app.Id))
 				if err != nil {
 					log.Error(err)
+				}
+			}
+			if app.Instances > 1 {
+				if cpuUsedPercent < conf.MinCpuPercent && memUsedPercent < conf.MinMemPercent {
+					// 调用扩接口
+					err := AppRest(token, app.Instances-1, fmt.Sprintf("%d", app.Id))
+					if err != nil {
+						log.Error(err)
+					}
 				}
 			}
 		}
