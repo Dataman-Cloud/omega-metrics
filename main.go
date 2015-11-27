@@ -34,7 +34,7 @@ func init() {
 		os.Exit(0)
 	}()
 	go func() {
-		ticker := time.NewTicker(10 * time.Second)
+		ticker := time.NewTicker(20 * time.Second)
 		for {
 			select {
 			case <-ticker.C:

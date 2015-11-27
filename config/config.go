@@ -29,6 +29,9 @@ type Config struct {
 	MaxCpuPercent  float64
 	MinMemPercent  float64
 	MinCpuPercent  float64
+	WaitCheckTimes int
+	MaxInstances   int
+	MinInstances   int
 	Log            *LogConfig
 	Cache          *CacheConfig
 	Mq             *MqConfig

@@ -19,6 +19,10 @@ func AutoScale(token string) error {
 	if err != nil {
 		log.Error(err)
 	}
+	var checkUpTimes int = 0
+	var checkDownTimes int = 0
+	var overMaxTimes int = 0
+	var overMinTimes int = 0
 	for _, app := range applications {
 		appMonitor, err := gatherApp(app)
 		if err != nil {
@@ -32,20 +36,37 @@ func AutoScale(token string) error {
 		log.Debug("menUsedPercent:  ", memUsedPercent)
 		log.Debug("MaxMemPercent:  ", conf.MaxMemPercent)
 		log.Debug("MinCpuPercent:  ", conf.MinCpuPercent)
+
 		if appMonitor.AppCpuShare != 0 && appMonitor.AppMemShare != 0 {
-			if cpuUsedPercent > conf.MaxCpuPercent || memUsedPercent > conf.MaxMemPercent {
-				// 调用扩容接口
-				err := AppRest(token, app.Instances+1, fmt.Sprintf("%d", app.Id))
-				if err != nil {
-					log.Error(err)
+			if app.Instances < conf.MaxInstances {
+				checkUpTimes++
+				log.Debug("checkUptimes ===", checkUpTimes)
+				if cpuUsedPercent > conf.MaxCpuPercent || memUsedPercent > conf.MaxMemPercent {
+					overMaxTimes++
+					// 调用扩容接口
+					if checkUpTimes == overMaxTimes && overMaxTimes > conf.WaitCheckTimes {
+						overMaxTimes = 0
+						checkUpTimes = 0
+						err := AppRest(token, app.Instances*2, fmt.Sprintf("%d", app.Id))
+						if err != nil {
+							log.Error(err)
+						}
+					}
 				}
 			}
-			if app.Instances > 1 {
+
+			if app.Instances > conf.MinInstances {
+				checkDownTimes++
 				if cpuUsedPercent < conf.MinCpuPercent && memUsedPercent < conf.MinMemPercent {
+					overMinTimes++
 					// 调用扩接口
-					err := AppRest(token, app.Instances-1, fmt.Sprintf("%d", app.Id))
-					if err != nil {
-						log.Error(err)
+					if checkDownTimes == overMinTimes && overMinTimes > conf.WaitCheckTimes {
+						overMinTimes = 0
+						checkDownTimes = 0
+						err := AppRest(token, app.Instances/2, fmt.Sprintf("%d", app.Id))
+						if err != nil {
+							log.Error(err)
+						}
 					}
 				}
 			}
