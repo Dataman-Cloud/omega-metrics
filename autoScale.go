@@ -22,6 +22,7 @@ func AutoScale(token string) error {
 	log.Debug("into AutoScale")
 	conf := config.Pairs()
 	conn := cache.Open()
+	defer conn.Close()
 	uid, err := redis.String(conn.Do("HGET", "s:"+token, "user_id"))
 	if err != nil {
 		log.Error(err)
