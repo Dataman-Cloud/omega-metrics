@@ -50,7 +50,10 @@ func MetricsSubscribe(exchange string, routingkey string, handler func(string, [
 	err = channel.ExchangeDeclare(exchange, "direct", true, false, false, false, nil)
 	failOnError(err, "can't declare exchange")
 
-	err = channel.QueueBind(routingkey, routingkey, exchange, false, nil)
+	queue, err := declareQueue(channel, routingkey)
+	failOnError(err, "can't declare queue")
+
+	err = channel.QueueBind(queue.Name, routingkey, exchange, false, nil)
 	failOnError(err, "can't bind queue")
 
 	messages, err := channel.Consume(routingkey, "", true, false, false, false, nil)
@@ -64,6 +67,21 @@ func MetricsSubscribe(exchange string, routingkey string, handler func(string, [
 	}()
 
 	return nil
+}
+
+func declareQueue(channel *amqp.Channel, name string) (amqp.Queue, error) {
+	args := amqp.Table{
+		"x-message-ttl": int64(300000),
+		"x-expires":     int64(1000 * 60 * 60 * 24 * 1),
+	}
+	return channel.QueueDeclare(
+		name,
+		true,
+		false,
+		false,
+		false,
+		args,
+	)
 }
 
 func InitMQ() {
