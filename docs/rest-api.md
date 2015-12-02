@@ -3,7 +3,7 @@
 ## API List
   - [GET http://localhost:9005/](#healthCheck)  :healthCheck  检查服务是否正常运行
   - [GET http://localhost:9005/api/v1/metrics/cluster/{clusterID}](#get master mertrics) 获取ID 为`clusterID`的集群的集群资源消耗信息
-  - [GET http://localhost:9005/api/v1/event/{clusterID}/{appName}](#get marathon event) 获取`clusterID`的集群上`appName`应用的部署信息
+  - [GET http://localhost:9005/api/v1/appmetrics/clusterId/{clusterId}/app/{app}](#get app metrics) 获取ID为`clusterID` 应用名称为`app` 的应用的资源消耗信息
 
 #### GET `http://localhost:9005/`
 检查服务是否正常运行 (healthCheck)   </br>
@@ -84,27 +84,6 @@ curl -X GET -H {Authorization:token} http://localhost:9005/api/v1/metrics/cluste
 说明:
 * masMetrics数据取自mesos-master metrics 磁盘 内存 和 CPU 数据均和直接查看主机数据不同
 * appMetrics数据取自cadvisor
-
-#### GET `http://localhost:9005/api/v1/event/{clusterID}/{appName}`
-根据集群ID和appName, 获取事件的监控信息
-
-e.g :
-```shell
-curl  http://localhost:9005/api/v1/event/140/testapp
-```
-
-***Response***
-```json
-{
-    "code":"0",
-    "data":[
-        "2015-10-12T02:08:59.525Z /dataman-nginx-test2 ScaleApplication deployment_step_success",
-        "2015-10-12T02:08:39.514Z /dataman-nginx-test2 StartApplication deployment_step_success",
-        "2015-10-12T02:07:59.677Z /dataman-nginx-test2 StopApplication deployment_step_success"
-    ],
-    "error":""
-}
-```
 
 #### GET `http://localhost:9005/api/v1/appmetrics/clusterId/{clusterId}/app/{app}`
 根据集群ID和appName，获取app的应用数据监控
