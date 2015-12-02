@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"time"
 
 	log "github.com/cihub/seelog"
 )
@@ -25,7 +24,6 @@ var parserTypeMappings map[string]reflect.Type
 
 func init() {
 	recognizedTypes := []interface{}{
-		MarathonEventMar{},
 		MasterMetricsMar{},
 		SlaveStateMar{},
 	}
@@ -254,81 +252,4 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 		array = append(array, conInfo)
 	}
 	return array
-}
-
-func marathonEventMarshal(timestamp string) string {
-	// 改变时间戳格式"2015-10-21T07:16:31.802Z" 为 "2015-10-21 07:16:31"
-	layout := "2006-01-02T15:04:05.999Z"
-	t, err := time.Parse(layout, timestamp)
-	if err != nil {
-		log.Error("[marathon event] timestamp parse error", err)
-		return timestamp
-	}
-	nt := t.Add(time.Hour * 8)
-	return nt.Format("2006-01-02 15:04:05")
-}
-
-func MarathonEventJson(rabbitMessage RabbitMqMessage) MarathonEventMar {
-	var marEvent MarathonEvent
-	var marEventMar MarathonEventMar
-	var statusUpdate StatusUpdate
-
-	marEventMar.ClusterId = strconv.Itoa(rabbitMessage.ClusterId)
-	err := json.Unmarshal([]byte(rabbitMessage.Message), &marEvent)
-	if err != nil {
-		log.Error("[MarathonEvent] unmarshal MarathonEvent error ", err)
-		return marEventMar
-	}
-	log.Debugf("marathon event type: [%s] message %s", marEvent.EventType, rabbitMessage.Message)
-	switch marEvent.EventType {
-	case Deployment_info:
-		marEventMar.EventType = marEvent.EventType
-		marEventMar.App.AppId = marEvent.Plan.Id
-		marEventMar.App.AppName = strings.Replace(marEvent.CurrentStep.Actions[0].App, "/", "", 1)
-		marEventMar.Timestamp = marathonEventMarshal(marEvent.Timestamp)
-		return marEventMar
-	case Deployment_success, Deployment_failed:
-		marEventMar.EventType = marEvent.EventType
-		marEventMar.App.AppId = marEvent.Id
-		marEventMar.Timestamp = marathonEventMarshal(marEvent.Timestamp)
-		return marEventMar
-	case Deployment_step_success, Deployment_step_failure:
-		marEventMar.EventType = marEvent.EventType
-		marEventMar.App.AppName = strings.Replace(marEvent.CurrentStep.Actions[0].App, "/", "", 1)
-		marEventMar.Timestamp = marathonEventMarshal(marEvent.Timestamp)
-		marEventMar.CurrentType = marEvent.CurrentStep.Actions[0].Type
-		return marEventMar
-	case Status_update_event:
-		err := json.Unmarshal([]byte(rabbitMessage.Message), &statusUpdate)
-		if err != nil {
-			log.Error("[MarathonEvent] unmarshal StatusUpdate error ", err)
-			return marEventMar
-		}
-		var portArray []string
-		for _, v := range statusUpdate.Ports {
-			j := strconv.Itoa(v)
-			portArray = append(portArray, j)
-		}
-		portstr := strings.Join(portArray, ",")
-		appId := statusUpdate.Host + ":" + portstr
-		marEventMar.EventType = marEvent.EventType
-		marEventMar.App.AppName = strings.Replace(statusUpdate.AppId, "/", "", 1)
-		marEventMar.Timestamp = marathonEventMarshal(statusUpdate.Timestamp)
-		marEventMar.CurrentType = statusUpdate.TaskStatus
-		marEventMar.TaskId = appId
-		return marEventMar
-	case Destroy_app:
-		var destroyApp DestroyApp
-		err := json.Unmarshal([]byte(rabbitMessage.Message), &destroyApp)
-		if err != nil {
-			log.Error("[MarathonEvent] unmarshal DestroyApp error ", err)
-			return marEventMar
-		}
-		marEventMar.EventType = marEvent.EventType
-		marEventMar.App.AppName = strings.Replace(destroyApp.AppId, "/", "", 1)
-		marEventMar.Timestamp = marathonEventMarshal(destroyApp.Timestamp)
-		marEventMar.CurrentType = destroyApp.EventType
-		return marEventMar
-	}
-	return marEventMar
 }
