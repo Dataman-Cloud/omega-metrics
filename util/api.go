@@ -6,7 +6,6 @@ import (
 
 const (
 	MonitorMasterMetrics = "MasterMetricsMar"
-	MonitorMarathonEvent = "MarathonEventMar"
 	MonitorAppMetrics    = "SlaveStateMar"
 )
 
@@ -78,52 +77,6 @@ type Application struct {
 	ClusterId *string    `json:"clusterId"`
 	Instances *int       `json:"containerNum"`
 	Update    *time.Time `json:"update"`
-}
-
-// marathon event
-type MarathonEvent struct {
-	EventType   string      `json:"eventType"`
-	Timestamp   string      `json:"timestamp"`
-	Id          string      `json:"id,omitempty"`
-	Plan        plan        `json:"plan,omitempty"`
-	CurrentStep currentStep `json:"currentStep,omitempty"`
-}
-
-type MarathonEventMar struct {
-	EventType   string  `json:"eventType"`
-	Timestamp   string  `json:"timestamp"`
-	App         appInfo `json:"app"`
-	CurrentType string  `json:"currentType"`
-	TaskId      string  `json:"taskId"`
-	ClusterId   string  `json:"clusterId"`
-}
-
-type StatusUpdate struct {
-	EventType  string `json:"eventType"`
-	Timestamp  string `json:"timestamp"`
-	AppId      string `json:"appId"`
-	Host       string `json:"host"`
-	Ports      []int  `json:"ports"`
-	TaskStatus string `json:"taskStatus"`
-}
-
-type DestroyApp struct {
-	EventType string `json:"eventType"`
-	Timestamp string `json:"timestamp"`
-	AppId     string `json:"appId"`
-}
-
-type currentStep struct {
-	Actions []actions
-}
-
-type actions struct {
-	Type string
-	App  string
-}
-
-type plan struct {
-	Id string
 }
 
 // master state

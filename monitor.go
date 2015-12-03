@@ -17,7 +17,6 @@ import (
 func startC() {
 	log.Debug("start master metrics mq consumer")
 	util.MetricsSubscribe(util.Metrics_exchange, util.Master_metrics_routing, handler)
-	util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_event_routing, handler)
 	util.MetricsSubscribe(util.Metrics_exchange, util.Slave_state_routing, handler)
 	util.MetricsSubscribe(util.Metrics_exchange, util.Master_state_routing, handler)
 	util.MetricsSubscribe(util.Metrics_exchange, util.Slave_metrics_routing, func(routingKey string, messageBody []byte) {})
@@ -68,6 +67,10 @@ func handler(routingKey string, messageBody []byte) {
 		}
 		log.Infof("received masterStateRouting message clusterId: %s, leader: %d, json: %+v", jsonstr.ClusterId, jsonstr.Leader, jsonstr)
 	case util.Slave_state_routing:
+		log.Debug("-----------------------      slave state   ")
+		log.Debugf("********************       slave_state_message:%s", mqMessage.Message)
+		log.Debugf("********************       slave_state_attached:%s", mqMessage.Attached)
+		log.Debug("-----------------------      end")
 		array := util.SlaveStateJson(*mqMessage)
 		if len(array) != 0 {
 			for _, v := range array {
@@ -80,71 +83,6 @@ func handler(routingKey string, messageBody []byte) {
 			}
 		}
 		log.Infof("received slaveStateMessage array: %s", array)
-	case util.Marathon_event_routing: // 应用级别的部署监控
-		jsonstr := util.MarathonEventJson(*mqMessage)
-		switch jsonstr.EventType {
-		case util.Deployment_info:
-			if jsonstr.App.AppId != "" && jsonstr.App.AppName != "" {
-				label := jsonstr.ClusterId + "_" + jsonstr.App.AppId
-				log.Info("[deployment_info] label: ", label)
-				err := cache.WriteStringToRedis(label, jsonstr.App.AppName, config.DefaultTimeout)
-				if err != nil {
-					log.Error("[Marathon_event deployment info] writeToRedis2 has err: ", err)
-				}
-			}
-		case util.Deployment_success, util.Deployment_failed:
-			if jsonstr.App.AppId != "" && jsonstr.Timestamp != "" {
-				key := jsonstr.ClusterId + "_" + jsonstr.App.AppId
-				app, err := cache.ReadFromRedis(key)
-				if err != nil {
-					log.Error("readFromRedis has err: ", err)
-					return
-				}
-				jsonstr.App.AppName = app
-				label := jsonstr.ClusterId + "_" + app
-				log.Debugf("[deployment_success] label: %s event: %+v", label, jsonstr)
-				value, _ := json.Marshal(jsonstr)
-				err = cache.WriteListToRedis(label, string(value), -1)
-				if err != nil {
-					log.Errorf("[Marathon_event %s ] writeToRedis has err: %s\n", jsonstr.EventType, err.Error())
-				}
-			}
-		case util.Deployment_step_success, util.Deployment_step_failure:
-			if jsonstr.App.AppName != "" && jsonstr.Timestamp != "" && jsonstr.CurrentType != "" {
-				label := jsonstr.ClusterId + "_" + jsonstr.App.AppName
-				log.Debugf("[deployment_step_success] label: %s event: %+v", label, jsonstr)
-				value, _ := json.Marshal(jsonstr)
-				err := cache.WriteListToRedis(label, string(value), -1)
-				if err != nil {
-					log.Errorf("[Marathon_event %s ] writeToRedis has err: %s\n", jsonstr.EventType, err.Error())
-				}
-			}
-		case util.Status_update_event:
-			if jsonstr.App.AppName != "" && jsonstr.Timestamp != "" && jsonstr.CurrentType != "" {
-				label := jsonstr.ClusterId + "_" + jsonstr.App.AppName
-				log.Debugf("[status_update_event] label: %s event %+v", label, jsonstr)
-				value, _ := json.Marshal(jsonstr)
-				err := cache.WriteListToRedis(label, string(value), -1)
-				if err != nil {
-					log.Error("[status_update_event] writeToRedis has err: ", err)
-				}
-			}
-		case util.Destroy_app:
-			if jsonstr.App.AppName != "" && jsonstr.ClusterId != "" {
-				label := jsonstr.ClusterId + "_" + jsonstr.App.AppName
-				label2 := jsonstr.ClusterId + "-" + jsonstr.App.AppName
-				log.Info("[destroy_app] label: ", label)
-				err := cache.DeleteRedisByKey(label)
-				if err != nil {
-					log.Error("[destroy_app] deleteKeyFromRedis has err: ", err)
-				}
-				log.Info("[Destroy_app] label: ", label2)
-				err = cache.DeleteRedisByKey(label2)
-				if err != nil {
-					log.Error("[Destroy_app] deleteKeyFromRedis has err: ", err)
-				}
-			}
-		}
 	}
 }
 
@@ -166,7 +104,7 @@ func masterMetrics(ctx *gin.Context) {
 
 	rs, err := cache.ReadFromRedis(cluster_id)
 	if err != nil {
-		log.Error("readFromRedis has err: ", err)
+		log.Errorf("[Master Metrics] read key %v FromRedis has err: %v", cluster_id, err)
 		response.Err = "[Master Metrics] read from redis error " + err.Error()
 		ctx.JSON(http.StatusOK, response)
 		return
@@ -247,8 +185,8 @@ func gatherApp(app util.Application) (util.AppMetric, error) {
 	for _, smem := range smems {
 		str, err := cache.ReadFromRedis(smem)
 		if err != nil {
-			log.Error("[App Metrics] ReadFromRedis error ", err)
-			return result, err
+			log.Errorf("[App Metrics] Read key %v FromRedis error %v", smem, err)
+			continue
 		}
 		if err == nil && str != "" {
 			strs = append(strs, str)
@@ -279,36 +217,6 @@ func gatherApp(app util.Application) (util.AppMetric, error) {
 	return result, nil
 }
 
-func marathonEvent(ctx *gin.Context) {
-	conn := cache.Open()
-	defer conn.Close()
-
-	response := util.MonitorResponse{
-		Code: 1,
-		Data: nil,
-		Err:  "",
-	}
-
-	key := ctx.Param("cluster_id") + "_" + ctx.Param("app")
-	strs, err := redis.Strings(conn.Do("LRANGE", key, 0, -1))
-	if err != nil {
-		log.Error("[Marathon Event] got error ", err)
-		response.Err = "[Marathon Event] got error " + err.Error()
-		ctx.JSON(http.StatusOK, response)
-		return
-	}
-	jsoninterface, err := util.ReturnMessage(util.MonitorMarathonEvent, strs)
-	if err != nil {
-		log.Error("[Marathon Event] analysis error ", err)
-		response.Err = "[Marathon Event] analysis error " + err.Error()
-		ctx.JSON(http.StatusOK, response)
-		return
-	}
-	response.Code = 0
-	response.Data = *jsoninterface
-	ctx.JSON(http.StatusOK, response)
-}
-
 func appMetrics(ctx *gin.Context) {
 	conn := cache.Open()
 	defer conn.Close()
@@ -331,7 +239,7 @@ func appMetrics(ctx *gin.Context) {
 	for _, smem := range smems {
 		str, err := cache.ReadFromRedis(smem)
 		if err != nil {
-			log.Error("[App Metrics] ReadFromRedis error ", err)
+			log.Errorf("[App Metrics] Read key %v FromRedis error %v ", smem, err)
 			continue
 		}
 		if err == nil && str != "" {
