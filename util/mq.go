@@ -72,7 +72,7 @@ func MetricsSubscribe(exchange string, routingkey string, handler func(string, [
 func declareQueue(channel *amqp.Channel, name string) (amqp.Queue, error) {
 	args := amqp.Table{
 		"x-message-ttl": int64(300000),
-		"x-expires":     int64(1000 * 60 * 60 * 24 * 1),
+		"x-expires":     int64(1000 * 60 * 60 * 24 * 7),
 	}
 	return channel.QueueDeclare(
 		name,

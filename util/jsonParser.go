@@ -167,6 +167,10 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 
 	clusterId := strconv.Itoa(rabbitMessage.ClusterId)
 	// parse "message"
+	if rabbitMessage.Message == "" {
+		log.Error("[SlaveState] Message message is \"\"")
+		return array
+	}
 	err := json.Unmarshal([]byte(rabbitMessage.Message), &message)
 	if err != nil {
 		log.Error("[SlaveState] unmarshal SlaveState error ", err)
@@ -205,8 +209,13 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 			}
 		}
 	}
+	log.Debug(" &&&&&&&&&&&&&&&&&&&  key map : ", m)
 
 	// parse "attached"
+	if rabbitMessage.Attached == "" {
+		log.Error("[SlaveState] Attached message is \"\"")
+		return array
+	}
 	err = json.Unmarshal([]byte(rabbitMessage.Attached), &cadInfo)
 	if err != nil {
 		log.Error("[SlaveState] unmarshal cadvisor containerInfo error ", err)
@@ -225,6 +234,9 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 		var app appInfo
 		var containerId string
 		for _, aliase := range value.Aliases {
+			if strings.Contains(aliase, "mesos") {
+				log.Debug("   &&&&&&&&&&&&&&&&&&&&&&&   aliase :%s", aliase)
+			}
 			_, ok := m[aliase]
 			if ok {
 				flag = true

@@ -67,6 +67,10 @@ func handler(routingKey string, messageBody []byte) {
 		}
 		log.Infof("received masterStateRouting message clusterId: %s, leader: %d, json: %+v", jsonstr.ClusterId, jsonstr.Leader, jsonstr)
 	case util.Slave_state_routing:
+		log.Debug("-----------------------      slave state   ")
+		log.Debugf("********************       slave_state_message:%s", mqMessage.Message)
+		log.Debugf("********************       slave_state_attached:%s", mqMessage.Attached)
+		log.Debug("-----------------------      end")
 		array := util.SlaveStateJson(*mqMessage)
 		if len(array) != 0 {
 			for _, v := range array {
