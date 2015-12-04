@@ -18,6 +18,7 @@ cache:
     password: ""
     db: 0
     llen: 178
+    poolsize: 100
 mq:
     user: "guest"
     password: "guest"
