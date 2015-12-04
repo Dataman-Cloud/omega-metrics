@@ -15,7 +15,6 @@ import (
 	"github.com/Dataman-Cloud/omega-metrics/logger"
 	"github.com/Dataman-Cloud/omega-metrics/util"
 	log "github.com/cihub/seelog"
-	redis "github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"
 )
 
@@ -39,9 +38,7 @@ func init() {
 			select {
 			case <-ticker.C:
 				log.Debug("--------------------> begin to check auto scale")
-				conn := cache.Open()
-				defer conn.Close()
-				token, _ := redis.String(conn.Do("GET", "AutoScaleToken"))
+				token, _ := cache.ReadFromRedis("AutoScaleToken")
 				log.Debug("token==========", token)
 				if token != "" {
 					log.Debug("into token")

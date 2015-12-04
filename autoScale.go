@@ -45,9 +45,9 @@ func AutoScale(token string) error {
 		log.Debug("menUsedPercent:  ", memUsedPercent)
 		log.Debug("MaxMemPercent:  ", conf.MaxMemPercent)
 		log.Debug("MinCpuPercent:  ", conf.MinCpuPercent)
-
+		log.Debug("MaxInstances: ", conf.MaxInstances)
 		if appMonitor.AppCpuShare != 0 && appMonitor.AppMemShare != 0 {
-			if app.Instances < conf.MaxInstances {
+			if app.Instances <= conf.MaxInstances/2 {
 				checkUpTimes++
 				log.Debug("checkUptimes ===", checkUpTimes)
 				if cpuUsedPercent > conf.MaxCpuPercent || memUsedPercent > conf.MaxMemPercent {
@@ -56,9 +56,10 @@ func AutoScale(token string) error {
 					if checkUpTimes == overMaxTimes && overMaxTimes > conf.WaitCheckTimes {
 						overMaxTimes = 0
 						checkUpTimes = 0
+						log.Debug("调用扩容接口")
 						err := AppRest(token, app.Instances*2, fmt.Sprintf("%d", app.Id))
 						if err != nil {
-							log.Error(err)
+							log.Error("扩容失败：", err)
 						}
 					}
 				} else {
@@ -67,7 +68,7 @@ func AutoScale(token string) error {
 				}
 			}
 
-			if app.Instances > conf.MinInstances {
+			if app.Instances >= conf.MinInstances {
 				checkDownTimes++
 				if cpuUsedPercent < conf.MinCpuPercent && memUsedPercent < conf.MinMemPercent {
 					overMinTimes++

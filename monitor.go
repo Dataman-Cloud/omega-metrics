@@ -43,6 +43,7 @@ func handler(routingKey string, messageBody []byte) {
 
 	switch routingKey {
 	case util.Master_metrics_routing:
+		log.Debug("$$$$$$$$$$$$$$$$$$$$$$$$$     1      master_metrics message  %+v")
 		jsonstr := util.MasterMetricsJson(*mqMessage)
 		if jsonstr.ClusterId != "" && jsonstr.Leader == 1 {
 			label := jsonstr.ClusterId + "_" + routingKey
@@ -54,6 +55,7 @@ func handler(routingKey string, messageBody []byte) {
 		}
 		log.Infof("received masterMetricsRouting message clusterId:%s leader:%d json:%+v", jsonstr.ClusterId, jsonstr.Leader, jsonstr)
 	case util.Master_state_routing:
+		log.Debug("$$$$$$$$$$$$$$$$$$$$$$$$$   2     master_state message  %+v")
 		jsonstr := util.MasterStateJson(*mqMessage)
 		if jsonstr.ClusterId != "" && jsonstr.Leader == 1 {
 			for _, task := range jsonstr.AppAndTasks {
@@ -66,6 +68,7 @@ func handler(routingKey string, messageBody []byte) {
 		}
 		log.Infof("received masterStateRouting message clusterId: %s, leader: %d, json: %+v", jsonstr.ClusterId, jsonstr.Leader, jsonstr)
 	case util.Slave_state_routing:
+		log.Debug("$$$$$$$$$$$$$$$$$$$$$$$$$     3      slave_state message  %+v")
 		array := util.SlaveStateJson(*mqMessage)
 		if len(array) != 0 {
 			for _, v := range array {

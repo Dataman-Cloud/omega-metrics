@@ -209,6 +209,10 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 	}
 
 	// parse "attached"
+	if rabbitMessage.Attached == "" {
+		log.Error("***************************           [SlaveState] Attached is empty")
+		return array
+	}
 	err = json.Unmarshal([]byte(rabbitMessage.Attached), &cadInfo)
 	if err != nil {
 		log.Error("[SlaveState] unmarshal cadvisor containerInfo error ", err)
