@@ -13,49 +13,57 @@ import (
 	"net/http"
 )
 
-var checkUpTimes int = 0
-var checkDownTimes int = 0
-var overMaxTimes int = 0
-var overMinTimes int = 0
+var checkUpTimes = make(map[int64]int)
+var checkDownTimes = make(map[int64]int)
+var overMaxTimes = make(map[int64]int)
+var overMinTimes = make(map[int64]int)
 
 func AutoScale(token string) error {
-	log.Debug("into AutoScale")
 	conf := config.Pairs()
 	conn := cache.Open()
 	defer conn.Close()
+
 	uid, err := redis.String(conn.Do("HGET", "s:"+token, "user_id"))
 	if err != nil {
 		log.Error(err)
+		return err
 	}
 	log.Debug("uid: ", uid)
+
 	applications, err := util.GetAllApps(uid)
 	if err != nil {
 		log.Error(err)
+		return err
 	}
+
 	for _, app := range applications {
 		appMonitor, err := gatherApp(app)
 		if err != nil {
 			log.Error(err)
+			return err
 		}
+
 		log.Debug("appCpuUsed: ", appMonitor.AppCpuUsed)
 		log.Debug("appCpuShare: ", appMonitor.AppCpuShare)
 		cpuUsedPercent := appMonitor.AppCpuUsed / appMonitor.AppCpuShare
 		memUsedPercent := float64(appMonitor.AppMemUsed) / float64(appMonitor.AppMemShare)
 		log.Debug("cpuUsedPercent:  ", cpuUsedPercent)
 		log.Debug("menUsedPercent:  ", memUsedPercent)
-		log.Debug("MaxMemPercent:  ", conf.MaxMemPercent)
-		log.Debug("MinCpuPercent:  ", conf.MinCpuPercent)
-		log.Debug("MaxInstances: ", conf.MaxInstances)
+		log.Debug("MaxMemPercent:  ", conf.Scale.MaxMemPercent)
+		log.Debug("MinCpuPercent:  ", conf.Scale.MinCpuPercent)
+		log.Debug("MaxInstances: ", conf.Scale.MaxInstances)
+
 		if appMonitor.AppCpuShare != 0 && appMonitor.AppMemShare != 0 {
-			if app.Instances <= conf.MaxInstances/2 {
-				checkUpTimes++
-				log.Debug("checkUptimes ===", checkUpTimes)
-				if cpuUsedPercent > conf.MaxCpuPercent || memUsedPercent > conf.MaxMemPercent {
-					overMaxTimes++
+			if app.Instances <= conf.Scale.MaxInstances/2 {
+				checkUpTimes[app.Id]++
+				log.Debug("checkUptimes ===", app.Id, checkUpTimes[app.Id])
+				if cpuUsedPercent > conf.Scale.MaxCpuPercent || memUsedPercent > conf.Scale.MaxMemPercent {
+					overMaxTimes[app.Id]++
+					log.Debug("overMaxTimes ===", app.Id, overMaxTimes[app.Id])
 					// 调用扩容接口
-					if checkUpTimes == overMaxTimes && overMaxTimes > conf.WaitCheckTimes {
-						overMaxTimes = 0
-						checkUpTimes = 0
+					if checkUpTimes[app.Id] == overMaxTimes[app.Id] && overMaxTimes[app.Id] > conf.Scale.WaitCheckTimes {
+						ClearMap(overMaxTimes)
+						ClearMap(checkUpTimes)
 						log.Debug("调用扩容接口")
 						err := AppRest(token, app.Instances*2, fmt.Sprintf("%d", app.Id))
 						if err != nil {
@@ -63,27 +71,28 @@ func AutoScale(token string) error {
 						}
 					}
 				} else {
-					overMaxTimes = 0
-					checkUpTimes = 0
+					overMaxTimes[app.Id] = 0
+					checkUpTimes[app.Id] = 0
+					log.Debug("set ", app.Id, "to 0")
 				}
 			}
 
-			if app.Instances >= conf.MinInstances {
-				checkDownTimes++
-				if cpuUsedPercent < conf.MinCpuPercent && memUsedPercent < conf.MinMemPercent {
-					overMinTimes++
+			if app.Instances >= conf.Scale.MinInstances {
+				checkDownTimes[app.Id]++
+				if cpuUsedPercent < conf.Scale.MinCpuPercent && memUsedPercent < conf.Scale.MinMemPercent {
+					overMinTimes[app.Id]++
 					// 调用扩接口
-					if checkDownTimes == overMinTimes && overMinTimes > conf.WaitCheckTimes {
-						overMinTimes = 0
-						checkDownTimes = 0
+					if checkDownTimes[app.Id] == overMinTimes[app.Id] && overMinTimes[app.Id] > conf.Scale.WaitCheckTimes {
+						ClearMap(overMinTimes)
+						ClearMap(checkDownTimes)
 						err := AppRest(token, app.Instances/2, fmt.Sprintf("%d", app.Id))
 						if err != nil {
 							log.Error(err)
 						}
 					}
 				} else {
-					overMinTimes = 0
-					checkDownTimes = 0
+					ClearMap(overMinTimes)
+					ClearMap(checkDownTimes)
 				}
 			}
 		}
@@ -149,4 +158,10 @@ func AppRest(token string, containerNum int, appId string) error {
 		return respInfo.Error
 	}
 	return nil
+}
+
+func ClearMap(m map[int64]int) {
+	for k, _ := range m {
+		delete(m, k)
+	}
 }

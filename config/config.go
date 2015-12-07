@@ -25,6 +25,15 @@ type Config struct {
 	Debugging      bool
 	Omega_app_host string
 	Omega_app_port int
+	Scale          *ScaleConfig
+	Log            *LogConfig
+	Cache          *CacheConfig
+	Mq             *MqConfig
+	Db             *DbConfig
+}
+
+type ScaleConfig struct {
+	AutoScaling    bool
 	MaxMemPercent  float64
 	MaxCpuPercent  float64
 	MinMemPercent  float64
@@ -32,10 +41,6 @@ type Config struct {
 	WaitCheckTimes int
 	MaxInstances   int
 	MinInstances   int
-	Log            *LogConfig
-	Cache          *CacheConfig
-	Mq             *MqConfig
-	Db             *DbConfig
 }
 
 type LogConfig struct {
@@ -79,6 +84,36 @@ func Pairs() Config {
 	return pairs
 }
 
+func Init() {
+	jww.SetLogThreshold(jww.LevelTrace)
+	jww.SetStdoutThreshold(jww.LevelInfo)
+
+	log.Println("initing config ...")
+
+	viper.SetConfigName("omega-metrics")
+	viper.AddConfigPath("./conf/")
+	viper.AddConfigPath("$HOME/.omega/")
+	viper.AddConfigPath("/etc/omega/")
+	viper.SetConfigType("yaml")
+
+	if err := viper.ReadInConfig(); err != nil {
+		log.Panicln("can't read config file:", err)
+	}
+
+	initDefault()
+
+	if err := viper.Unmarshal(&pairs); err != nil {
+		log.Panicln("can't covert to config pairs: ", err)
+	}
+
+	if !pairs.Debugging {
+		jww.SetLogThreshold(jww.LevelError)
+		jww.SetStdoutThreshold(jww.LevelError)
+	}
+	log.Printf("initialized config pairs: %q\n", pairs)
+
+}
+
 func init() {
 	jww.SetLogThreshold(jww.LevelTrace)
 	jww.SetStdoutThreshold(jww.LevelInfo)
@@ -86,7 +121,7 @@ func init() {
 	log.Println("initing config ...")
 
 	viper.SetConfigName("omega-metrics")
-	viper.AddConfigPath("./")
+	viper.AddConfigPath("./conf/")
 	viper.AddConfigPath("$HOME/.omega/")
 	viper.AddConfigPath("/etc/omega/")
 	viper.SetConfigType("yaml")

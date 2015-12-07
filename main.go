@@ -16,7 +16,10 @@ import (
 	"github.com/Dataman-Cloud/omega-metrics/util"
 	log "github.com/cihub/seelog"
 	"github.com/gin-gonic/gin"
+	"github.com/howeyc/fsnotify"
 )
+
+var isAutoScaling bool
 
 func init() {
 	logger.LoadLogConfig()
@@ -32,17 +35,22 @@ func init() {
 		destroy()
 		os.Exit(0)
 	}()
+
+	conf := config.Pairs()
+	isAutoScaling = conf.Scale.AutoScaling
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
 		for {
 			select {
 			case <-ticker.C:
-				log.Debug("--------------------> begin to check auto scale")
-				token, _ := cache.ReadFromRedis("AutoScaleToken")
-				log.Debug("token==========", token)
-				if token != "" {
-					log.Debug("into token")
-					go AutoScale(token)
+				if isAutoScaling {
+					log.Info("autoScaling is true and begin to get token...")
+					token, _ := cache.ReadFromRedis("AutoScaleToken")
+					log.Debug("token==========", token)
+					if token != "" {
+						log.Debug("begin to check autoScaling...")
+						go AutoScale(token)
+					}
 				}
 			}
 		}
@@ -58,6 +66,7 @@ func destroy() {
 
 func main() {
 	initEnv()
+	go initNotify()
 	monitor()
 	defer destroy()
 }
@@ -68,7 +77,43 @@ func initEnv() {
 	runtime.GOMAXPROCS(numCPU)
 	log.Info("Runing with ", numCPU, " CPUs")
 }
+func initNotify() {
+	log.Info("initNotify....................")
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Error("[main initNotify] NewWatcher error: ", err)
+	}
+	done := make(chan bool)
+	go func() {
+		for {
+			select {
+			case ev := <-watcher.Event:
+				log.Info("event:", ev)
+				if ev.IsModify() {
+					config.Init()
+					conf := config.Pairs()
+					if conf.Scale.AutoScaling {
+						log.Debug("auto scaling true")
+						isAutoScaling = true
+					} else {
+						log.Debug("auto scaling false")
+						isAutoScaling = false
+					}
+				}
+			case err := <-watcher.Error:
+				log.Error("error:", err)
+			}
+		}
+	}()
 
+	err = watcher.Watch("./conf")
+	if err != nil {
+		log.Error("[main initNotify---------------------------] watch error: ", err)
+	}
+
+	<-done
+	watcher.Close()
+}
 func monitor() {
 	startC()
 	gin.SetMode(gin.ReleaseMode)

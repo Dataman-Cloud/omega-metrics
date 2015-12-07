@@ -312,7 +312,6 @@ func appMetrics(ctx *gin.Context) {
 	}
 	var strs []string
 	for _, smem := range smems {
-		log.Debug("smen==========", smem)
 		str, err := cache.ReadFromRedis(smem)
 		if err != nil {
 			log.Errorf("[App Metrics] Read key %v FromRedis error %v ", smem, err)
