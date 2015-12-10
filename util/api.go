@@ -64,10 +64,15 @@ type AppMetric struct {
 	Instances   int     `json:"instances"`
 }
 
+type ApplicationWithNumber struct {
+	App         []Application
+	TotalNumber int
+}
+
 type AppListResponse struct {
-	Code int           `json:"code"`
-	Data []Application `json:"data"`
-	Err  string        `json:"error"`
+	Code int                   `json:"code"`
+	Data ApplicationWithNumber `json:"data"`
+	Err  string                `json:"error"`
 }
 
 type Application struct {
