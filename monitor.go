@@ -146,7 +146,7 @@ func masterMetrics(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, response)
 		return
 	}
-	for _, v := range httpstr.Data {
+	for _, v := range httpstr.Data.App {
 		// 判断app所属集群
 		if *v.ClusterId != ctx.Param("cluster_id") {
 			continue
