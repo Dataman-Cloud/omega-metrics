@@ -16,12 +16,13 @@ import (
 
 func startC() {
 	log.Debug("start master metrics mq consumer")
-	util.MetricsSubscribe(util.Metrics_exchange, util.Master_metrics_routing, handler)
-	util.MetricsSubscribe(util.Metrics_exchange, util.Slave_state_routing, handler)
-	util.MetricsSubscribe(util.Metrics_exchange, util.Master_state_routing, handler)
-	util.MetricsSubscribe(util.Metrics_exchange, util.Slave_metrics_routing, func(routingKey string, messageBody []byte) {})
-	util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_info_routing, func(routingKey string, messageBody []byte) {})
-	util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_metrics_routing, func(routingKey string, messageBody []byte) {})
+	go util.MetricsSubscribe(util.Metrics_exchange, util.Master_metrics_routing, handler)
+	go util.MetricsSubscribe(util.Metrics_exchange, util.Slave_state_routing, handler)
+	go util.MetricsSubscribe(util.Metrics_exchange, util.Master_state_routing, handler)
+	go util.MetricsSubscribe(util.Metrics_exchange, util.Slave_metrics_routing, func(routingKey string, messageBody []byte) {})
+	go util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_info_routing, func(routingKey string, messageBody []byte) {})
+	go util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_metrics_routing, func(routingKey string, messageBody []byte) {})
+	go util.MetricsSubscribe(util.Metrics_exchange, util.Slave_monitor_routing, func(routingKey string, messageBody []byte) {})
 
 }
 
