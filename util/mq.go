@@ -28,6 +28,7 @@ func failOnError(err error, msg string) error {
 }
 
 var mq *amqp.Connection
+var reconChan = make(chan *amqp.Error, 1)
 
 func MQ() *amqp.Connection {
 	if mq != nil {
@@ -95,7 +96,21 @@ func InitMQ() {
 		log.Error("can't dial mq server: ", opts)
 		panic(-1)
 	}
+
+	go onNotifyClose()
+	mq.NotifyClose(reconChan)
+
 	log.Debug("initialized MQ")
+}
+
+func onNotifyClose() {
+	for {
+		select {
+		case err := <-reconChan:
+			fmt.Println("mq connect closed with error", err)
+			panic(-1)
+		}
+	}
 }
 
 func DestroyMQ() {
