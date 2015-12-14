@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/Dataman-Cloud/omega-metrics/config"
+	"github.com/Dataman-Cloud/omega-metrics/logger"
 	log "github.com/cihub/seelog"
 	"github.com/streadway/amqp"
 )
@@ -15,6 +16,7 @@ const (
 	Master_state_routing     string = "master_state"
 	Slave_metrics_routing    string = "slave_metrics"
 	Slave_state_routing      string = "slave_state"
+	Slave_monitor_routing    string = "slave_monitor"
 	Marathon_event_routing   string = "marathon_event"
 	Marathon_metrics_routing string = "marathon_metrics"
 	Marathon_info_routing    string = "marathon_info"
@@ -44,6 +46,15 @@ func MQ() *amqp.Connection {
 }
 
 func MetricsSubscribe(exchange string, routingkey string, handler func(string, []byte)) error {
+	defer func() {
+		if err := recover(); err != nil {
+			stack := logger.Stack(5)
+			log.Errorf("Panic recovery -> %s\n%s\n", err, stack)
+			log.Flush()
+			MetricsSubscribe(exchange, routingkey, handler)
+		}
+	}()
+
 	mq := MQ()
 	channel, err := mq.Channel()
 	failOnError(err, "can't get channel")
@@ -60,13 +71,16 @@ func MetricsSubscribe(exchange string, routingkey string, handler func(string, [
 	messages, err := channel.Consume(routingkey, "", true, false, false, false, nil)
 	failOnError(err, "can't consume")
 
-	go func() {
-		defer channel.Close()
-		for message := range messages {
+	defer channel.Close()
+	for {
+		select {
+		case message, ok := <-messages:
 			handler(message.RoutingKey, message.Body)
+			if !ok {
+				log.Errorf("channel of queue with exchange:%s and routingkey:%s quit!", exchange, routingkey)
+			}
 		}
-	}()
-
+	}
 	return nil
 }
 
