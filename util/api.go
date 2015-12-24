@@ -62,6 +62,7 @@ type AppMetric struct {
 	AppMemShare uint64  `json:"appMemShare"`
 	AppMemUsed  uint64  `json:"appMemUsed"`
 	Instances   int     `json:"instances"`
+	Status      uint8   `json:"status"`
 }
 
 type ApplicationWithNumber struct {
