@@ -59,7 +59,7 @@ func monitor() {
 	gin.SetMode(gin.ReleaseMode)
 	log.Info("[monitor] is up")
 	router := gin.New()
-	router.Use(gin.Logger(), gin.Recovery(), SetHeader)
+	router.Use(gin.Logger(), gin.Recovery())
 	// healthcheck
 	router.GET("/", func(c *gin.Context) {
 		c.String(200, "pass")
