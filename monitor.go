@@ -211,6 +211,7 @@ func gatherApp(app util.Application) (util.AppMetric, error) {
 	result.AppCpuShare = cpuShareSum
 	result.AppMemUsed = memUsedSum
 	result.AppMemShare = memTotalSum
+	result.Status = *app.AppStatus
 	return result, nil
 }
 
