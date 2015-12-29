@@ -59,7 +59,7 @@ func handler(routingKey string, messageBody []byte) {
 		jsonstr := util.MasterStateJson(*mqMessage)
 		if jsonstr.ClusterId != "" && jsonstr.Leader == 1 {
 			for _, task := range jsonstr.AppAndTasks {
-				label := jsonstr.ClusterId + "-" + task.AppName
+				label := jsonstr.ClusterId + ":" + task.AppName
 				err := cache.WriteSetToRedis(label, task.TaskId, config.ContainerMonitorTimeout)
 				if err != nil {
 					log.Error("[Master_state] writeSetToRedis has err: ", err)
@@ -116,7 +116,7 @@ func masterMetrics(ctx *gin.Context) {
 
 	token := util.Header(ctx, HeaderToken)
 	client := &http.Client{}
-	addr := fmt.Sprintf("%s:%d/api/v1/applications/", conf.Omega_app_host, conf.Omega_app_port)
+	addr := fmt.Sprintf("%s:%d/api/v1/applications/0/appStatus", conf.Omega_app_host, conf.Omega_app_port)
 	req, err := http.NewRequest("GET", addr, nil)
 	if err != nil {
 		log.Error("[Master Metrics] creat new http request error: ", err)
@@ -147,9 +147,9 @@ func masterMetrics(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, response)
 		return
 	}
-	for _, v := range httpstr.Data.App {
+	for _, v := range httpstr.Data {
 		// 判断app所属集群
-		if *v.ClusterId != ctx.Param("cluster_id") {
+		if v.Cid != ctx.Param("cluster_id") {
 			continue
 		}
 		appm, err := gatherApp(v)
@@ -167,12 +167,12 @@ func masterMetrics(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
-func gatherApp(app util.Application) (util.AppMetric, error) {
+func gatherApp(app util.StatusAndTask) (util.AppMetric, error) {
 	conn := cache.Open()
 	defer conn.Close()
 
 	var result util.AppMetric
-	key := *app.ClusterId + "-" + *app.AppName
+	key := app.Cid + ":" + app.Name
 	smems, err := redis.Strings(conn.Do("SMEMBERS", key))
 	if err != nil {
 		log.Error("[gatherApp] redis error ", err)
@@ -205,13 +205,12 @@ func gatherApp(app util.Application) (util.AppMetric, error) {
 		memUsedSum += task.MemoryUsed
 		memTotalSum += task.MemoryTotal
 	}
-	result.AppName = *app.AppName
-	result.Instances = *app.Instances
+	result.AppName = app.Name
 	result.AppCpuUsed = cpuUsedSum
 	result.AppCpuShare = cpuShareSum
 	result.AppMemUsed = memUsedSum
 	result.AppMemShare = memTotalSum
-	result.Status = *app.AppStatus
+	result.Status = app.Status
 	return result, nil
 }
 
@@ -225,7 +224,7 @@ func appMetrics(ctx *gin.Context) {
 		Err:  "",
 	}
 
-	key := ctx.Param("cluster_id") + "-" + ctx.Param("app")
+	key := ctx.Param("cluster_id") + ":" + ctx.Param("app")
 	smems, err := redis.Strings(conn.Do("SMEMBERS", key))
 	if err != nil {
 		log.Error("[App Metrics] SMEMBERS error ", err)
