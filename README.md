@@ -50,7 +50,7 @@
     echo 'alias ggvt='$GOPATH/bin/gvt >> ~/.bashrc && \
     mkdir -p $GOPATH/src/github.com/Dataman-Cloud/ && \
     cd $GOPATH/src/github.com/Dataman-Cloud/ && \
-    git clone https://leonluhan:DataMan1234@github.com/Dataman-Cloud/omega-metrics && \
+    git clone https://{user}:{passwd}@github.com/Dataman-Cloud/omega-metrics && \
     cd $GOPATH/src/github.com/Dataman-Cloud/omega-metrics && \
     go build . && \
     cp omega-metrics /data/omega-metrics/ && \
