@@ -62,26 +62,20 @@ type AppMetric struct {
 	AppMemShare uint64  `json:"appMemShare"`
 	AppMemUsed  uint64  `json:"appMemUsed"`
 	Instances   int     `json:"instances"`
+	Status      uint8   `json:"status"`
 }
 
-type ApplicationWithNumber struct {
-	App         []Application
-	TotalNumber int
+type StatusAndTask struct {
+	Cid    string `json:"cid"`
+	Name   string `json:"name"`
+	Status uint8  `json:"status"`
+	Tasks  int64  `json:"tasks"`
 }
 
 type AppListResponse struct {
-	Code int                   `json:"code"`
-	Data ApplicationWithNumber `json:"data"`
-	Err  string                `json:"error"`
-}
-
-type Application struct {
-	AppId     *int64     `json:"appId"`
-	AppName   *string    `json:"appName"`
-	AppStatus *uint8     `json:"appStatus"`
-	ClusterId *string    `json:"clusterId"`
-	Instances *int       `json:"containerNum"`
-	Update    *time.Time `json:"update"`
+	Code int                      `json:"code"`
+	Data map[string]StatusAndTask `json:"data"`
+	Err  string                   `json:"error"`
 }
 
 // master state
