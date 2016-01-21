@@ -211,6 +211,7 @@ func gatherApp(app util.StatusAndTask) (util.AppMetric, error) {
 	result.AppMemUsed = memUsedSum
 	result.AppMemShare = memTotalSum
 	result.Status = app.Status
+	result.Instances = app.Instances
 	return result, nil
 }
 

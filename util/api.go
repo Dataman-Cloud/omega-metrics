@@ -61,16 +61,17 @@ type AppMetric struct {
 	AppCpuUsed  float64 `json:"appCpuUsed"`
 	AppMemShare uint64  `json:"appMemShare"`
 	AppMemUsed  uint64  `json:"appMemUsed"`
-	Instances   int     `json:"instances"`
+	Instances   int64   `json:"instances"`
 	Status      uint8   `json:"status"`
 }
 
 type StatusAndTask struct {
-	Cid    string `json:"cid"`
-	Name   string `json:"name"`
-	Aliase string `json:"aliase"`
-	Status uint8  `json:"status"`
-	Tasks  int64  `json:"tasks"`
+	Cid       string `json:"cid"`
+	Name      string `json:"name"`
+	Aliase    string `json:"aliase"`
+	Status    uint8  `json:"status"`
+	Tasks     int64  `json:"tasks"`
+	Instances int64  `json:"instances"`
 }
 
 type AppListResponse struct {
