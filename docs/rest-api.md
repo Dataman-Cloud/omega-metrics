@@ -1,23 +1,23 @@
 #omega-metrics REST API
 
 ## API List
-  - [GET http://localhost:9005/](#healthCheck)  :healthCheck  检查服务是否正常运行
-  - [GET http://localhost:9005/api/v1/metrics/cluster/{clusterID}](#get master mertrics) 获取ID 为`clusterID`的集群的集群资源消耗信息
-  - [GET http://localhost:9005/api/v1/appmetrics/clusterId/{clusterId}/app/{app}](#get app metrics) 获取ID为`clusterID` 应用名称为`app` 的应用的资源消耗信息
+  - [GET http://localhost:5003/](#healthCheck)  :healthCheck  检查服务是否正常运行
+  - [GET http://localhost:5003/api/v1/metrics/cluster/{clusterID}](#get master mertrics) 获取ID 为`clusterID`的集群的集群资源消耗信息
+  - [GET http://localhost:5003/api/v1/metrics/clusterId/{clusterId}/app/{app}](#get app metrics) 获取ID为`clusterID` 应用名称为`app` 的应用的资源消耗信息
 
-#### GET `http://localhost:9005/`
+#### GET `http://localhost:5003/`
 检查服务是否正常运行 (healthCheck)   </br>
 ***Response***
 ```
 pass
 ```
 
-#### GET `http://localhost:9005/api/v1/metrics/cluster/{clusterID}`
+#### GET `http://localhost:5003/api/v1/metrics/cluster/{clusterID}`
 根据集群ID 获取集群监控的信息
 
 e.g :
 ```shell
-curl -X GET -H {Authorization:token} http://localhost:9005/api/v1/metrics/cluster/140
+curl -X GET -H {Authorization:token} http://localhost:5003/api/v1/metrics/cluster/140
 ```
 
 ***Response***
@@ -85,12 +85,12 @@ curl -X GET -H {Authorization:token} http://localhost:9005/api/v1/metrics/cluste
 * masMetrics数据取自mesos-master metrics 磁盘 内存 和 CPU 数据均和直接查看主机数据不同
 * appMetrics数据取自cadvisor
 
-#### GET `http://localhost:9005/api/v1/appmetrics/clusterId/{clusterId}/app/{app}`
+#### GET `http://localhost:5003/api/v1/metrics/clusterId/{clusterId}/app/{app}`
 根据集群ID和appName，获取app的应用数据监控
 
 e.g :
 ```shell
-curl  http://localhost:9005/api/v1/appmetrics/clusterId/140/app/test
+curl  http://localhost:5003/api/v1/metrics/clusterId/140/app/test
 ```
 
 ***Response***
