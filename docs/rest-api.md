@@ -3,7 +3,7 @@
 ## API List
   - [GET http://localhost:5003/](#healthCheck)  :healthCheck  检查服务是否正常运行
   - [GET http://localhost:5003/api/v1/metrics/cluster/{clusterID}](#get master mertrics) 获取ID 为`clusterID`的集群的集群资源消耗信息
-  - [GET http://localhost:5003/api/v1/metrics/clusterId/{clusterId}/app/{app}](#get app metrics) 获取ID为`clusterID` 应用名称为`app` 的应用的资源消耗信息
+  - [GET http://localhost:5003/api/v1/metrics/cluster/{clusterID}/app/{app}](#get app metrics) 获取ID为`clusterID` 应用名称为`app` 的应用的资源消耗信息
 
 #### GET `http://localhost:5003/`
 检查服务是否正常运行 (healthCheck)   </br>
