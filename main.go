@@ -43,7 +43,7 @@ func destroy() {
 
 func main() {
 	initEnv()
-	monitor()
+	initServer()
 	defer destroy()
 }
 
@@ -54,7 +54,7 @@ func initEnv() {
 	log.Info("Runing with ", numCPU, " CPUs")
 }
 
-func monitor() {
+func initServer() {
 	startC()
 	gin.SetMode(gin.ReleaseMode)
 	log.Info("[monitor] is up")
@@ -64,6 +64,7 @@ func monitor() {
 	router.GET("/", func(c *gin.Context) {
 		c.String(200, "pass")
 	})
+	router.GET("/api/v2/health", HealthCheck)
 
 	monitorGroup := router.Group("/api/v1")
 	{
