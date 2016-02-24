@@ -176,7 +176,7 @@ func gatherApp(app util.StatusAndTask) (util.AppMetric, error) {
 	defer conn.Close()
 
 	var result util.AppMetric
-	key := app.Cid + ":" + app.Name
+	key := app.Cid + ":" + app.Aliase
 	smems, err := redis.Strings(conn.Do("SMEMBERS", key))
 	if err != nil {
 		log.Error("[gatherApp] redis error ", err)
@@ -215,6 +215,7 @@ func gatherApp(app util.StatusAndTask) (util.AppMetric, error) {
 	result.AppMemUsed = memUsedSum
 	result.AppMemShare = memTotalSum
 	result.Status = app.Status
+	result.Instances = app.Instances
 	return result, nil
 }
 
