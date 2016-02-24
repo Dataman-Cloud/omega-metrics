@@ -15,6 +15,7 @@ const (
 	DefaultPort                 = 9005
 	DefaultDebugging            = true
 	DefaultLogLevel             = "debug"
+	DefaultHealthCheck          = 60
 )
 
 type Config struct {
@@ -28,6 +29,7 @@ type Config struct {
 	Log            *LogConfig
 	Cache          *CacheConfig
 	Mq             *MqConfig
+	HealthCheck    int
 }
 
 type LogConfig struct {

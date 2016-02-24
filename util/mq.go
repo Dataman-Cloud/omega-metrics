@@ -20,6 +20,8 @@ const (
 	Marathon_event_routing   string = "marathon_event"
 	Marathon_metrics_routing string = "marathon_metrics"
 	Marathon_info_routing    string = "marathon_info"
+	ExchangeCluster          string = "cluster"
+	RoutingHealth            string = "health"
 )
 
 func failOnError(err error, msg string) error {
@@ -84,6 +86,29 @@ func MetricsSubscribe(exchange string, routingkey string, handler func(string, [
 		}
 	}
 	return nil
+}
+
+func Publish(exchange, routing string, message string) error {
+        mq := MQ()
+        channel, err := mq.Channel()
+        failOnError(err, "can't get channel")
+
+        defer channel.Close()
+        err = channel.ExchangeDeclare(exchange, "direct", true, false, false, false, nil)
+        failOnError(err, "can't declare exchange")
+
+        err = channel.Publish(
+                exchange,
+                routing,
+                false,
+                false,
+                amqp.Publishing{
+                        ContentType: "text/plain",
+                        Body:        []byte(message),
+                },
+        )
+        failOnError(err, "can't publish message")
+        return nil
 }
 
 func declareQueue(channel *amqp.Channel, name string) (amqp.Queue, error) {
