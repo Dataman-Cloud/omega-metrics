@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"time"
 
 	"github.com/Dataman-Cloud/omega-metrics/cache"
 	"github.com/Dataman-Cloud/omega-metrics/config"
@@ -68,6 +69,10 @@ func handler(routingKey string, messageBody []byte) {
 		}
 		log.Infof("received masterStateRouting message clusterId: %s, leader: %d, json: %+v", jsonstr.ClusterId, jsonstr.Leader, jsonstr)
 	case util.Slave_state_routing:
+		log.Debug("-----------------------      slave state   ")
+		log.Debugf("********************       slave_state_message:%s", mqMessage.Message)
+		log.Debugf("********************       slave_state_attached:%s", mqMessage.Attached)
+		log.Debug("-----------------------      end")
 		array := util.SlaveStateJson(*mqMessage)
 		if len(array) != 0 {
 			for _, v := range array {
@@ -256,3 +261,73 @@ func appMetrics(ctx *gin.Context) {
 	response.Data = *jsoninterface
 	ctx.JSON(http.StatusOK, response)
 }
+
+var monitor Monitor
+var lastHealthCheckTime int64
+
+type Monitor struct {
+        OmegaMetrics HealthStatus `json:"omegaMetrics"`
+        Redis        HealthStatus `json:"redis"`
+        RabbitMQ     HealthStatus `json:"rabbitMQ"`
+}
+
+type HealthStatus struct {
+        Status uint8   `json:"status"`
+        Time   float64 `json:"time"`
+}
+
+func HealthCheck(ctx *gin.Context) {
+        conf := config.Pairs()
+        var duration int
+        if conf.HealthCheck != 0 {
+                duration = conf.HealthCheck
+        } else {
+                duration = config.DefaultHealthCheck
+        }
+        if time.Now().Unix()-lastHealthCheckTime < int64(duration) {
+                ctx.JSON(http.StatusOK, monitor)
+                return
+        }
+        metricsHealth := true
+        start := time.Now()
+        // redis check
+        err := cache.WriteStringToRedis("health", "check", 2)
+        if err != nil {
+                log.Error(err)
+                monitor.Redis.Status = 1
+                monitor.Redis.Time = Milliseconds(time.Since(start))
+                metricsHealth = false
+        } else {
+                monitor.Redis.Status = 0
+                monitor.Redis.Time = Milliseconds(time.Since(start))
+        }
+        // rabbitMQ check
+        begin := time.Now()
+        err = util.Publish(util.ExchangeCluster, util.RoutingHealth, "health check")
+        if err != nil {
+                log.Error(err)
+                monitor.RabbitMQ.Status = 1
+                monitor.RabbitMQ.Time = Milliseconds(time.Since(begin))
+                metricsHealth = false
+        } else {
+                monitor.RabbitMQ.Status = 0
+                monitor.RabbitMQ.Time = Milliseconds(time.Since(begin))
+        }
+        // OmegaMetrics check
+        if metricsHealth {
+                monitor.OmegaMetrics.Status = 0
+                monitor.OmegaMetrics.Time = Milliseconds(time.Since(start))
+        } else {
+                monitor.OmegaMetrics.Status = 1
+                monitor.OmegaMetrics.Time = Milliseconds(time.Since(start))
+        }
+        lastHealthCheckTime = time.Now().Unix()
+	ctx.JSON(http.StatusOK, monitor)
+}
+
+func Milliseconds(d time.Duration) float64 {
+        min := d / 1e6
+        nsec := d % 1e6
+        return float64(min) + float64(nsec)*(1e-6)
+}
+
