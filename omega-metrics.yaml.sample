@@ -1,20 +1,20 @@
 ---
 numCPU: 1
-host: ""
+host: "0.0.0.0"
 port: 9005
 debugging: false
-omega_app_host: "http://10.3.10.83"
+omega_app_host: "http://app"
 omega_app_port: 6080
 healthCheck: 60
 log:
     console: true
-    file: "./omega-metrics.log"
+    file: "/var/log/omega/omega-metrics.log"
     level: "debug"
     formatter: "%Date(2006-01-02 15:04:05Z07:00) [%LEVEL] %Msg%n"
     fileSize: 5000000
     fileNum: 10
 cache:
-    host: "dev.dataman.io"
+    host: "redis"
     port: 6379
     password: ""
     db: 0
@@ -23,5 +23,5 @@ cache:
 mq:
     user: "guest"
     password: "guest"
-    host: "dev.dataman.io"
+    host: "rmq"
     port: 5672
