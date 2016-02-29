@@ -64,7 +64,7 @@ func initServer() {
 	router.GET("/", func(c *gin.Context) {
 		c.String(200, "pass")
 	})
-	router.GET("/api/v2/health", HealthCheck)
+	router.GET("/api/v3/health/metrics", HealthCheck)
 
 	monitorGroup := router.Group("/api/v1")
 	{
