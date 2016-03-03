@@ -79,13 +79,15 @@ func handler(routingKey string, messageBody []byte) {
 		if len(array) != 0 {
 			for _, v := range array {
 				key := v.App.Task_id
+				appname := v.App.AppName
+				appid := v.App.AppId
 				value, _ := json.Marshal(v)
 
 				err := cache.WriteStringToRedis(key, string(value), config.ContainerMonitorTimeout)
 				if err != nil {
 					log.Error("[Slave_state] writeHashToRedis has err: ", err)
 				}
-				dberr := db.WriteStringToInfluxdb("Slave_state", key, string(value))
+				dberr := db.WriteStringToInfluxdb("Slave_state", appname, appid, string(value))
 				if dberr != nil {
 					log.Error("[Slave_state] WriteStringToInfluxdb has err: ", dberr)
 				}
