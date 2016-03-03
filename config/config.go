@@ -57,6 +57,12 @@ type MqConfig struct {
 	Port     int64
 }
 
+type DbConfig struct {
+	User     string
+	Password string
+	Host     string
+	Port     int64
+}
 var pairs Config
 
 func Pairs() Config {

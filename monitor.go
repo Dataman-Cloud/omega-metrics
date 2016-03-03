@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Dataman-Cloud/omega-metrics/cache"
+	"github.com/Dataman-Cloud/omega-metrics/db"
 	"github.com/Dataman-Cloud/omega-metrics/config"
 	"github.com/Dataman-Cloud/omega-metrics/util"
 	log "github.com/cihub/seelog"
@@ -66,6 +67,10 @@ func handler(routingKey string, messageBody []byte) {
 				if err != nil {
 					log.Error("[Master_state] writeSetToRedis has err: ", err)
 				}
+				dberr := db.WriteStringToInfluxdbMasterState("Master_state", label, task.TaskId)
+				if dberr != nil {
+					log.Error("[Master_state] WriteStringToInfluxdb has err: ", dberr)
+				}
 			}
 		}
 		log.Infof("received masterStateRouting message clusterId: %s, leader: %d, json: %+v", jsonstr.ClusterId, jsonstr.Leader, jsonstr)
@@ -75,9 +80,14 @@ func handler(routingKey string, messageBody []byte) {
 			for _, v := range array {
 				key := v.App.Task_id
 				value, _ := json.Marshal(v)
+
 				err := cache.WriteStringToRedis(key, string(value), config.ContainerMonitorTimeout)
 				if err != nil {
 					log.Error("[Slave_state] writeHashToRedis has err: ", err)
+				}
+				dberr := db.WriteStringToInfluxdb("Slave_state", key, v)
+				if dberr != nil {
+					log.Error("[Slave_state] WriteStringToInfluxdb has err: ", dberr)
 				}
 			}
 		}
@@ -327,4 +337,3 @@ func Milliseconds(d time.Duration) float64 {
         nsec := d % 1e6
         return float64(min) + float64(nsec)*(1e-6)
 }
-
