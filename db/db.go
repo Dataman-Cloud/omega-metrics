@@ -19,7 +19,7 @@ const (
 	password = "root"
 )
 
-func WriteStringToInfluxdb(serie string, tags_value string, fields_value string) error {
+func WriteStringToInfluxdb(serie string, appname string, appid string, fields_value string) error {
 
 	conn, err := client.NewHTTPClient(client.HTTPConfig{
 			Addr: Addr,
@@ -38,15 +38,17 @@ func WriteStringToInfluxdb(serie string, tags_value string, fields_value string)
 	})
 
 	var slave_mar util.SlaveStateMar
-  json.Unmarshal([]byte(fields_value), &slave_mar)
+        json.Unmarshal([]byte(fields_value), &slave_mar)
 	fmt.Println("slave_mar: %s", slave_mar)
+
 	fields := structs.Map(&slave_mar)
 
 		  fmt.Println("serie: %s", serie)
 		  fmt.Println("fields: %s", fields)
-			fmt.Println("tags_value: %s", tags_value)
+	    fmt.Println("appname: %s", appname)
+	    fmt.Println("appid: %s", appid)
 		  //Create a point and add to batch
-		  tags := map[string]string{"Task_id": tags_value}
+		  tags := map[string]string{"appname": appname, "appid": appid}
 
 			pt, err := client.NewPoint(serie, tags, fields)
 			if err != nil {
