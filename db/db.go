@@ -4,6 +4,7 @@ import (
 	"fmt"
 	//"sync"
 	//"github.com/Dataman-Cloud/omega-metrics/config"
+	"encoding/json"
 	log "github.com/cihub/seelog"
 	"github.com/influxdata/influxdb/client/v2"
 	"github.com/fatih/structs"
@@ -18,7 +19,7 @@ const (
 	password = "root"
 )
 
-func WriteStringToInfluxdb(serie string, tags_value string, fields_value util.SlaveStateMar) error {
+func WriteStringToInfluxdb(serie string, tags_value string, fields_value string) error {
 
 	conn, err := client.NewHTTPClient(client.HTTPConfig{
 			Addr: Addr,
@@ -36,44 +37,16 @@ func WriteStringToInfluxdb(serie string, tags_value string, fields_value util.Sl
 			Precision: "s",
 	})
 
-	  type SlaveStateMar struct {
-		  Timestamp     int64   `json:"Timestamp"`
-		  ClusterID     string  `json:"ClusterID"`
-		  SlaveID       string  `json:"SlaveID"`
-			InstanceID    string  `json:"InstanceID"`
-      AppName       string  `json:"AppName"`
-			TaskID        string  `json:"TaskID"`
-		  ContainerID   string  `json:"ContainerID"`
-		  CpuUsedCores  float64 `json:"CpuUsedCores"`
-		  CpuShareCores float64 `json:"CpuShareCores"`
-		  MemoryTotal   uint64  `json:"MemoryTotal"`
-		  MemoryUsed    uint64  `json:"MemoryUsed"`
-	  }
-
-		  InstanceID := fields_value.App.AppId
-			AppName := fields_value.App.AppName
-
-      fileds_new := &SlaveStateMar{
-				Timestamp: fields_value.Timestamp,
-				ClusterID: fields_value.ClusterId,
-				SlaveID: fields_value.App.Slave_id,
-				InstanceID: fields_value.App.AppId,
-				AppName: fields_value.App.AppName,
-				TaskID: fields_value.App.Task_id,
-				CpuUsedCores: fields_value.CpuUsedCores,
-				CpuShareCores: fields_value.CpuShareCores,
-				MemoryTotal: fields_value.MemoryTotal,
-				MemoryUsed: fields_value.MemoryUsed,
-			}
-
-		  fields := structs.Map(fileds_new)
+	var slave_mar util.SlaveStateMar
+  json.Unmarshal([]byte(fields_value), &slave_mar)
+	fmt.Println("slave_mar: %s", slave_mar)
+	fields := structs.Map(&slave_mar)
 
 		  fmt.Println("serie: %s", serie)
 		  fmt.Println("fields: %s", fields)
-			fmt.Println("InstanceID: %s", InstanceID)
-			fmt.Println("AppName: %s", AppName)
+			fmt.Println("tags_value: %s", tags_value)
 		  //Create a point and add to batch
-		  tags := map[string]string{"InstanceID": InstanceID, "AppName": AppName}
+		  tags := map[string]string{"Task_id": tags_value}
 
 			pt, err := client.NewPoint(serie, tags, fields)
 			if err != nil {
