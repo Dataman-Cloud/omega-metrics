@@ -25,3 +25,8 @@ mq:
     password: "guest"
     host: "rmq"
     port: 5672
+db:
+    user: "root"
+    password: "root"
+    host: "influxdb"
+    port: 8086
