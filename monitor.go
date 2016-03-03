@@ -85,7 +85,7 @@ func handler(routingKey string, messageBody []byte) {
 				if err != nil {
 					log.Error("[Slave_state] writeHashToRedis has err: ", err)
 				}
-				dberr := db.WriteStringToInfluxdb("Slave_state", key, v)
+				dberr := db.WriteStringToInfluxdb("Slave_state", key, string(value))
 				if dberr != nil {
 					log.Error("[Slave_state] WriteStringToInfluxdb has err: ", dberr)
 				}
