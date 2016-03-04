@@ -66,9 +66,9 @@ type AppMetric struct {
 }
 
 type StatusAndTask struct {
-	Cid       string `json:"cid"`
+	Cid       int64  `json:"cid"`
 	Name      string `json:"name"`
-	Aliase    string `json:"aliase"`
+	Alias     string `json:"alias"`
 	Status    uint8  `json:"status"`
 	Tasks     int64  `json:"tasks"`
 	Instances int64  `json:"instances"`
