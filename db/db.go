@@ -39,16 +39,31 @@ func WriteStringToInfluxdb(serie string, appname string, appid string, fields_va
 
 	var slave_mar util.SlaveStateMar
         json.Unmarshal([]byte(fields_value), &slave_mar)
-	fmt.Println("slave_mar: %s", slave_mar)
 
 	fields := structs.Map(&slave_mar)
 
-		  fmt.Println("serie: %s", serie)
-		  fmt.Println("fields: %s", fields)
-	    fmt.Println("appname: %s", appname)
-	    fmt.Println("appid: %s", appid)
-		  //Create a point and add to batch
-		  tags := map[string]string{"appname": appname, "appid": appid}
+  fields["ContainerName"] = fields["ContainerId"]
+
+	MemoryTotal, ok := fields["MemoryTotal"]
+	if ok {
+		fields["MemoryTotal"] = float64(MemoryTotal.(uint64))
+	}
+
+	MemoryUsed, ok := fields["MemoryUsed"]
+	if ok {
+		fields["MemoryUsed"] = float64(MemoryUsed.(uint64))
+	}
+
+	clusteid, _ := fields["ClusterId"].(string)
+
+  delete(fields, "App")
+	delete(fields, "ContainerId")
+	delete(fields, "ClusterId")
+
+	tags := map[string]string{"appname": appname, "instance": appid, "clusteid": clusteid}
+
+	fmt.Println("fields after: %s", fields)
+
 
 			pt, err := client.NewPoint(serie, tags, fields)
 			if err != nil {
@@ -57,6 +72,7 @@ func WriteStringToInfluxdb(serie string, appname string, appid string, fields_va
 
 			bp.AddPoint(pt)
 
+			fmt.Println("influxdb bp: %s", bp)
 
 	// Write the batch
 	conn.Write(bp)
@@ -79,3 +95,4 @@ func WriteStringToInfluxdbMasterState(serie string, tags_value string, fields_va
 	fmt.Println("fields_value: %s", fields_value)
 	return nil
 }
+

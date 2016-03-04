@@ -110,6 +110,10 @@ type SlaveStateMar struct {
 	CpuShareCores float64 `json:"cpuShareCores"`
 	MemoryTotal   uint64  `json:"memoryTotal"`
 	MemoryUsed    uint64  `json:"memoryUsed"`
+	NetworkReceviedBytes   float64 `json:"nw_rx_bytes"`
+	NetworkSentBytes       float64 `json:"nw_tx_bytes"`
+	DiskIOReadBytes        float64 `json: "disk_read_bytes"`
+	DiskIOWriteBytes       float64 `json: "disk_write_bytes"`
 }
 
 type SlaveState struct {
@@ -429,3 +433,4 @@ type ContainerInfoRequest struct {
 	// If ommitted, current time is assumed.
 	End time.Time `json:"end,omitempty"`
 }
+
