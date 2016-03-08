@@ -118,7 +118,7 @@ func masterMetrics(ctx *gin.Context) {
 
 	token := util.Header(ctx, HeaderToken)
 	client := &http.Client{}
-	addr := fmt.Sprintf("%s:%d/api/v1/applications/0/appStatus", conf.Omega_app_host, conf.Omega_app_port)
+	addr := fmt.Sprintf("%s:%d/api/v3/apps/status", conf.Omega_app_host, conf.Omega_app_port)
 	req, err := http.NewRequest("GET", addr, nil)
 	if err != nil {
 		log.Error("[Master Metrics] creat new http request error: ", err)

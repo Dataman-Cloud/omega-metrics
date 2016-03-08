@@ -68,8 +68,8 @@ func initServer() {
 
 	monitorGroup := router.Group("/api/v3")
 	{
-		monitorGroup.GET("/metrics/clusters/:cluster_id", masterMetrics)
-		monitorGroup.GET("/metrics/clusters/:cluster_id/apps/:app", appMetrics)
+		monitorGroup.GET("/clusters/:cluster_id/metrics", masterMetrics)
+		monitorGroup.GET("/clusters/:cluster_id/apps/:app/metrics", appMetrics)
 	}
 
 	conf := config.Pairs()
