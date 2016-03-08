@@ -66,10 +66,10 @@ func initServer() {
 	})
 	router.GET("/api/v3/health/metrics", HealthCheck)
 
-	monitorGroup := router.Group("/api/v1")
+	monitorGroup := router.Group("/api/v3")
 	{
-		monitorGroup.GET("/metrics/cluster/:cluster_id", masterMetrics)
-		monitorGroup.GET("/metrics/cluster/:cluster_id/app/:app", appMetrics)
+		monitorGroup.GET("/metrics/clusters/:cluster_id", masterMetrics)
+		monitorGroup.GET("/metrics/clusters/:cluster_id/apps/:app", appMetrics)
 	}
 
 	conf := config.Pairs()

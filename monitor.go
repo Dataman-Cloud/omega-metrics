@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/Dataman-Cloud/omega-metrics/cache"
@@ -150,7 +151,7 @@ func masterMetrics(ctx *gin.Context) {
 	}
 	for _, v := range httpstr.Data {
 		// 判断app所属集群
-		if v.Cid != ctx.Param("cluster_id") {
+		if strconv.FormatInt(v.Cid, 10) != ctx.Param("cluster_id") {
 			continue
 		}
 		appm, err := gatherApp(v)
@@ -173,7 +174,7 @@ func gatherApp(app util.StatusAndTask) (util.AppMetric, error) {
 	defer conn.Close()
 
 	var result util.AppMetric
-	key := app.Cid + ":" + app.Aliase
+	key := strconv.FormatInt(app.Cid, 10) + ":" + app.Alias
 	smems, err := redis.Strings(conn.Do("SMEMBERS", key))
 	if err != nil {
 		log.Error("[gatherApp] redis error ", err)
