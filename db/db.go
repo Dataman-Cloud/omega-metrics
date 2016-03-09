@@ -2,8 +2,7 @@ package db
 
 import (
 	"fmt"
-	//"sync"
-	//"github.com/Dataman-Cloud/omega-metrics/config"
+	"github.com/Dataman-Cloud/omega-metrics/config"
 	"encoding/json"
 	log "github.com/cihub/seelog"
 	"github.com/influxdata/influxdb/client/v2"
@@ -11,18 +10,15 @@ import (
 	"github.com/Dataman-Cloud/omega-metrics/util"
 )
 
-//var pool *redis.Pool
-const (
-  DB = "shurenyun"
-	Addr = "http://influxdb:8086"
-	username = "root"
-	password = "root"
-)
-
 func WriteStringToInfluxdb(serie string, appname string, appid string, fields_value string) error {
 
+  conf := config.Pairs()
+  addr := fmt.Sprintf("http://%s:%d", conf.Db.Host, conf.Db.Port)
+	username := fmt.Sprintf("%s", conf.Db.User)
+	password := fmt.Sprintf("%s", conf.Db.Password)
+	database := fmt.Sprintf("%s", conf.Db.Database)
 	conn, err := client.NewHTTPClient(client.HTTPConfig{
-			Addr: Addr,
+			Addr: addr,
 			Username: username,
 			Password: password,
 	})
@@ -33,7 +29,7 @@ func WriteStringToInfluxdb(serie string, appname string, appid string, fields_va
 
 	// Create a new point batch
 	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
-			Database:  DB,
+			Database:  database,
 			Precision: "s",
 	})
 
@@ -76,7 +72,7 @@ func WriteStringToInfluxdb(serie string, appname string, appid string, fields_va
 
 	// Write the batch
 	conn.Write(bp)
-	log.Infof("Write String to Influxdb %s, Serie %s", DB, serie)
+	log.Infof("Write String to Influxdb %s, Serie %s", database, serie)
 	return nil
 }
 
@@ -95,4 +91,3 @@ func WriteStringToInfluxdbMasterState(serie string, tags_value string, fields_va
 	fmt.Println("fields_value: %s", fields_value)
 	return nil
 }
-
