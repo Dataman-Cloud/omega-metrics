@@ -30,3 +30,4 @@ db:
     password: "root"
     host: "influxdb"
     port: 8086
+    database: "shurenyun"
