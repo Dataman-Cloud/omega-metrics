@@ -15,6 +15,7 @@ import (
 	log "github.com/cihub/seelog"
 	redis "github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"
+	"github.com/influxdata/influxdb/client/v2"
 )
 
 func startC() {
@@ -66,10 +67,6 @@ func handler(routingKey string, messageBody []byte) {
 				err := cache.WriteSetToRedis(label, task.TaskId, config.ContainerMonitorTimeout)
 				if err != nil {
 					log.Error("[Master_state] writeSetToRedis has err: ", err)
-				}
-				dberr := db.WriteStringToInfluxdbMasterState("Master_state", label, task.TaskId)
-				if dberr != nil {
-					log.Error("[Master_state] WriteStringToInfluxdb has err: ", dberr)
 				}
 			}
 		}
@@ -341,4 +338,46 @@ func Milliseconds(d time.Duration) float64 {
 	min := d / 1e6
 	nsec := d % 1e6
 	return float64(min) + float64(nsec)*(1e-6)
+}
+
+func appMonitor(ctx *gin.Context) {
+
+	cluster_id := ctx.Param("cluster_id")
+	appname := ctx.Param("app")
+	item := ctx.Query("item")
+	from := ctx.Query("from")
+	end := ctx.Query("end")
+	filter := "clusterid = '" + cluster_id + "' AND appname = '" + appname + "' AND time > '" + from + "' AND time < '" + end + "'"
+
+	command := ""
+	fields := "time,ContainerName,instance,cluster_id,appname"
+	switch item {
+		 case "cpu":
+					command = "SELECT " + fields + ",CpuShareCores,CpuUsedCores" + " FROM Slave_state WHERE " + filter
+		 case "memory":
+					command = "SELECT " + fields + ",MemoryTotal,MemoryUsed" + " FROM Slave_state WHERE " + filter
+		 case "network":
+					command = "SELECT " + fields + ",NetworkReceviedBytes,NetworkSentBytes" + " FROM Slave_state WHERE " + filter
+		 case "disk":
+					command = "SELECT " + fields + ",DiskIOReadBytes,DiskIOWriteBytes" + " FROM Slave_state WHERE " + filter
+		 default:
+					command = "SELECT * FROM Slave_state WHERE " + filter
+	}
+  log.Infof("[App Monitor] Query Influxdb Command %s ", command)
+
+	response := util.MonitorResponse{
+		Code: 1,
+		Data: nil,
+		Err:  "",
+	}
+
+	dbresult, err := db.InfluxdbClient_Query(command)
+	if err != nil {
+		log.Error("[App Monitor] Query Influxdb Error ", err)
+    response.Err = "[App Monitor] Query Influxdb Error" + err.Error()
+		ctx.JSON(http.StatusOK, response)
+	}
+	response.Code = 0
+	response.Data = dbresult.Results
+	ctx.JSON(http.StatusOK, response)
 }
