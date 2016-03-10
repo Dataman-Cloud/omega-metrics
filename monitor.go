@@ -15,6 +15,7 @@ import (
 	log "github.com/cihub/seelog"
 	redis "github.com/garyburd/redigo/redis"
 	"github.com/gin-gonic/gin"
+	"github.com/influxdata/influxdb/client/v2"
 )
 
 func startC() {
