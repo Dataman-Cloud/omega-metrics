@@ -50,25 +50,22 @@ func WriteStringToInfluxdb(serie string, appname string, appid string, fields_va
 		fields["MemoryUsed"] = float64(MemoryUsed.(uint64))
 	}
 
-	clusteid, _ := fields["ClusterId"].(string)
+	clusterid, _ := fields["ClusterId"].(string)
 
   delete(fields, "App")
 	delete(fields, "ContainerId")
 	delete(fields, "ClusterId")
 
-	tags := map[string]string{"appname": appname, "instance": appid, "clusteid": clusteid}
+	tags := map[string]string{"appname": appname, "instance": appid, "clusterid": clusterid}
 
-	fmt.Println("fields after: %s", fields)
+	pt, err := client.NewPoint(serie, tags, fields)
+	if err != nil {
+			log.Error("Error: ", err.Error())
+	}
 
+	bp.AddPoint(pt)
 
-			pt, err := client.NewPoint(serie, tags, fields)
-			if err != nil {
-				log.Error("Error: ", err.Error())
-			}
-
-			bp.AddPoint(pt)
-
-			fmt.Println("influxdb bp: %s", bp)
+	fmt.Println("influxdb bp: %s", bp)
 
 	// Write the batch
 	conn.Write(bp)
@@ -76,18 +73,30 @@ func WriteStringToInfluxdb(serie string, appname string, appid string, fields_va
 	return nil
 }
 
-func WriteStringToInfluxdbSlaveState(serie string, tags_value string, fields_value util.SlaveStateMar) error {
-	containerId := fields_value.ContainerId
+/*
+func InfluxdbClient_Query(command string) []client.Response {
+	conf := config.Pairs()
+  addr := fmt.Sprintf("http://%s:%d", conf.Db.Host, conf.Db.Port)
+	username := fmt.Sprintf("%s", conf.Db.User)
+	password := fmt.Sprintf("%s", conf.Db.Password)
+	database := fmt.Sprintf("%s", conf.Db.Database)
+	conn, err := client.NewHTTPClient(client.HTTPConfig{
+			Addr: addr,
+			Username: username,
+			Password: password,
+	})
+	if err != nil {
+		log.Error("Error creating Influxdb Client: ", err.Error())
+	}
+	defer conn.Close()
 
-	fmt.Println("serie: %s", serie)
-	fmt.Println("containerId: %s", containerId)
-	fmt.Println("fields_value: %s", fields_value)
-	return nil
-}
+	q := client.Query{
+		Command:  command + " limit 1",
+		Database: database,
+	}
 
-func WriteStringToInfluxdbMasterState(serie string, tags_value string, fields_value string) error {
-	fmt.Println("serie: %s", serie)
-	fmt.Println("tags_value: %s", tags_value)
-	fmt.Println("fields_value: %s", fields_value)
-	return nil
+	response, err := conn.Query(q)
+	fmt.Println(response.Results)
+	return response
 }
+*/
