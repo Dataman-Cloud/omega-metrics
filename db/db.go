@@ -1,26 +1,26 @@
 package db
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/Dataman-Cloud/omega-metrics/config"
-	"encoding/json"
-	log "github.com/cihub/seelog"
-	"github.com/influxdata/influxdb/client/v2"
-	"github.com/fatih/structs"
 	"github.com/Dataman-Cloud/omega-metrics/util"
+	log "github.com/cihub/seelog"
+	"github.com/fatih/structs"
+	"github.com/influxdata/influxdb/client/v2"
 )
 
 func WriteStringToInfluxdb(serie string, appname string, appid string, fields_value string) error {
 
-  conf := config.Pairs()
-  addr := fmt.Sprintf("http://%s:%d", conf.Db.Host, conf.Db.Port)
+	conf := config.Pairs()
+	addr := fmt.Sprintf("http://%s:%d", conf.Db.Host, conf.Db.Port)
 	username := fmt.Sprintf("%s", conf.Db.User)
 	password := fmt.Sprintf("%s", conf.Db.Password)
 	database := fmt.Sprintf("%s", conf.Db.Database)
 	conn, err := client.NewHTTPClient(client.HTTPConfig{
-			Addr: addr,
-			Username: username,
-			Password: password,
+		Addr:     addr,
+		Username: username,
+		Password: password,
 	})
 	if err != nil {
 		log.Error("Error creating Influxdb Client: ", err.Error())
@@ -29,16 +29,16 @@ func WriteStringToInfluxdb(serie string, appname string, appid string, fields_va
 
 	// Create a new point batch
 	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
-			Database:  database,
-			Precision: "s",
+		Database:  database,
+		Precision: "s",
 	})
 
 	var slave_mar util.SlaveStateMar
-        json.Unmarshal([]byte(fields_value), &slave_mar)
+	json.Unmarshal([]byte(fields_value), &slave_mar)
 
 	fields := structs.Map(&slave_mar)
 
-  fields["ContainerName"] = fields["ContainerId"]
+	fields["ContainerName"] = fields["ContainerId"]
 
 	MemoryTotal, ok := fields["MemoryTotal"]
 	if ok {
@@ -52,7 +52,7 @@ func WriteStringToInfluxdb(serie string, appname string, appid string, fields_va
 
 	clusterid, _ := fields["ClusterId"].(string)
 
-  delete(fields, "App")
+	delete(fields, "App")
 	delete(fields, "ContainerId")
 	delete(fields, "ClusterId")
 
@@ -60,7 +60,7 @@ func WriteStringToInfluxdb(serie string, appname string, appid string, fields_va
 
 	pt, err := client.NewPoint(serie, tags, fields)
 	if err != nil {
-			log.Error("Error: ", err.Error())
+		log.Error("Error: ", err.Error())
 	}
 
 	bp.AddPoint(pt)

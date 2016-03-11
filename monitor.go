@@ -351,16 +351,16 @@ func appMonitor(ctx *gin.Context) {
 	command := ""
 	fields := "time,ContainerName,instance,cluster_id,appname"
 	switch item {
-		 case "cpu":
-					command = "SELECT " + fields + ",CpuShareCores,CpuUsedCores" + " FROM Slave_state WHERE " + filter
-		 case "memory":
-					command = "SELECT " + fields + ",MemoryTotal,MemoryUsed" + " FROM Slave_state WHERE " + filter
-		 case "network":
-					command = "SELECT " + fields + ",NetworkReceviedBytes,NetworkSentBytes" + " FROM Slave_state WHERE " + filter
-		 case "disk":
-					command = "SELECT " + fields + ",DiskIOReadBytes,DiskIOWriteBytes" + " FROM Slave_state WHERE " + filter
-		 default:
-					command = "SELECT * FROM Slave_state WHERE " + filter
+	case "cpu":
+		command = "SELECT " + fields + ",CpuShareCores,CpuUsedCores" + " FROM Slave_state WHERE " + filter
+	case "memory":
+		command = "SELECT " + fields + ",MemoryTotal,MemoryUsed" + " FROM Slave_state WHERE " + filter
+	case "network":
+		command = "SELECT " + fields + ",NetworkReceviedBytes,NetworkSentBytes" + " FROM Slave_state WHERE " + filter
+	case "disk":
+		command = "SELECT " + fields + ",DiskIOReadBytes,DiskIOWriteBytes" + " FROM Slave_state WHERE " + filter
+	default:
+		command = "SELECT * FROM Slave_state WHERE " + filter
 	}
   log.Infof("[App Monitor] Query Influxdb Command %s ", command)
 
