@@ -161,6 +161,7 @@ func parseMesosPorts(str string) (string, error) {
 }
 
 func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
+
 	var message SlaveState
 	var cadInfo map[string]ContainerInfo
 	var array []SlaveStateMar
@@ -241,12 +242,32 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 		//      conInfo.Timestamp = value.Stats[1].Timestamp
 		cpuUsed := float64(value.Stats[1].Cpu.Usage.Total - value.Stats[0].Cpu.Usage.Total)
 		cpuTotal := float64(value.Stats[1].Timestamp.Sub(value.Stats[0].Timestamp).Nanoseconds())
-		cpuCores := float64(len(value.Stats[1].Cpu.Usage.PerCpu))
-		conInfo.CpuUsedCores = cpuUsed / cpuTotal * cpuCores
+		//cpuCores := float64(len(value.Stats[1].Cpu.Usage.PerCpu))
+		conInfo.CpuUsedCores = cpuUsed / cpuTotal
 
-		conInfo.CpuShareCores = app.Resources.Cpus
+		conInfo.CpuShareCores = float64(app.Resources.Cpus)
 		conInfo.MemoryUsed = value.Stats[1].Memory.Usage / (1024 * 1024)
 		conInfo.MemoryTotal = app.Resources.Mem
+		conInfo.NetworkReceviedBytes = float64(value.Stats[1].Network.RxBytes)
+		conInfo.NetworkSentBytes = float64(value.Stats[1].Network.TxBytes)
+
+		if len(value.Stats[1].DiskIo.IoServiceBytes) > 0 {
+			DiskIOReadBytes, ok := value.Stats[1].DiskIo.IoServiceBytes[0].Stats["Read"]
+			if ok {
+				log.Infof("[SlaveState] Get the disk io read bytes")
+				conInfo.DiskIOReadBytes = float64(DiskIOReadBytes)
+			} else {
+				log.Error("[SlaveState] Failed to get the disk io read bytes")
+			}
+			DiskIOWriteBytes, ok := value.Stats[1].DiskIo.IoServiceBytes[0].Stats["Write"]
+			if ok {
+				log.Infof("[SlaveState] Get the disk io write bytes")
+				conInfo.DiskIOWriteBytes = float64(DiskIOWriteBytes)
+			} else {
+				log.Error("[SlaveState] Failed to get the disk io write bytes")
+			}
+		}
+
 		ls, _ := json.Marshal(conInfo)
 		log.Debugf("AppMetrics: ", string(ls))
 		array = append(array, conInfo)

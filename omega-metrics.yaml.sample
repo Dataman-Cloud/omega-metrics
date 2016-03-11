@@ -25,3 +25,10 @@ mq:
     password: "guest"
     host: "rmq"
     port: 5672
+db:
+    user: "root"
+    password: "root"
+    host: "influxdb"
+    port: 8086
+    database: "shurenyun"
+    query_default_duration: "15m"  # 's' seconds, 'm' minutes, 'h' hours, 'd' days, 'w' weeks
