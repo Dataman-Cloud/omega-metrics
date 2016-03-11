@@ -11,7 +11,9 @@ import (
 )
 
 func WriteStringToInfluxdb(serie string, appname string, appid string, fields_value string) error {
-
+	// Receive the variable serie, appname, appid and fiels_value. Write the fileds_value
+	// into the name of serie of database conf.Db.Database, and set the tags with
+	// appname, appid and clusterid.
 	conf := config.Pairs()
 	addr := fmt.Sprintf("http://%s:%d", conf.Db.Host, conf.Db.Port)
 	username := fmt.Sprintf("%s", conf.Db.User)
@@ -64,9 +66,6 @@ func WriteStringToInfluxdb(serie string, appname string, appid string, fields_va
 	}
 
 	bp.AddPoint(pt)
-
-	fmt.Println("influxdb bp: %s", bp)
-
 	// Write the batch
 	conn.Write(bp)
 	log.Infof("Write String to Influxdb %s, Serie %s", database, serie)
@@ -74,15 +73,16 @@ func WriteStringToInfluxdb(serie string, appname string, appid string, fields_va
 }
 
 func InfluxdbClient_Query(command string) (client.Response, error) {
+	// Receive the command and return the query respose.
 	conf := config.Pairs()
-  addr := fmt.Sprintf("http://%s:%d", conf.Db.Host, conf.Db.Port)
+	addr := fmt.Sprintf("http://%s:%d", conf.Db.Host, conf.Db.Port)
 	username := fmt.Sprintf("%s", conf.Db.User)
 	password := fmt.Sprintf("%s", conf.Db.Password)
 	database := fmt.Sprintf("%s", conf.Db.Database)
 	conn, err := client.NewHTTPClient(client.HTTPConfig{
-			Addr: addr,
-			Username: username,
-			Password: password,
+		Addr:     addr,
+		Username: username,
+		Password: password,
 	})
 	if err != nil {
 		log.Error("Error creating Influxdb Client: ", err.Error())
@@ -95,6 +95,5 @@ func InfluxdbClient_Query(command string) (client.Response, error) {
 	}
 
 	response, err := conn.Query(q)
-	fmt.Println(response.Results)
 	return *response, err
 }
