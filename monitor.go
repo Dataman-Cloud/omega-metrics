@@ -358,16 +358,16 @@ func appMonitor(ctx *gin.Context) {
 	command := ""
 	fields := "time,ContainerName,instance,cluster_id,appname"
 	switch item {
-		 case "cpu":
-					command = "SELECT " + fields + ",CpuShareCores,CpuUsedCores" + " FROM Slave_state WHERE " + filter
-		 case "memory":
-					command = "SELECT " + fields + ",MemoryTotal,MemoryUsed" + " FROM Slave_state WHERE " + filter
-		 case "network":
-					command = "SELECT " + fields + ",NetworkReceviedBytes,NetworkSentBytes" + " FROM Slave_state WHERE " + filter
-		 case "disk":
-					command = "SELECT " + fields + ",DiskIOReadBytes,DiskIOWriteBytes" + " FROM Slave_state WHERE " + filter
-		 default:
-					command = "SELECT * FROM Slave_state WHERE " + filter
+	case "cpu":
+		command = "SELECT " + fields + ",CpuShareCores,CpuUsedCores" + " FROM Slave_state WHERE " + filter
+	case "memory":
+		command = "SELECT " + fields + ",MemoryTotal,MemoryUsed" + " FROM Slave_state WHERE " + filter
+	case "network":
+		command = "SELECT " + fields + ",NetworkReceviedBytes,NetworkSentBytes" + " FROM Slave_state WHERE " + filter
+	case "disk":
+		command = "SELECT " + fields + ",DiskIOReadBytes,DiskIOWriteBytes" + " FROM Slave_state WHERE " + filter
+	default:
+		command = "SELECT * FROM Slave_state WHERE " + filter
 	}
 
 	fmt.Println("command: %s", command)
@@ -378,9 +378,9 @@ func appMonitor(ctx *gin.Context) {
 	password := fmt.Sprintf("%s", conf.Db.Password)
 	database := fmt.Sprintf("%s", conf.Db.Database)
 	conn, err := client.NewHTTPClient(client.HTTPConfig{
-			Addr: addr,
-			Username: username,
-			Password: password,
+		Addr:     addr,
+		Username: username,
+		Password: password,
 	})
 	if err != nil {
 		log.Error("Error creating Influxdb Client: ", err.Error())
@@ -393,8 +393,8 @@ func appMonitor(ctx *gin.Context) {
 	}
 	if response, err := conn.Query(q); err == nil && response.Error() == nil {
 		fmt.Println(response.Results)
-                ctx.JSON(http.StatusOK, response.Results)
+		ctx.JSON(http.StatusOK, response.Results)
 	} else {
-                ctx.String(http.StatusOK, "Error")
+		ctx.String(http.StatusOK, "Error")
 	}
 }
