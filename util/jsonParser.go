@@ -251,22 +251,22 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 		conInfo.NetworkReceviedBytes = float64(value.Stats[1].Network.RxBytes)
 		conInfo.NetworkSentBytes = float64(value.Stats[1].Network.TxBytes)
 
-		DiskIOReadBytes, ok := value.Stats[1].DiskIo.IoServiceBytes[0].Stats["Read"]
-		if ok {
-			log.Infof("[SlaveState] Get the disk io read bytes")
-			conInfo.DiskIOReadBytes = float64(DiskIOReadBytes)
-		} else {
-			log.Error("[SlaveState] Failed to get the disk io read bytes")
+		if len(value.Stats[1].DiskIo.IoServiceBytes) > 0 {
+			DiskIOReadBytes, ok := value.Stats[1].DiskIo.IoServiceBytes[0].Stats["Read"]
+			if ok {
+				log.Infof("[SlaveState] Get the disk io read bytes")
+				conInfo.DiskIOReadBytes = float64(DiskIOReadBytes)
+			} else {
+				log.Error("[SlaveState] Failed to get the disk io read bytes")
+			}
+			DiskIOWriteBytes, ok := value.Stats[1].DiskIo.IoServiceBytes[0].Stats["Write"]
+			if ok {
+				log.Infof("[SlaveState] Get the disk io write bytes")
+				conInfo.DiskIOWriteBytes = float64(DiskIOWriteBytes)
+			} else {
+				log.Error("[SlaveState] Failed to get the disk io write bytes")
+			}
 		}
-
-		DiskIOWriteBytes, ok := value.Stats[1].DiskIo.IoServiceBytes[0].Stats["Write"]
-		if ok {
-			log.Infof("[SlaveState] Get the disk io write bytes")
-			conInfo.DiskIOWriteBytes = float64(DiskIOWriteBytes)
-		} else {
-			log.Error("[SlaveState] Failed to get the disk io write bytes")
-		}
-
 
 		ls, _ := json.Marshal(conInfo)
 		log.Debugf("AppMetrics: ", string(ls))
@@ -274,4 +274,3 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 	}
 	return array
 }
-
