@@ -29,7 +29,7 @@ type Config struct {
 	Log            *LogConfig
 	Cache          *CacheConfig
 	Mq             *MqConfig
-	Db						 *DbConfig
+	Db             *DbConfig
 	HealthCheck    int
 }
 
@@ -59,12 +59,14 @@ type MqConfig struct {
 }
 
 type DbConfig struct {
-	User     string
-	Password string
-	Host     string
-	Port     int64
-	Database string
+	User                   string
+	Password               string
+	Host                   string
+	Port                   int64
+	Database               string
+	Query_Default_Duration string
 }
+
 var pairs Config
 
 func Pairs() Config {
