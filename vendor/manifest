@@ -57,6 +57,12 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "github.com/fatih/structs",
+			"repository": "https://github.com/fatih/structs",
+			"revision": "12ff68a6f48a1c8bd118316171545683337655df",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/garyburd/redigo/internal",
 			"repository": "https://github.com/garyburd/redigo",
 			"revision": "9c474d0715937065f7e5b9f8d724a72ba55763e7",
@@ -81,6 +87,27 @@
 			"repository": "https://github.com/gin-gonic/gin",
 			"revision": "704d690ac0e25fcd060ff82f75f913e879e65a3c",
 			"branch": "master"
+		},
+		{
+			"importpath": "github.com/influxdata/influxdb/client/v2",
+			"repository": "https://github.com/influxdata/influxdb",
+			"revision": "156cc5eddfd17795b2b407cd83b98f014036a26b",
+			"branch": "master",
+			"path": "/client/v2"
+		},
+		{
+			"importpath": "github.com/influxdata/influxdb/models",
+			"repository": "https://github.com/influxdata/influxdb",
+			"revision": "156cc5eddfd17795b2b407cd83b98f014036a26b",
+			"branch": "master",
+			"path": "/models"
+		},
+		{
+			"importpath": "github.com/influxdata/influxdb/pkg/escape",
+			"repository": "https://github.com/influxdata/influxdb",
+			"revision": "156cc5eddfd17795b2b407cd83b98f014036a26b",
+			"branch": "master",
+			"path": "/pkg/escape"
 		},
 		{
 			"importpath": "github.com/kr/pretty",
@@ -155,6 +182,12 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "github.com/streadway/amqp",
+			"repository": "https://github.com/streadway/amqp.git",
+			"revision": "b4f3ceab0337f013208d31348b578d83c0064744",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/tobi/airbrake-go",
 			"repository": "https://github.com/tobi/airbrake-go",
 			"revision": "5b5e269e1bc398d43f67e43dafff3414a59cd5a2",
@@ -226,24 +259,6 @@
 			"repository": "https://gopkg.in/yaml.v2",
 			"revision": "7ad95dd0798a40da1ccdff6dff35fd177b5edf40",
 			"branch": "v2"
-		},
-		{
-			"importpath": "github.com/streadway/amqp",
-			"repository": "https://github.com/streadway/amqp.git",
-			"revision": "b4f3ceab0337f013208d31348b578d83c0064744",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/influxdata/influxdb",
-			"repository": "https://github.com/influxdata/influxdb.git",
-			"revision": "af0198448092f8a6adc41f2bc801c413e2579b90",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/fatih/structs",
-			"repository": "https://github.com/fatih/structs.git",
-			"revision": "12ff68a6f48a1c8bd118316171545683337655df",
-			"branch": "master"
 		}
 	]
 }
