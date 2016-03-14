@@ -236,22 +236,30 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 		conInfo.ClusterId = clusterId
 		conInfo.App = app
 		conInfo.ContainerId = containerId
-		//      conInfo.Timestamp = value.Stats[1].Timestamp
+
 		deltatime := value.Stats[1].Timestamp.Sub(value.Stats[0].Timestamp)
+
 		cpuUsed := float64(value.Stats[1].Cpu.Usage.Total - value.Stats[0].Cpu.Usage.Total)
 		cpuTotal := float64(deltatime.Nanoseconds())
-		//cpuCores := float64(len(value.Stats[1].Cpu.Usage.PerCpu))
 		conInfo.CpuUsedCores = cpuUsed / cpuTotal
 
 		conInfo.CpuShareCores = float64(app.Resources.Cpus)
 		conInfo.MemoryUsed = value.Stats[1].Memory.Usage / (1024 * 1024)
 		conInfo.MemoryTotal = app.Resources.Mem
 
-		if value.Spec.HasNetwork {
-			conInfo.NetworkReceviedByteRate = (float64(value.Stats[1].Network.RxBytes) -
-				float64(value.Stats[0].Network.RxBytes)) / deltatime.Seconds()
-			conInfo.NetworkSentByteRate = (float64(value.Stats[1].Network.TxBytes) -
-				float64(value.Stats[0].Network.TxBytes)) / deltatime.Seconds()
+		if value.Spec.HasNetwork && (len(value.Stats[1].Network.Interfaces) > 0) {
+			var receivedBytes uint64
+			var sentBytes uint64
+			for _, networkStats := range value.Stats[1].Network.Interfaces {
+				receivedBytes += uint64(networkStats.RxBytes)
+				sentBytes += uint64(networkStats.TxBytes)
+			}
+			for _, networkStats := range value.Stats[0].Network.Interfaces {
+				receivedBytes -= uint64(networkStats.RxBytes)
+				sentBytes -= uint64(networkStats.TxBytes)
+			}
+			conInfo.NetworkReceviedByteRate = float64(receivedBytes) / deltatime.Seconds()
+			conInfo.NetworkSentByteRate = float64(sentBytes) / deltatime.Seconds()
 		}
 
 		if value.Spec.HasDiskIo && (len(value.Stats[1].DiskIo.IoServiceBytes) > 0) {
