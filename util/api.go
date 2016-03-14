@@ -112,8 +112,8 @@ type SlaveStateMar struct {
 	MemoryUsed              uint64  `json:"memoryUsed"`
 	NetworkReceviedByteRate float64 `json:"nw_rx_bytes"`
 	NetworkSentByteRate     float64 `json:"nw_tx_bytes"`
-	DiskIOReadBytes         float64 `json: "disk_read_bytes"`
-	DiskIOWriteBytes        float64 `json: "disk_write_bytes"`
+	DiskIOReadBytesRate     float64 `json: "disk_read_bytes"`
+	DiskIOWriteBytesRate    float64 `json: "disk_write_bytes"`
 }
 
 type SlaveState struct {

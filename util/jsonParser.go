@@ -263,20 +263,18 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 		}
 
 		if value.Spec.HasDiskIo && (len(value.Stats[1].DiskIo.IoServiceBytes) > 0) {
-			DiskIOReadBytes, ok := value.Stats[1].DiskIo.IoServiceBytes[0].Stats["Read"]
-			if ok {
-				log.Infof("[SlaveState] Get the disk io read bytes")
-				conInfo.DiskIOReadBytes = float64(DiskIOReadBytes)
-			} else {
-				log.Error("[SlaveState] Failed to get the disk io read bytes")
+			var readBytes uint64
+			var writeBytes uint64
+			for _, diskStats := range value.Stats[1].DiskIo.IoServiceBytes {
+				readBytes += diskStats.Stats["Read"]
+				writeBytes += diskStats.Stats["Write"]
 			}
-			DiskIOWriteBytes, ok := value.Stats[1].DiskIo.IoServiceBytes[0].Stats["Write"]
-			if ok {
-				log.Infof("[SlaveState] Get the disk io write bytes")
-				conInfo.DiskIOWriteBytes = float64(DiskIOWriteBytes)
-			} else {
-				log.Error("[SlaveState] Failed to get the disk io write bytes")
+			for _, diskStats := range value.Stats[0].DiskIo.IoServiceBytes {
+				readBytes -= diskStats.Stats["Read"]
+				writeBytes -= diskStats.Stats["Write"]
 			}
+			conInfo.DiskIOReadBytesRate = float64(readBytes) / deltatime.Seconds()
+			conInfo.DiskIOWriteBytesRate = float64(writeBytes) / deltatime.Seconds()
 		}
 
 		ls, _ := json.Marshal(conInfo)
