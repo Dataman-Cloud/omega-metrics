@@ -171,7 +171,6 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 	err := json.Unmarshal([]byte(rabbitMessage.Message), &message)
 	if err != nil {
 		log.Error("[SlaveState] unmarshal SlaveState error ", err)
-		log.Debug("[SlaveState] SlaveState Message : ", rabbitMessage.Message)
 		return array
 	}
 	ip := message.Flags.Ip
@@ -211,13 +210,11 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 	err = json.Unmarshal([]byte(rabbitMessage.Attached), &cadInfo)
 	if err != nil {
 		log.Error("[SlaveState] unmarshal cadvisor containerInfo error ", err)
-		log.Debug("[SlaveState] SlaveState cadvisor message : ", rabbitMessage.Attached)
 		return array
 	}
 	for _, value := range cadInfo {
-		if len(value.Stats) != 2 {
-			log.Error("[SlaveState] length of Stats isn't 2, can't calc cpurate")
-			log.Debug("[SlaveState] SlaveState cadvisor message : ", rabbitMessage.Attached)
+		if len(value.Stats) < 2 {
+			log.Error("[SlaveState] length of Stats isn't larger than 2, can't calc cpurate")
 			continue
 		}
 		var conInfo SlaveStateMar
@@ -240,18 +237,24 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 		conInfo.App = app
 		conInfo.ContainerId = containerId
 		//      conInfo.Timestamp = value.Stats[1].Timestamp
+		deltatime := value.Stats[1].Timestamp.Sub(value.Stats[0].Timestamp)
 		cpuUsed := float64(value.Stats[1].Cpu.Usage.Total - value.Stats[0].Cpu.Usage.Total)
-		cpuTotal := float64(value.Stats[1].Timestamp.Sub(value.Stats[0].Timestamp).Nanoseconds())
+		cpuTotal := float64(deltatime.Nanoseconds())
 		//cpuCores := float64(len(value.Stats[1].Cpu.Usage.PerCpu))
 		conInfo.CpuUsedCores = cpuUsed / cpuTotal
 
 		conInfo.CpuShareCores = float64(app.Resources.Cpus)
 		conInfo.MemoryUsed = value.Stats[1].Memory.Usage / (1024 * 1024)
 		conInfo.MemoryTotal = app.Resources.Mem
-		conInfo.NetworkReceviedBytes = float64(value.Stats[1].Network.RxBytes)
-		conInfo.NetworkSentBytes = float64(value.Stats[1].Network.TxBytes)
 
-		if len(value.Stats[1].DiskIo.IoServiceBytes) > 0 {
+		if value.Spec.HasNetwork {
+			conInfo.NetworkReceviedByteRate = (float64(value.Stats[1].Network.RxBytes) -
+				float64(value.Stats[0].Network.RxBytes)) / deltatime.Seconds()
+			conInfo.NetworkSentByteRate = (float64(value.Stats[1].Network.TxBytes) -
+				float64(value.Stats[0].Network.TxBytes)) / deltatime.Seconds()
+		}
+
+		if value.Spec.HasDiskIo && (len(value.Stats[1].DiskIo.IoServiceBytes) > 0) {
 			DiskIOReadBytes, ok := value.Stats[1].DiskIo.IoServiceBytes[0].Stats["Read"]
 			if ok {
 				log.Infof("[SlaveState] Get the disk io read bytes")
