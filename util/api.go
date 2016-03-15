@@ -101,19 +101,19 @@ type MasterState struct {
 
 // slave state
 type SlaveStateMar struct {
-	Timestamp               int64   `json:"timestamp"`
-	ClusterId               string  `json:"clusterId"`
-	Slave_id                string  `json:"slave_id"`
-	App                     appInfo `json:"app"`
-	ContainerId             string  `json:"containerId"`
-	CpuUsedCores            float64 `json:"cpuUsedCores"`
-	CpuShareCores           float64 `json:"cpuShareCores"`
-	MemoryTotal             uint64  `json:"memoryTotal"`
-	MemoryUsed              uint64  `json:"memoryUsed"`
-	NetworkReceviedByteRate float64 `json:"nw_rx_bytes"`
-	NetworkSentByteRate     float64 `json:"nw_tx_bytes"`
-	DiskIOReadBytesRate     float64 `json: "disk_read_bytes"`
-	DiskIOWriteBytesRate    float64 `json: "disk_write_bytes"`
+	Timestamp               time.Time `json:"timestamp"`
+	ClusterId               string    `json:"clusterId"`
+	Slave_id                string    `json:"slave_id"`
+	App                     appInfo   `json:"app"`
+	ContainerId             string    `json:"containerId"`
+	CpuUsedCores            float64   `json:"cpuUsedCores"`
+	CpuShareCores           float64   `json:"cpuShareCores"`
+	MemoryTotal             uint64    `json:"memoryTotal"`
+	MemoryUsed              uint64    `json:"memoryUsed"`
+	NetworkReceviedByteRate float64   `json:"nw_rx_bytes"`
+	NetworkSentByteRate     float64   `json:"nw_tx_bytes"`
+	DiskIOReadBytesRate     float64   `json: "disk_read_bytes"`
+	DiskIOWriteBytesRate    float64   `json: "disk_write_bytes"`
 }
 
 type SlaveState struct {

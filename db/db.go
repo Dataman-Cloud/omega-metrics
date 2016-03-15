@@ -8,6 +8,7 @@ import (
 	log "github.com/cihub/seelog"
 	"github.com/fatih/structs"
 	"github.com/influxdata/influxdb/client/v2"
+	"time"
 )
 
 func WriteStringToInfluxdb(serie string, appname string, appid string, fields_value string) error {
@@ -60,7 +61,15 @@ func WriteStringToInfluxdb(serie string, appname string, appid string, fields_va
 
 	tags := map[string]string{"appname": appname, "instance": appid, "clusterid": clusterid}
 
-	pt, err := client.NewPoint(serie, tags, fields)
+	timestampInterface, ok := fields["Timestamp"]
+	var timestamp time.Time
+	if ok {
+		timestamp = timestampInterface.(time.Time)
+	} else {
+		timestamp = time.Now()
+	}
+
+	pt, err := client.NewPoint(serie, tags, fields, timestamp)
 	if err != nil {
 		log.Error("Error: ", err.Error())
 	}
