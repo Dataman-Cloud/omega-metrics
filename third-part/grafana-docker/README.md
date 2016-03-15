@@ -12,6 +12,7 @@ docker run -d
    -v /opt/data/grafana:/var/lib/grafana \
    -p 3000:3000 \
    -e "GF_SECURITY_ADMIN_PASSWORD=dataman" \
+   -e "GF_AUTH_ANONYMOUS_ENABLED=true" \
    -e "INFLUXDB_HOST=192.168.1.189" \
    -e "INFLUXDB_PORT=8086" \
    -e "INFLUXDB_USER=root" \
