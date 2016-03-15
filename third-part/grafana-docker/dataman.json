@@ -1,7 +1,7 @@
 {
  "dashboard":
  {
-   "id": 1,
+   "id": null,
    "title": "App",
    "originalTitle": "App",
    "tags": [],
@@ -531,5 +531,6 @@
    "schemaVersion": 8,
    "version": 6,
    "links": []
- }
+ },
+ "overwrite": true
 }
