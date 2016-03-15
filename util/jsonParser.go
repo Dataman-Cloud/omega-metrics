@@ -236,6 +236,7 @@ func SlaveStateJson(rabbitMessage RabbitMqMessage) []SlaveStateMar {
 		conInfo.ClusterId = clusterId
 		conInfo.App = app
 		conInfo.ContainerId = containerId
+		conInfo.Timestamp = value.Stats[1].Timestamp
 
 		deltatime := value.Stats[1].Timestamp.Sub(value.Stats[0].Timestamp)
 
