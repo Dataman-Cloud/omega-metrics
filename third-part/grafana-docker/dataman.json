@@ -71,7 +71,7 @@
                  }
                ],
                "measurement": "Slave_state",
-               "query": "SELECT \"CpuUsedCores\" FROM \"Slave_state\" WHERE \"appname\" =~ /$app_uuid_t$/ AND $timeFilter GROUP BY \"instance\"",
+               "query": "SELECT \"CpuUsedCores\" FROM \"Slave_state\" WHERE \"clusterid\" =~ /$cluster_id_t$/ AND \"appname\" =~ /$app_uuid_t$/ AND $timeFilter GROUP BY \"instance\"",
                "refId": "A",
                "resultFormat": "time_series",
                "select": [
@@ -86,6 +86,12 @@
                ],
                "tags": [
                  {
+                   "key": "clusterid",
+                   "operator": "=~",
+                   "value": "/$cluster_id_t$/"
+                 },
+                 {
+                   "condition": "AND",
                    "key": "appname",
                    "operator": "=~",
                    "value": "/$app_uuid_t$/"
@@ -163,7 +169,8 @@
                  }
                ],
                "measurement": "Slave_state",
-               "query": "SELECT \"MemoryUsed\" FROM \"Slave_state\" WHERE \"appname\" =~ /$app_uuid_t$/ AND $timeFilter GROUP BY \"instance\"",
+               "query": "SELECT \"MemoryUsed\" FROM \"Slave_state\" WHERE \"clusterid\" =~ /$cluster_id_t$/ AND \"appname\" =~ /$app_uuid_t$/ AND $timeFilter GROUP BY \"instance\"",
+               "rawQuery": false,
                "refId": "A",
                "resultFormat": "time_series",
                "select": [
@@ -178,6 +185,12 @@
                ],
                "tags": [
                  {
+                   "key": "clusterid",
+                   "operator": "=~",
+                   "value": "/$cluster_id_t$/"
+                 },
+                 {
+                   "condition": "AND",
                    "key": "appname",
                    "operator": "=~",
                    "value": "/$app_uuid_t$/"
@@ -263,7 +276,7 @@
                  }
                ],
                "measurement": "Slave_state",
-               "query": "SELECT \"DiskIOReadBytesRate\" FROM \"Slave_state\" WHERE \"appname\" =~ /$app_uuid_t$/ AND $timeFilter GROUP BY \"instance\"",
+               "query": "SELECT \"DiskIOReadBytesRate\" FROM \"Slave_state\" WHERE \"clusterid\" =~ /$cluster_id_t$/ AND \"appname\" =~ /$app_uuid_t$/ AND $timeFilter GROUP BY \"instance\"",
                "refId": "A",
                "resultFormat": "time_series",
                "select": [
@@ -278,6 +291,12 @@
                ],
                "tags": [
                  {
+                   "key": "clusterid",
+                   "operator": "=~",
+                   "value": "/$cluster_id_t$/"
+                 },
+                 {
+                   "condition": "AND",
                    "key": "appname",
                    "operator": "=~",
                    "value": "/$app_uuid_t$/"
@@ -296,7 +315,7 @@
                  }
                ],
                "measurement": "Slave_state",
-               "query": "SELECT \"DiskIOWriteBytesRate\" FROM \"Slave_state\" WHERE \"appname\" =~ /$app_uuid_t$/ AND $timeFilter GROUP BY \"instance\"",
+               "query": "SELECT \"DiskIOWriteBytesRate\" FROM \"Slave_state\" WHERE \"clusterid\" =~ /$cluster_id_t$/ AND \"appname\" =~ /$app_uuid_t$/ AND $timeFilter GROUP BY \"instance\"",
                "refId": "B",
                "resultFormat": "time_series",
                "select": [
@@ -311,6 +330,12 @@
                ],
                "tags": [
                  {
+                   "key": "clusterid",
+                   "operator": "=~",
+                   "value": "/$cluster_id_t$/"
+                 },
+                 {
+                   "condition": "AND",
                    "key": "appname",
                    "operator": "=~",
                    "value": "/$app_uuid_t$/"
@@ -388,7 +413,7 @@
                  }
                ],
                "measurement": "Slave_state",
-               "query": "SELECT \"NetworkReceviedByteRate\" FROM \"Slave_state\" WHERE \"appname\" =~ /$app_uuid_t$/ AND $timeFilter GROUP BY \"instance\"",
+               "query": "SELECT \"NetworkReceviedByteRate\" FROM \"Slave_state\" WHERE \"clusterid\" =~ /$cluster_id_t$/ AND \"appname\" =~ /$app_uuid_t$/ AND $timeFilter GROUP BY \"instance\"",
                "refId": "A",
                "resultFormat": "time_series",
                "select": [
@@ -403,6 +428,12 @@
                ],
                "tags": [
                  {
+                   "key": "clusterid",
+                   "operator": "=~",
+                   "value": "/$cluster_id_t$/"
+                 },
+                 {
+                   "condition": "AND",
                    "key": "appname",
                    "operator": "=~",
                    "value": "/$app_uuid_t$/"
@@ -421,7 +452,7 @@
                  }
                ],
                "measurement": "Slave_state",
-               "query": "SELECT \"NetworkSentByteRate\" FROM \"Slave_state\" WHERE \"appname\" =~ /$app_uuid_t$/ AND $timeFilter GROUP BY \"instance\"",
+               "query": "SELECT \"NetworkSentByteRate\" FROM \"Slave_state\" WHERE \"clusterid\" =~ /$cluster_id_t$/ AND \"appname\" =~ /$app_uuid_t$/ AND $timeFilter GROUP BY \"instance\"",
                "refId": "B",
                "resultFormat": "time_series",
                "select": [
@@ -436,6 +467,12 @@
                ],
                "tags": [
                  {
+                   "key": "clusterid",
+                   "operator": "=~",
+                   "value": "/$cluster_id_t$/"
+                 },
+                 {
+                   "condition": "AND",
                    "key": "appname",
                    "operator": "=~",
                    "value": "/$app_uuid_t$/"
@@ -497,8 +534,34 @@
        {
          "allFormat": "glob",
          "current": {
+           "tags": [],
+           "text": "1",
+           "value": "1"
+         },
+         "datasource": null,
+         "includeAll": false,
+         "label": "集群",
+         "multi": false,
+         "multiFormat": "glob",
+         "name": "cluster_id_t",
+         "options": [
+           {
+             "selected": true,
+             "text": "1",
+             "value": "1"
+           }
+         ],
+         "query": "SHOW TAG VALUES FROM \"Slave_state\" WITH KEY = \"clusterid\"",
+         "refresh": false,
+         "regex": "",
+         "type": "query"
+       },
+       {
+         "allFormat": "glob",
+         "current": {
            "text": "ge5g4z3jnz4a0000",
-           "value": "ge5g4z3jnz4a0000"
+           "value": "ge5g4z3jnz4a0000",
+           "tags": []
          },
          "datasource": null,
          "includeAll": false,
@@ -511,16 +574,12 @@
              "text": "ge5g4z3jnz4a0000",
              "value": "ge5g4z3jnz4a0000",
              "selected": true
-           },
-           {
-             "text": "ge5g4z3jnz4de000",
-             "value": "ge5g4z3jnz4de000",
-             "selected": false
            }
          ],
-         "query": "SHOW TAG VALUES FROM \"Slave_state\" WITH KEY = \"appname\"",
+         "query": "SHOW TAG VALUES FROM \"Slave_state\" WITH KEY = \"appname\"  where clusterid=~ /$cluster_id_t$/ ",
          "refresh": true,
-         "type": "query"
+         "type": "query",
+         "useTags": false
        }
      ]
    },
@@ -529,7 +588,7 @@
    },
    "refresh": "10s",
    "schemaVersion": 8,
-   "version": 6,
+   "version": 8,
    "links": []
  }
 }
