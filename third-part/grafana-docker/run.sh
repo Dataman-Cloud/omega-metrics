@@ -2,6 +2,7 @@
 
 admin_user="admin"
 admin_pass="admin"
+port=5010
 
 start_grafana() {
     chown -R grafana:grafana /var/lib/grafana /var/log/grafana
@@ -72,7 +73,7 @@ check_env_variable() {
 
 create_grafana_datasource() {
     url="http://$INFLUXDB_HOST:$INFLUXDB_PORT"
-    curl -sX POST -i "http://$admin_user:$admin_pass@localhost:3000/api/datasources" \
+    curl -sX POST -i "http://$admin_user:$admin_pass@localhost:$port/api/datasources" \
        -H "Content-Type: application/json" \
        -H "Accept: application/json" \
        -d '{"name":"influxdb",
@@ -96,7 +97,7 @@ create_grafana_dashboard() {
     fi
     url="http://$INFLUXDB_HOST:$INFLUXDB_PORT"
     echo $dashboard
-    curl -sX POST -i "http://$admin_user:$admin_pass@localhost:3000/api/dashboards/db" \
+    curl -sX POST -i "http://$admin_user:$admin_pass@localhost:$port/api/dashboards/db" \
        -H "Content-Type: application/json" \
        -H "Accept: application/json" \
        -d @dataman.json
