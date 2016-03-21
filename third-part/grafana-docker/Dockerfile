@@ -8,7 +8,11 @@ ENV INFLUXDB_NAME shurenyun
 
 RUN apt-get update -y && apt-get install curl -y
 
+ADD grafana.ini /etc/grafana/grafana.ini 
+
 COPY ./run.sh /run.sh
 COPY ./dataman.json /dataman.json
+
+EXPOSE 5010
 
 ENTRYPOINT ["/run.sh"]

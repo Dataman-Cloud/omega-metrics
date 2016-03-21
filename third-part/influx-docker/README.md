@@ -1,6 +1,6 @@
 # Influxdb Docker image
 
-We use the [tutum/influxdb](https://hub.docker.com/r/tutum/influxdb/).
+Based on the [tutum/influxdb](https://hub.docker.com/r/tutum/influxdb/), update the reserver ports in the configuration file.
 
 ## Running the container
 
@@ -8,9 +8,9 @@ Start your container:
 
 ```
 docker run -d \
-    --volume=/var/influxdb:/data
-    -p 8083:5008 \
-    -p 8086:5009 \
+    --volume=/data/volumn/influxdb:/data
+    -p 5007:5007 \
+    -p 5008:5008 \
     -e "PRE_CREATE_DB=shurenyun"
-    testregistry.dataman.io/zqdou/influxdb:0.9
+    testregistry.dataman.io/zqdou/influxdb:0.10
 ```
