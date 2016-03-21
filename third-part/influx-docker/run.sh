@@ -3,7 +3,7 @@
 set -m
 CONFIG_FILE="/config/config.toml"
 INFLUX_HOST="localhost"
-INFLUX_API_PORT="5009"
+INFLUX_API_PORT="5008"
 API_URL="http://${INFLUX_HOST}:${INFLUX_API_PORT}"
 
 # Dynamically change the value of 'max-open-shards' to what 'ulimit -n' returns

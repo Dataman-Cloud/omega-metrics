@@ -29,6 +29,6 @@ db:
     user: "root"
     password: "root"
     host: "influxdb"
-    port: 8086
+    port: 5008
     database: "shurenyun"
     query_default_duration: "15m"  # 's' seconds, 'm' minutes, 'h' hours, 'd' days, 'w' weeks
