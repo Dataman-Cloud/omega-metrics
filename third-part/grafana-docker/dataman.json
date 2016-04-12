@@ -552,7 +552,7 @@
            }
          ],
          "query": "SHOW TAG VALUES FROM \"Slave_state\" WITH KEY = \"clusterid\"",
-         "refresh": false,
+         "refresh": true,
          "regex": "",
          "type": "query"
        },
