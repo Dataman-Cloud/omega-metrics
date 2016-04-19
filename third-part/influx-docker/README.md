@@ -14,3 +14,12 @@ docker run -d \
     -e "PRE_CREATE_DB=shurenyun"
     testregistry.dataman.io/zqdou/influxdb:0.10
 ```
+
+## Enable the UDP listener
+
+Refer to [Influxdb: UDP Service](https://docs.influxdata.com/influxdb/v0.12/write_protocols/udp/)
+
+Add this line in the file /etc/sysctl.conf
+```
+net.core.rmem_max=8388608
+```

@@ -5,6 +5,9 @@ ADD config.toml /config/config.toml
 ADD run.sh /run.sh
 RUN chmod +x /*.sh
 
+# Set the UDP buffer limit
+RUN echo "net.core.rmem_max=8388608" >> /etc/sysctl.conf
+
 # Admin server WebUI
 EXPOSE 5008
 
