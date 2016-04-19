@@ -199,16 +199,18 @@ reporting-disabled = false
 ###
 
 [[udp]]
-  enabled = false
-  bind-address = ":4444"
-  database = "udpdb"
+  enabled = true
+  bind-address = ":5008"
+  database = "shurenyun"
 
   # These next lines control how batching works. You should have this enabled
   # otherwise you could get dropped metrics or poor performance. Batching
   # will buffer points in memory if you have many coming in.
 
-  # batch-size = 1000 # will flush if this many points get buffered
-  # batch-timeout = "1s" # will flush at least this often even if we haven't hit buffer limit
+  batch-size = 1000 # will flush if this many points get buffered
+  batch-timeout = "1s" # will flush at least this often even if we haven't hit buffer limit
+  batch-pending = 10
+  read-buffer = 0
 
 ###
 ### [monitoring]
