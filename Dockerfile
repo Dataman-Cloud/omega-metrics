@@ -1,4 +1,4 @@
-FROM testregistry.dataman.io/zqdou/ubuntu-go:1.5.1
+FROM index.shurenyun.com/zqdou/ubuntu-go:1.5.1
 
 MAINTAINER zqdou zqdou@dataman-inc.com
 
