@@ -72,7 +72,6 @@ func handler(routingKey string, messageBody []byte) {
 		log.Infof("received masterStateRouting message clusterId: %s, leader: %d, json: %+v", jsonstr.ClusterId, jsonstr.Leader, jsonstr)
 	case util.Slave_state_routing:
 		array := util.SlaveStateJson(*mqMessage)
-		log.Infof("received slaveStateMessage array: %s", array)
 		if len(array) != 0 {
 			for _, v := range array {
 				key := v.App.Task_id
