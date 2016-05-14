@@ -1,7 +1,6 @@
 package db
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/Dataman-Cloud/omega-metrics/config"
 	"github.com/Dataman-Cloud/omega-metrics/util"
@@ -11,7 +10,7 @@ import (
 	"time"
 )
 
-func WriteStringToInfluxdb(serie string, appname string, appid string, fields_value string) error {
+func WriteContainerInfoToInflux(conInfo *util.SlaveStateMar) error {
 	// Receive the variable serie, appname, appid and fiels_value. Write the fileds_value
 	// into the name of serie of database conf.Db.Database, and set the tags with
 	// appname, appid and clusterid.
@@ -20,7 +19,7 @@ func WriteStringToInfluxdb(serie string, appname string, appid string, fields_va
 	database := fmt.Sprintf("%s", conf.Db.Database)
 	conn, err := client.NewUDPClient(
 		client.UDPConfig{
-			Addr:     addr,
+			Addr: addr,
 		})
 	if err != nil {
 		log.Error("Error creating Influxdb Client: ", err.Error())
@@ -35,10 +34,7 @@ func WriteStringToInfluxdb(serie string, appname string, appid string, fields_va
 		Precision: "s",
 	})
 
-	var slave_mar util.SlaveStateMar
-	json.Unmarshal([]byte(fields_value), &slave_mar)
-
-	fields := structs.Map(&slave_mar)
+	fields := structs.Map(conInfo)
 
 	fields["ContainerName"] = fields["ContainerId"]
 
@@ -52,13 +48,13 @@ func WriteStringToInfluxdb(serie string, appname string, appid string, fields_va
 		fields["MemoryUsed"] = float64(MemoryUsed.(uint64))
 	}
 
-	clusterid, _ := fields["ClusterId"].(string)
-
 	delete(fields, "App")
 	delete(fields, "ContainerId")
 	delete(fields, "ClusterId")
 
-	tags := map[string]string{"appname": appname, "instance": appid, "clusterid": clusterid}
+	appInfo := conInfo.App
+	fields["SlaveId"] = appInfo.SlaveId
+	tags := map[string]string{"appname": appInfo.AppName, "instance": appInfo.AppId, "clusterid": appInfo.ClusterId}
 
 	timestampInterface, ok := fields["Timestamp"]
 	var timestamp time.Time
@@ -68,7 +64,7 @@ func WriteStringToInfluxdb(serie string, appname string, appid string, fields_va
 		timestamp = time.Now()
 	}
 
-	pt, err := client.NewPoint(serie, tags, fields, timestamp)
+	pt, err := client.NewPoint(config.ContainerMonitorSerie, tags, fields, timestamp)
 	if err != nil {
 		log.Error("Error: ", err.Error())
 	}
@@ -79,7 +75,7 @@ func WriteStringToInfluxdb(serie string, appname string, appid string, fields_va
 	if err != nil {
 		log.Error("Error: ", err.Error())
 	} else {
-		log.Infof("Write String to Influxdb %s, Serie %s", database, serie)
+		log.Infof("Write String to Influxdb %s, Serie %s", database, config.ContainerMonitorSerie)
 	}
 	return err
 }

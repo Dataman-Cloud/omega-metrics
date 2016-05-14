@@ -16,12 +16,13 @@ type MonitorResponse struct {
 }
 
 type RabbitMqMessage struct {
-	ClusterId int    `json:"clusterId"`
-	NodeId    string `json:"nodeId"`
-	Type      string `json:"type"`
-	Message   string `json:"message"`
-	Attached  string `json:"attached"`
-	Timestamp int64  `json:"timestamp"`
+	ClusterId int                `json:"clusterId"`
+	NodeId    string             `json:"nodeId"`
+	Type      string             `json:"type"`
+	Message   string             `json:"message"`
+	Attached  string             `json:"attached"`
+	Tags      map[string]*string `json:"tags"`
+	Timestamp int64              `json:"timestamp"`
 }
 
 // master metrics
@@ -102,9 +103,7 @@ type MasterState struct {
 // slave state
 type SlaveStateMar struct {
 	Timestamp               time.Time `json:"timestamp"`
-	ClusterId               string    `json:"clusterId"`
-	Slave_id                string    `json:"slave_id"`
-	App                     appInfo   `json:"app"`
+	App                     AppInfo   `json:"app"`
 	ContainerId             string    `json:"containerId"`
 	CpuUsedCores            float64   `json:"cpuUsedCores"`
 	CpuShareCores           float64   `json:"cpuShareCores"`
@@ -144,7 +143,7 @@ type executor struct {
 type tasks struct {
 	Id        string    `json:"id"`
 	Name      string    `json:"name"`
-	Slave_id  string    `json:"slave_id"`
+	SlaveId   string    `json:"slave_id"`
 	Resources resources `json:"resources"`
 }
 
@@ -155,11 +154,12 @@ type resources struct {
 	Ports string  `json:"ports,omitempty"`
 }
 
-type appInfo struct {
+type AppInfo struct {
 	AppName   string    `json:"appName"`
 	AppId     string    `json:"appId"`
-	Task_id   string    `json:"task_id"`
-	Slave_id  string    `json:"slave_id"`
+	ClusterId string    `json:"clusterId"`
+	TaskId    string    `json:"taskId"`
+	SlaveId   string    `json:"slaveId"`
 	Resources resources `json:"resources"`
 }
 
@@ -468,4 +468,32 @@ type ContainerInfoRequest struct {
 	// End time for which to query information.
 	// If ommitted, current time is assumed.
 	End time.Time `json:"end,omitempty"`
+}
+
+type HaproxySession struct {
+	Bin        int64  `json:"bin"`
+	Bout       int64  `json:"bout"`
+	Dreq       int64  `json:"dreq"`
+	Dresp      int64  `json:"dresp"`
+	Ereq       int64  `json:"ereq"`
+	HttpResp1  int64  `json:"http_response.1xx"`
+	HttpResp2  int64  `json:"http_response.2xx"`
+	HttpResp3  int64  `json:"http_response.3xx"`
+	HttpResp4  int64  `json:"http_response.4xx"`
+	HttpResp5  int64  `json:"http_response.5xx`
+	ProxyName  string `json:"proxyname"`
+	Rate       int64  `json:"rate"`
+	RateMax    int64  `json:"rate_max"`
+	ReqRate    int64  `json:"req_rate"`
+	ReqRateMax int64  `json:"req_rate_max"`
+	ReqTot     int64  `json:"req_tot"`
+	Scur       int64  `json:"scur"`
+	ServerName string `json:"servername"`
+	Smax       int64  `json:"smax"`
+	Stot       int64  `json:"stot"`
+}
+
+type AppRequestInfo struct {
+	AppName string `json:"appname"`
+	ReqRate int64  `json:"reqRate"`
 }

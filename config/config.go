@@ -9,13 +9,15 @@ import (
 )
 
 const (
-	ContainerMonitorTimeout int = 30
+	ContainerMonitorTimeout int = 30 // seconds
+	SessionInfoTimeout      int = 60 // seconds
 	DefaultTimeout          int = 24 * 3600
 	DefaultHost                 = "localhost"
 	DefaultPort                 = 9005
 	DefaultDebugging            = true
 	DefaultLogLevel             = "debug"
 	DefaultHealthCheck          = 60
+	ContainerMonitorSerie       = "Slave_state"
 )
 
 type Config struct {
