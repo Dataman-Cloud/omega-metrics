@@ -11,6 +11,7 @@ import (
 	"github.com/Dataman-Cloud/omega-metrics/cache"
 	"github.com/Dataman-Cloud/omega-metrics/config"
 	"github.com/Dataman-Cloud/omega-metrics/db"
+	"github.com/Dataman-Cloud/omega-metrics/metrics/slave"
 	"github.com/Dataman-Cloud/omega-metrics/util"
 	log "github.com/cihub/seelog"
 	redis "github.com/garyburd/redigo/redis"
@@ -71,26 +72,7 @@ func handler(routingKey string, messageBody []byte) {
 		}
 		log.Infof("received masterStateRouting message clusterId: %s, leader: %d, json: %+v", jsonstr.ClusterId, jsonstr.Leader, jsonstr)
 	case util.Slave_state_routing:
-		array := util.SlaveStateJson(*mqMessage)
-		if len(array) != 0 {
-			for _, v := range array {
-				key := v.App.Task_id
-				appname := v.App.AppName
-				appid := v.App.AppId
-				value, _ := json.Marshal(v)
-
-				err := cache.WriteStringToRedis(key, string(value), config.ContainerMonitorTimeout)
-				if err != nil {
-					log.Error("[Slave_state] writeHashToRedis has err: ", err)
-				}
-				dberr := db.WriteStringToInfluxdb("Slave_state", appname, appid, string(value))
-				if dberr != nil {
-					log.Error("[Slave_state] WriteStringToInfluxdb has err: ", dberr)
-				}
-			}
-		}
-		appdata := util.SlaveStateJson(*mqMessage)
-		fmt.Println("appdata: %s", appdata)
+		go slave.SlaveStateHandler(mqMessage)
 	}
 }
 

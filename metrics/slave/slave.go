@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"strconv"
+	"strings"
 
 	"github.com/Dataman-Cloud/omega-metrics/cache"
 	"github.com/Dataman-Cloud/omega-metrics/config"
 	"github.com/Dataman-Cloud/omega-metrics/db"
 	"github.com/Dataman-Cloud/omega-metrics/util"
+	log "github.com/cihub/seelog"
 )
 
 // hanlder slave state message
@@ -18,10 +20,10 @@ func SlaveStateHandler(message *util.RabbitMqMessage) {
 		return
 	}
 
-	clusterId := strconv.Itoa(*message.ClusterId)
+	clusterId := strconv.Itoa(message.ClusterId)
 	// parse "message"-> mesos-slave info
 	var slaveState util.SlaveState
-	if err := json.Unmarshal([]byte(rabbitMessage.Message), &slaveState); err != nil {
+	if err := json.Unmarshal([]byte(message.Message), &slaveState); err != nil {
 		log.Error("[SlaveState] unmarshal SlaveState error: ", err)
 		return
 	}
@@ -31,15 +33,29 @@ func SlaveStateHandler(message *util.RabbitMqMessage) {
 		return
 	}
 
-	appInfo := ParseSlaveState(clusterId, slaveState)
+	appInfo, err := ParseSlaveState(clusterId, slaveState)
+	if err != nil {
+		return
+	}
+
+	if err := ParseAppMonitorData(&message.Attached, appInfo); err != nil {
+		log.Error("[Slave state] Parse app monitor info got error:  ", err.Error())
+	}
+
+	if sessionInfo, ok := message.Tags["session"]; ok {
+		sessionKey := clusterId + ":" + slaveState.Id
+		if err := ParseSessionData(sessionInfo, sessionKey); err != nil {
+			log.Error("Slave state] Parse session data got error: ", err.Error())
+		}
+	}
 
 }
 
 // construction app container name by executor and slave id
 // get the resrouce the mesos distribution to every container
 func ParseSlaveState(clusterId string, slaveState util.SlaveState) (map[string]util.AppInfo, error) {
-	slaveAppMap := make(map[string]appInfo)
-	salveId = slaveState.Id
+	slaveAppMap := make(map[string]util.AppInfo)
+	slaveId := slaveState.Id
 	slaveIp := slaveState.Flags.Ip
 
 	for _, v := range slaveState.Frameworks {
@@ -50,8 +66,9 @@ func ParseSlaveState(clusterId string, slaveState util.SlaveState) (map[string]u
 					continue
 				}
 				key := "mesos-" + slaveId + "." + exec.Container
-				value.Task_id = exec.Id
-				value.Slave_id = slaveId
+				var value util.AppInfo
+				value.TaskId = exec.Id
+				value.SlaveId = slaveId
 				value.AppName = exec.Tasks[0].Name
 				value.Resources = exec.Tasks[0].Resources
 				portstring, err := parseMesosPorts(exec.Tasks[0].Resources.Ports)
@@ -61,7 +78,6 @@ func ParseSlaveState(clusterId string, slaveState util.SlaveState) (map[string]u
 				var appId string
 				if portstring == "" {
 					appId = slaveIp + "-" + strconv.Itoa(index)
-					num += 1
 				} else {
 					appId = slaveIp + ":" + portstring
 				}
@@ -69,8 +85,8 @@ func ParseSlaveState(clusterId string, slaveState util.SlaveState) (map[string]u
 					TaskId:    exec.Id,
 					ClusterId: clusterId,
 					SlaveId:   slaveId,
-					AppName:   exec.Task[0].Name,
-					Resources: exec.Task[0].Resources,
+					AppName:   exec.Tasks[0].Name,
+					Resources: exec.Tasks[0].Resources,
 					AppId:     appId,
 				}
 				slaveAppMap[key] = appInfo
@@ -82,13 +98,13 @@ func ParseSlaveState(clusterId string, slaveState util.SlaveState) (map[string]u
 }
 
 // parse app monitor data to get the resourse seizure and mate container and app
-func ParseAppMonitorData(messgae *string, slaveInfo map[string]util.AppInfo) error {
+func ParseAppMonitorData(message *string, slaveInfo map[string]util.AppInfo) error {
 	if message == nil {
 		return errors.New("[Slave attach] messgae is null")
 	}
 
 	var cadInfo map[string]util.ContainerInfo
-	if err := json.Unmarshal([]byte(*messgae), &cadInfo); err != nil {
+	if err := json.Unmarshal([]byte(*message), &cadInfo); err != nil {
 		log.Error("[Slave attach] unmarshal cadvisor containerInfo error ", err)
 		return err
 	}
@@ -98,7 +114,8 @@ func ParseAppMonitorData(messgae *string, slaveInfo map[string]util.AppInfo) err
 			log.Error("[SlaveState] length of Stats isn't larger than 2, can't calc cpurate")
 			continue
 		}
-		var conInfo SlaveStateMar
+
+		var conInfo util.SlaveStateMar
 
 		flag := false
 		var app util.AppInfo
@@ -169,17 +186,18 @@ func ParseAppMonitorData(messgae *string, slaveInfo map[string]util.AppInfo) err
 
 		go db.WriteContainerInfoToInflux(&conInfo)
 	}
+	return nil
 }
 
 // write container info to cache for cluster monitor
-func WriteContainerInfoToCache(conInfo *util.ContainerInfo) {
+func WriteContainerInfoToCache(conInfo *util.SlaveStateMar) {
 	infoBytes, err := json.Marshal(conInfo)
 	if err != nil {
 		log.Error("[Slave state] marshal container info to cache got error: ", err)
 		return
 	}
 
-	if err := cache.WriteStringToRedis(conInfo.key, string(infoBytes), config.ContainerMonitorTimeout); err != nil {
+	if err := cache.WriteStringToRedis(conInfo.App.SlaveId, string(infoBytes), config.ContainerMonitorTimeout); err != nil {
 		log.Error("[Slave state] write container info to cache got error: ", err)
 		return
 	}
@@ -207,5 +225,45 @@ func parseMesosPorts(str string) (string, error) {
 		portsArr = append(portsArr, strconv.Itoa(i))
 	}
 	return strings.Join(portsArr, ","), nil
+}
 
+// parse app sessions info
+func ParseSessionData(message *string, sessionKey string) error {
+	var sessionList []util.HaproxySession
+
+	if err := json.Unmarshal([]byte(*message), &sessionList); err != nil {
+		return err
+	}
+
+	for _, session := range sessionList {
+		proxyName := strings.Trim(session.ProxyName, ":")
+		splits := strings.Split(proxyName, "-")
+		if len(splits) < 1 {
+			continue
+		}
+
+		appReqInfo := util.AppRequestInfo{
+			AppName: splits[0],
+			ReqRate: session.ReqRate,
+		}
+
+		go WriteAppReqInfoToCache(sessionKey, &appReqInfo)
+	}
+	return nil
+}
+
+// write app req info to cache
+func WriteAppReqInfoToCache(key string, appReqInfo *util.AppRequestInfo) {
+	infoBytes, err := json.Marshal(appReqInfo)
+	if err != nil {
+		log.Error("[Slave state] marshal appReqInfo got error: ", err)
+		return
+	}
+
+	if err := cache.WriteStringToRedis(key, string(infoBytes), config.SessionInfoTimeout); err != nil {
+		log.Error("[Slave state] Write appReqInfo to cache got error: ", err.Error())
+		return
+	}
+
+	return
 }

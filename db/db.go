@@ -1,7 +1,6 @@
 package db
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/Dataman-Cloud/omega-metrics/config"
 	"github.com/Dataman-Cloud/omega-metrics/util"
@@ -35,7 +34,7 @@ func WriteContainerInfoToInflux(conInfo *util.SlaveStateMar) error {
 		Precision: "s",
 	})
 
-	fields := structs.Map(&conInfo)
+	fields := structs.Map(conInfo)
 
 	fields["ContainerName"] = fields["ContainerId"]
 
@@ -55,7 +54,7 @@ func WriteContainerInfoToInflux(conInfo *util.SlaveStateMar) error {
 
 	appInfo := conInfo.App
 	fields["SlaveId"] = appInfo.SlaveId
-	tags := map[string]string{"appname": appInfo.AppName, "instance": appInfo.AppId, "clusterid": app.ClusterId}
+	tags := map[string]string{"appname": appInfo.AppName, "instance": appInfo.AppId, "clusterid": appInfo.ClusterId}
 
 	timestampInterface, ok := fields["Timestamp"]
 	var timestamp time.Time
@@ -65,7 +64,7 @@ func WriteContainerInfoToInflux(conInfo *util.SlaveStateMar) error {
 		timestamp = time.Now()
 	}
 
-	pt, err := client.NewPoint(serie, tags, fields, timestamp)
+	pt, err := client.NewPoint(config.ContainerMonitorSerie, tags, fields, timestamp)
 	if err != nil {
 		log.Error("Error: ", err.Error())
 	}
@@ -76,7 +75,7 @@ func WriteContainerInfoToInflux(conInfo *util.SlaveStateMar) error {
 	if err != nil {
 		log.Error("Error: ", err.Error())
 	} else {
-		log.Infof("Write String to Influxdb %s, Serie %s", database, serie)
+		log.Infof("Write String to Influxdb %s, Serie %s", database, config.ContainerMonitorSerie)
 	}
 	return err
 }

@@ -469,3 +469,31 @@ type ContainerInfoRequest struct {
 	// If ommitted, current time is assumed.
 	End time.Time `json:"end,omitempty"`
 }
+
+type HaproxySession struct {
+	Bin        int64  `json:"bin"`
+	Bout       int64  `json:"bout"`
+	Dreq       int64  `json:"dreq"`
+	Dresp      int64  `json:"dresp"`
+	Ereq       int64  `json:"ereq"`
+	HttpResp1  int64  `json:"http_response.1xx"`
+	HttpResp2  int64  `json:"http_response.2xx"`
+	HttpResp3  int64  `json:"http_response.3xx"`
+	HttpResp4  int64  `json:"http_response.4xx"`
+	HttpResp5  int64  `json:"http_response.5xx`
+	ProxyName  string `json:"proxyname"`
+	Rate       int64  `json:"rate"`
+	RateMax    int64  `json:"rate_max"`
+	ReqRate    int64  `json:"req_rate"`
+	ReqRateMax int64  `json:"req_rate_max"`
+	ReqTot     int64  `json:"req_tot"`
+	Scur       int64  `json:"scur"`
+	ServerName string `json:"servername"`
+	Smax       int64  `json:"smax"`
+	Stot       int64  `json:"stot"`
+}
+
+type AppRequestInfo struct {
+	AppName string `json:"appname"`
+	ReqRate int64  `json:"reqRate"`
+}
