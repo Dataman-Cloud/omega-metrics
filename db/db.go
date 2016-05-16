@@ -2,6 +2,8 @@ package db
 
 import (
 	"fmt"
+	"reflect"
+
 	"github.com/Dataman-Cloud/omega-metrics/config"
 	"github.com/Dataman-Cloud/omega-metrics/util"
 	log "github.com/cihub/seelog"
@@ -10,27 +12,108 @@ import (
 	"time"
 )
 
+var (
+	InfluxAddr     string = "localhost:5008"
+	InfulxDataBase string = "shurenyun"
+)
+
+func init() {
+	conf := config.Pairs()
+	InfluxAddr = fmt.Sprintf("%s:%d", conf.Db.Host, conf.Db.Port)
+	InfulxDataBase = conf.Db.Database
+}
+
+// create new influxdb udp client
+func CreateInfluxUDPClient() client.Client {
+	conn, err := client.NewUDPClient(
+		client.UDPConfig{
+			Addr: InfluxAddr,
+		})
+	if err != nil {
+		log.Error("Error creating Influxdb Client: ", err.Error())
+	}
+
+	return conn
+}
+
+// convert a struct instance to influxdb tags and fields. influx key use struct tag json
+// use struct influx tag 'influx' to differentiate tag and field
+func BuildInfluxData(instance interface{}) (tags map[string]string, fields map[string]interface{}) {
+	tags = make(map[string]string)
+	fields = make(map[string]interface{})
+
+	val := reflect.ValueOf(instance).Elem()
+	var str string
+
+	for i := 0; i < val.NumField(); i++ {
+		typefield := val.Type().Field(i)
+		influxTag := typefield.Tag.Get("influx")
+		if influxTag == "" {
+			continue
+		}
+
+		jsonTag := typefield.Tag.Get("json")
+		if jsonTag == "" {
+			continue
+		}
+
+		valueFiled := val.Field(i).Interface()
+
+		if influxTag == "tag" {
+			switch value := valueFiled.(type) {
+			case string:
+				str = value
+			}
+			tags[jsonTag] = str
+		} else if influxTag == "field" {
+			fields[jsonTag] = valueFiled
+		}
+	}
+	return
+}
+
+func WriteAppReqInfoToInflux(appReq *util.InfluxAppRequestInfo) error {
+	conn := CreateInfluxUDPClient()
+	if conn == nil {
+		return fmt.Errorf("Create influx udp client failed connect is nil")
+	}
+	defer conn.Close()
+
+	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
+		Database:  InfulxDataBase,
+		Precision: "s",
+	})
+	tags, fields := BuildInfluxData(appReq)
+
+	pt, err := client.NewPoint(config.AppRequestInfoSerie, tags, fields)
+	if err != nil {
+		log.Error("Create newPoint app req info for influx got error: ", err)
+		return err
+	}
+
+	bp.AddPoint(pt)
+	if err := conn.Write(bp); err != nil {
+		log.Error("Write app req info to influx got error: ", err)
+		return err
+	}
+
+	return nil
+}
+
+// write container monitor data to influxdb
 func WriteContainerInfoToInflux(conInfo *util.SlaveStateMar) error {
 	// Receive the variable serie, appname, appid and fiels_value. Write the fileds_value
 	// into the name of serie of database conf.Db.Database, and set the tags with
 	// appname, appid and clusterid.
-	conf := config.Pairs()
-	addr := fmt.Sprintf("%s:%d", conf.Db.Host, conf.Db.Port)
-	database := fmt.Sprintf("%s", conf.Db.Database)
-	conn, err := client.NewUDPClient(
-		client.UDPConfig{
-			Addr: addr,
-		})
-	if err != nil {
-		log.Error("Error creating Influxdb Client: ", err.Error())
-	} else {
-		log.Infof("Connected the Influxdb Server %s, Database %s", addr, database)
+	conn := CreateInfluxUDPClient()
+	if conn == nil {
+		return fmt.Errorf("Create influx udp client failed connect is nil")
 	}
 	defer conn.Close()
 
 	// Create a new point batch
 	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  database,
+		Database:  InfulxDataBase,
 		Precision: "s",
 	})
 
@@ -74,9 +157,8 @@ func WriteContainerInfoToInflux(conInfo *util.SlaveStateMar) error {
 	err = conn.Write(bp)
 	if err != nil {
 		log.Error("Error: ", err.Error())
-	} else {
-		log.Infof("Write String to Influxdb %s, Serie %s", database, config.ContainerMonitorSerie)
 	}
+
 	return err
 }
 

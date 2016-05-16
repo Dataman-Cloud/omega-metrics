@@ -235,6 +235,7 @@ func ParseSessionData(message *string, sessionKey string) error {
 		return err
 	}
 
+	var appReqInfos []util.AppRequestInfo
 	for _, session := range sessionList {
 		proxyName := strings.Trim(session.ProxyName, ":")
 		splits := strings.Split(proxyName, "-")
@@ -247,13 +248,15 @@ func ParseSessionData(message *string, sessionKey string) error {
 			ReqRate: session.ReqRate,
 		}
 
-		go WriteAppReqInfoToCache(sessionKey, &appReqInfo)
+		appReqInfos = append(appReqInfos, appReqInfo)
 	}
+
+	go WriteAppReqInfoToCache(sessionKey, &appReqInfos)
 	return nil
 }
 
 // write app req info to cache
-func WriteAppReqInfoToCache(key string, appReqInfo *util.AppRequestInfo) {
+func WriteAppReqInfoToCache(key string, appReqInfo *[]util.AppRequestInfo) {
 	infoBytes, err := json.Marshal(appReqInfo)
 	if err != nil {
 		log.Error("[Slave state] marshal appReqInfo got error: ", err)

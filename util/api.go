@@ -83,10 +83,11 @@ type AppListResponse struct {
 
 // master state
 type MasterStateMar struct {
-	Timestamp   int64         `json:"timestamp"`
-	ClusterId   string        `json:"clusterId"`
-	Leader      int           `json:"leader"`
-	AppAndTasks []AppAndTasks `json:"appAndTasks"`
+	Timestamp   int64             `json:"timestamp"`
+	ClusterId   string            `json:"clusterId"`
+	Leader      int               `json:"leader"`
+	AppAndTasks []AppAndTasks     `json:"appAndTasks"`
+	Slaves      []MasterSlaveInfo `json:"slaves"`
 }
 
 type AppAndTasks struct {
@@ -95,9 +96,17 @@ type AppAndTasks struct {
 }
 
 type MasterState struct {
-	HostName   string      `json:"hostname"`
-	Frameworks []framework `json:"frameworks"`
-	Leader     string      `json:"leader"`
+	HostName   string            `json:"hostname"`
+	Frameworks []Framework       `json:"frameworks"`
+	Leader     string            `json:"leader"`
+	Slaves     []MasterSlaveInfo `json:"slaves"`
+}
+
+// slave info in master info
+type MasterSlaveInfo struct {
+	Id       string `json:"id"`
+	Hostname string `json:"hostname"`
+	Active   bool   `json:"active"`
 }
 
 // slave state
@@ -118,7 +127,7 @@ type SlaveStateMar struct {
 type SlaveState struct {
 	Hostname   string      `json:"hostname"`
 	Id         string      `json:"id"`
-	Frameworks []framework `json:"frameworks"`
+	Frameworks []Framework `json:"frameworks"`
 	Flags      flag        `json:"flags"`
 }
 
@@ -126,7 +135,7 @@ type flag struct {
 	Ip string `json:"ip"`
 }
 
-type framework struct {
+type Framework struct {
 	Id        string     `json:"id"`
 	Name      string     `json:"name"`
 	Hostname  string     `json:"hostname"`
@@ -495,5 +504,11 @@ type HaproxySession struct {
 
 type AppRequestInfo struct {
 	AppName string `json:"appname"`
-	ReqRate int64  `json:"reqRate"`
+	ReqRate int64  `json:"reqrate"`
+}
+
+type InfluxAppRequestInfo struct {
+	ClusterId string `json:"clusterid" influx:"tag"`
+	AppName   string `json:"appname" influx:"tag"`
+	ReqRate   int64  `json:"reqrate" influx:"field"`
 }

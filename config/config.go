@@ -18,6 +18,7 @@ const (
 	DefaultLogLevel             = "debug"
 	DefaultHealthCheck          = 60
 	ContainerMonitorSerie       = "Slave_state"
+	AppRequestInfoSerie         = "app_req_rate"
 )
 
 type Config struct {

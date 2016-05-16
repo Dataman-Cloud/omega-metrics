@@ -12,16 +12,14 @@ import (
 var pool *redis.Pool
 
 func Open() redis.Conn {
-	log.Debug("cahce :", pool)
 	if pool != nil {
 		return pool.Get()
 	}
 
 	mutex := &sync.Mutex{}
 	mutex.Lock()
-	InitCache()
 	defer mutex.Unlock()
-	log.Debug("cahce1 :", pool)
+	InitCache()
 
 	return pool.Get()
 }
@@ -61,7 +59,6 @@ func DestroyCache() {
 func WriteStringToRedis(key string, value string, timeout int) error {
 	conn := Open()
 	defer conn.Close()
-	log.Debugf("redis Set key %s, value %s", key, value)
 	if timeout != -1 {
 		_, err := conn.Do("SETEX", key, timeout, value)
 		return err
@@ -74,12 +71,9 @@ func WriteSetToRedis(key, value string, timeout int) error {
 	conn := Open()
 	defer conn.Close()
 	var err error
-	log.Debugf("redis SADD key %s, value %s", key, value)
 	if _, err = conn.Do("SADD", key, value); err != nil {
 		return err
 	}
-
-	log.Debugf("redis EXPIRE key %s, value %s", key, value)
 
 	if timeout != -1 {
 		_, err = conn.Do("EXPIRE", key, timeout)
@@ -93,12 +87,9 @@ func WriteListToRedis(key, value string, timeout int) error {
 	defer conn.Close()
 	var err error
 	conf := config.Pairs()
-	log.Debugf("redis LPUSH id %s, json %s", key, value)
 	if err = conn.Send("LPUSH", key, value); err != nil {
 		return err
 	}
-
-	log.Debugf("redis EXPIRE id %s, json %s", key, value)
 
 	if timeout != -1 {
 		if err = conn.Send("EXPIRE", key, timeout); err != nil {
@@ -114,7 +105,6 @@ func WriteHashToRedis(key, field, value string, timeout int) error {
 	conn := Open()
 	defer conn.Close()
 	var err error
-	log.Debugf("redis HSET: %s, field: %s, value: %s", key, field, value)
 	if _, err = conn.Do("HSET", key, field, value); err != nil {
 		return err
 	}
@@ -130,7 +120,6 @@ func HashDelFromRedis(key, field string) error {
 	conn := Open()
 	defer conn.Close()
 	var err error
-	log.Debugf("redis HDEL: %s, field: %s", key, field)
 	_, err = conn.Do("HDEL", key, field)
 	return err
 }
@@ -138,7 +127,6 @@ func HashDelFromRedis(key, field string) error {
 func ReadFromRedis(key string) (string, error) {
 	conn := Open()
 	defer conn.Close()
-	log.Debugf("redis Get key %s", key)
 	value, err := redis.String(conn.Do("GET", key))
 	return value, err
 }
@@ -146,7 +134,6 @@ func ReadFromRedis(key string) (string, error) {
 func DeleteRedisByKey(key string) error {
 	conn := Open()
 	defer conn.Close()
-	log.Debugf("redis delete key %s", key)
 	_, err := conn.Do("DEL", key)
 	return err
 }
