@@ -11,6 +11,7 @@ import (
 	"github.com/Dataman-Cloud/omega-metrics/cache"
 	"github.com/Dataman-Cloud/omega-metrics/config"
 	"github.com/Dataman-Cloud/omega-metrics/db"
+	"github.com/Dataman-Cloud/omega-metrics/metrics/master"
 	"github.com/Dataman-Cloud/omega-metrics/metrics/slave"
 	"github.com/Dataman-Cloud/omega-metrics/util"
 	log "github.com/cihub/seelog"
@@ -58,21 +59,10 @@ func handler(routingKey string, messageBody []byte) {
 				log.Error("[Master_metrics] writeStringToRedis has err: ", err)
 			}
 		}
-		log.Infof("received masterMetricsRouting message clusterId:%s leader:%d json:%+v", jsonstr.ClusterId, jsonstr.Leader, jsonstr)
 	case util.Master_state_routing:
-		jsonstr := util.MasterStateJson(*mqMessage)
-		if jsonstr.ClusterId != "" && jsonstr.Leader == 1 {
-			for _, task := range jsonstr.AppAndTasks {
-				label := jsonstr.ClusterId + ":" + task.AppName
-				err := cache.WriteSetToRedis(label, task.TaskId, config.ContainerMonitorTimeout)
-				if err != nil {
-					log.Error("[Master_state] writeSetToRedis has err: ", err)
-				}
-			}
-		}
-		log.Infof("received masterStateRouting message clusterId: %s, leader: %d, json: %+v", jsonstr.ClusterId, jsonstr.Leader, jsonstr)
+		master.MasterStateHandler(mqMessage)
 	case util.Slave_state_routing:
-		go slave.SlaveStateHandler(mqMessage)
+		slave.SlaveStateHandler(mqMessage)
 	}
 }
 
@@ -84,7 +74,6 @@ func masterMetrics(ctx *gin.Context) {
 	var httpstr util.AppListResponse
 	var cm util.ClusterMetrics
 	cluster_id := ctx.Param("cluster_id") + "_" + util.Master_metrics_routing
-	log.Debug("cluster_id ", cluster_id)
 
 	response := util.MonitorResponse{
 		Code: 1,
