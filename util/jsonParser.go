@@ -105,33 +105,3 @@ func MasterMetricsJson(rabbitMessage RabbitMqMessage) MasterMetricsMar {
 		ClusterId:  clusterId,
 	}
 }
-
-func MasterStateJson(rabbitMessage RabbitMqMessage) MasterStateMar {
-	var masSta MasterState
-	var masStaMar MasterStateMar
-	clusterId := strconv.Itoa(rabbitMessage.ClusterId)
-	err := json.Unmarshal([]byte(rabbitMessage.Message), &masSta)
-	if err != nil {
-		log.Error("[MasterState] unmarshal MasterState error ", err)
-		return masStaMar
-	}
-	masStaMar.Timestamp = rabbitMessage.Timestamp
-	masStaMar.ClusterId = clusterId
-
-	if len(masSta.Frameworks) == 0 {
-		masStaMar.Leader = 0
-		return masStaMar
-	}
-	for _, v := range masSta.Frameworks {
-		if v.Name == "marathon" {
-			for _, task := range v.Tasks {
-				var apps AppAndTasks
-				apps.TaskId = task.Id
-				apps.AppName = task.Name
-				masStaMar.AppAndTasks = append(masStaMar.AppAndTasks, apps)
-			}
-		}
-	}
-	masStaMar.Leader = 1
-	return masStaMar
-}
