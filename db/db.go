@@ -1,39 +1,56 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/Dataman-Cloud/omega-metrics/config"
 	"github.com/Dataman-Cloud/omega-metrics/util"
 	log "github.com/cihub/seelog"
 	"github.com/fatih/structs"
 	"github.com/influxdata/influxdb/client/v2"
-	"time"
+	"github.com/influxdata/influxdb/models"
+)
+
+const (
+	DefaultHttpTimeout = 15 * time.Second
 )
 
 var (
 	InfluxAddr     string = "localhost:5008"
 	InfulxDataBase string = "shurenyun"
+	HttpInfluxAddr string = "http://localhost:5008"
+	InfulxUserName        = "shurenyun"
+	InfulxPassword        = "shurenyun"
 )
 
 func init() {
 	conf := config.Pairs()
 	InfluxAddr = fmt.Sprintf("%s:%d", conf.Db.Host, conf.Db.Port)
+	HttpInfluxAddr = fmt.Sprintf("http://%s", InfluxAddr)
 	InfulxDataBase = conf.Db.Database
+	InfulxUserName = conf.Db.User
+	InfulxPassword = conf.Db.Password
 }
 
 // create new influxdb udp client
-func CreateInfluxUDPClient() client.Client {
-	conn, err := client.NewUDPClient(
+func CreateInfluxUDPClient() (client.Client, error) {
+	return client.NewUDPClient(
 		client.UDPConfig{
 			Addr: InfluxAddr,
 		})
-	if err != nil {
-		log.Error("Error creating Influxdb Client: ", err.Error())
-	}
+}
 
-	return conn
+// create a new http influx client
+func CreateInfluxHttpClient() (client.Client, error) {
+	return client.NewHTTPClient(client.HTTPConfig{
+		Addr:     HttpInfluxAddr,
+		Username: InfulxUserName,
+		Password: InfulxPassword,
+		Timeout:  DefaultHttpTimeout,
+	})
 }
 
 // convert a struct instance to influxdb tags and fields. influx key use struct tag json
@@ -73,7 +90,11 @@ func BuildInfluxData(instance interface{}) (tags map[string]string, fields map[s
 }
 
 func WriteAppReqInfoToInflux(appReq *util.InfluxAppRequestInfo) error {
-	conn := CreateInfluxUDPClient()
+	conn, err := CreateInfluxUDPClient()
+	if err != nil {
+		return err
+	}
+
 	if conn == nil {
 		return fmt.Errorf("Create influx udp client failed connect is nil")
 	}
@@ -105,7 +126,11 @@ func WriteContainerInfoToInflux(conInfo *util.SlaveStateMar) error {
 	// Receive the variable serie, appname, appid and fiels_value. Write the fileds_value
 	// into the name of serie of database conf.Db.Database, and set the tags with
 	// appname, appid and clusterid.
-	conn := CreateInfluxUDPClient()
+	conn, err := CreateInfluxUDPClient()
+	if err != nil {
+		return err
+	}
+
 	if conn == nil {
 		return fmt.Errorf("Create influx udp client failed connect is nil")
 	}
@@ -188,4 +213,73 @@ func InfluxdbClient_Query(command string) (client.Response, error) {
 
 	response, err := conn.Query(q)
 	return *response, err
+}
+
+// Query from influx interface return influx row object
+func Query(sql string) (results []map[string]interface{}, err error) {
+	httpClient, err := CreateInfluxHttpClient()
+	if err != nil {
+		err = errors.New("Create influx http client got error: " + err.Error())
+		return
+	}
+
+	query := client.NewQuery(sql, InfulxDataBase, "ns")
+	response, err := httpClient.Query(query)
+	if err != nil {
+		err = errors.New("Query influxdb got error: " + err.Error())
+		return
+	}
+
+	if response.Error() != nil {
+		err = errors.New("Query influxdb response got error: " + response.Error().Error())
+		return
+	}
+
+	if len(response.Results) < 1 {
+		return
+	}
+
+	series := response.Results[0].Series
+	if len(series) < 1 {
+		return
+	}
+
+	results = ConvertSeriesToMap(series[0])
+	return
+}
+
+// convert an influxdb row value to map
+func ConvertSeriesToMap(row models.Row) (results []map[string]interface{}) {
+	columns := row.Columns
+	values := row.Values
+	tags := row.Tags
+	fieldNum := len(columns)
+	if fieldNum < 1 {
+		return
+	}
+
+	for index, value := range values {
+		event := make(map[string]interface{})
+		if len(value) != fieldNum {
+			break
+		}
+		for i := 0; i < fieldNum; i++ {
+			event[columns[i]] = value[i]
+		}
+		for k, v := range tags {
+			event[k] = v
+		}
+		event["index"] = index + 1
+		results = append(results, event)
+	}
+
+	return
+}
+
+// query requset info from influxdb by cluster id appname start time and end time
+func QueryReqInfo(cid string, appname string, sTime int64, eTime int64) ([]map[string]interface{}, error) {
+	formatSql := `select * from app_req_rate where clusterid = '%s' and appname = '%s' and time >= %d and time <= %d order by time desc`
+	sql := fmt.Sprintf(formatSql, cid, appname, sTime, eTime)
+	log.Info("************", sql)
+	return Query(sql)
 }

@@ -12,6 +12,7 @@ import (
 
 	"github.com/Dataman-Cloud/omega-metrics/cache"
 	"github.com/Dataman-Cloud/omega-metrics/config"
+	"github.com/Dataman-Cloud/omega-metrics/controller"
 	"github.com/Dataman-Cloud/omega-metrics/logger"
 	"github.com/Dataman-Cloud/omega-metrics/util"
 	log "github.com/cihub/seelog"
@@ -71,6 +72,7 @@ func initServer() {
 		monitorGroup.GET("/clusters/:cluster_id/metrics", masterMetrics)
 		monitorGroup.GET("/clusters/:cluster_id/apps/:app/metrics", appMetrics)
 		monitorGroup.GET("/clusters/:cluster_id/apps/:app/monitor", appMonitor) // Request the application monitor data
+		monitorGroup.GET("/clusters/:cluster_id/apps/:app/session", controller.RequestRate)
 	}
 
 	conf := config.Pairs()
