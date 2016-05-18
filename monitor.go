@@ -21,7 +21,7 @@ import (
 
 func startC() {
 	log.Debug("start master metrics mq consumer")
-	go util.MetricsSubscribe(util.Metrics_exchange, util.Master_state_routing, master.MasterMetricHandler)
+	go util.MetricsSubscribe(util.Metrics_exchange, util.Master_state_routing, master.MasterStateHandler)
 	go util.MetricsSubscribe(util.Metrics_exchange, util.Master_metrics_routing, master.MasterMetricHandler)
 	go util.MetricsSubscribe(util.Metrics_exchange, util.Slave_state_routing, slave.SlaveStateHandler)
 	go util.MetricsSubscribe(util.Metrics_exchange, util.Slave_metrics_routing, func(messageBody *[]byte) {})
