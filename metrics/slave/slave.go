@@ -197,7 +197,7 @@ func WriteContainerInfoToCache(conInfo *util.SlaveStateMar) {
 		return
 	}
 
-	if err := cache.WriteStringToRedis(conInfo.App.SlaveId, string(infoBytes), config.ContainerMonitorTimeout); err != nil {
+	if err := cache.WriteStringToRedis(conInfo.App.TaskId, string(infoBytes), config.ContainerMonitorTimeout); err != nil {
 		log.Error("[Slave state] write container info to cache got error: ", err)
 		return
 	}
