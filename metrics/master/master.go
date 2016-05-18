@@ -7,16 +7,70 @@ import (
 	"github.com/Dataman-Cloud/omega-metrics/cache"
 	"github.com/Dataman-Cloud/omega-metrics/config"
 	"github.com/Dataman-Cloud/omega-metrics/db"
+	"github.com/Dataman-Cloud/omega-metrics/metrics"
 	"github.com/Dataman-Cloud/omega-metrics/util"
 	log "github.com/cihub/seelog"
 )
 
-func MasterStateHandler(message *util.RabbitMqMessage) {
-	if message == nil {
+// handler master metric message
+func MasterMetricHandler(messageBody *[]byte) {
+	mqMessage := metrics.ParserMqMessage(messageBody)
+	if mqMessage == nil {
+		log.Error("[Master metric] Unmarshal master metrics got nil")
 		return
 	}
 
-	masterState := ParseMasterState(message)
+	masterMetric := ParseMasterMetrics(mqMessage)
+	if masterMetric.ClusterId != "" && masterMetric.Leader == 1 {
+		key := masterMetric.ClusterId + "_" + util.Master_metrics_routing
+		value, err := json.Marshal(masterMetric)
+		if err != nil {
+			log.Error("[Master metric] Marshal master metric got error: ", err)
+			return
+		}
+
+		if err := cache.WriteStringToRedis(key, string(value), config.DefaultTimeout); err != nil {
+			log.Error("[Master metric] Write master metric to cache got error: ", err)
+			return
+		}
+	}
+
+	return
+}
+
+// parse master metric info and write to cache
+func ParseMasterMetrics(rabbitMessage *util.RabbitMqMessage) util.MasterMetricsMar {
+	var masMet util.MasterMetrics
+	var masMetMar util.MasterMetricsMar
+	clusterId := strconv.Itoa(rabbitMessage.ClusterId)
+	err := json.Unmarshal([]byte(rabbitMessage.Message), &masMet)
+	if err != nil {
+		log.Error("[Master metric] unmarshal MasterMetrics error ", err)
+		return masMetMar
+	}
+
+	return util.MasterMetricsMar{
+		CpuPercent: masMet.CpuPercent * 100,
+		CpuShare:   masMet.CpuShare,
+		CpuTotal:   masMet.CpuTotal,
+		MemTotal:   masMet.MemTotal,
+		MemUsed:    masMet.MemUsed,
+		DiskUsed:   masMet.DiskUsed,
+		DiskTotal:  masMet.DiskTotal,
+		Leader:     masMet.Leader,
+		Timestamp:  rabbitMessage.Timestamp,
+		ClusterId:  clusterId,
+	}
+}
+
+// master state handler function
+func MasterStateHandler(messageBody *[]byte) {
+	mqMessage := metrics.ParserMqMessage(messageBody)
+	if mqMessage == nil {
+		return
+	}
+
+	masterState := ParseMasterState(mqMessage)
 	clusterId := masterState.ClusterId
 	if clusterId == "" || masterState.Leader != 1 {
 		return

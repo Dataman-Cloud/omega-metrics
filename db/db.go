@@ -22,8 +22,8 @@ var (
 	InfluxAddr     string = "localhost:5008"
 	InfulxDataBase string = "shurenyun"
 	HttpInfluxAddr string = "http://localhost:5008"
-	InfulxUserName        = "shurenyun"
-	InfulxPassword        = "shurenyun"
+	InfulxUserName string = "shurenyun"
+	InfulxPassword string = "shurenyun"
 )
 
 func init() {
@@ -89,6 +89,7 @@ func BuildInfluxData(instance interface{}) (tags map[string]string, fields map[s
 	return
 }
 
+// Write app request info to influxdb
 func WriteAppReqInfoToInflux(appReq *util.InfluxAppRequestInfo) error {
 	conn, err := CreateInfluxUDPClient()
 	if err != nil {
@@ -189,18 +190,7 @@ func WriteContainerInfoToInflux(conInfo *util.SlaveStateMar) error {
 
 func InfluxdbClient_Query(command string) (client.Response, error) {
 	// Receive the command and return the query respose.
-	conf := config.Pairs()
-	addr := fmt.Sprintf("http://%s:%d", conf.Db.Host, conf.Db.Port)
-	username := fmt.Sprintf("%s", conf.Db.User)
-	password := fmt.Sprintf("%s", conf.Db.Password)
-	database := fmt.Sprintf("%s", conf.Db.Database)
-	timeout := time.Second * 60
-	conn, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr:     addr,
-		Username: username,
-		Password: password,
-		Timeout:  timeout,
-	})
+	conn, err := CreateInfluxHttpClient()
 	if err != nil {
 		log.Error("Error creating Influxdb Client: ", err.Error())
 	}
@@ -208,7 +198,7 @@ func InfluxdbClient_Query(command string) (client.Response, error) {
 
 	q := client.Query{
 		Command:  command,
-		Database: database,
+		Database: InfulxDataBase,
 	}
 
 	response, err := conn.Query(q)
@@ -280,6 +270,5 @@ func ConvertSeriesToMap(row models.Row) (results []map[string]interface{}) {
 func QueryReqInfo(cid string, appname string, sTime int64, eTime int64) ([]map[string]interface{}, error) {
 	formatSql := `select * from app_req_rate where clusterid = '%s' and appname = '%s' and time >= %d and time <= %d order by time desc`
 	sql := fmt.Sprintf(formatSql, cid, appname, sTime, eTime)
-	log.Info("************", sql)
 	return Query(sql)
 }

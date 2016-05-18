@@ -9,21 +9,23 @@ import (
 	"github.com/Dataman-Cloud/omega-metrics/cache"
 	"github.com/Dataman-Cloud/omega-metrics/config"
 	"github.com/Dataman-Cloud/omega-metrics/db"
+	"github.com/Dataman-Cloud/omega-metrics/metrics"
 	"github.com/Dataman-Cloud/omega-metrics/util"
 	log "github.com/cihub/seelog"
 )
 
 // hanlder slave state message
 // slave state contain mesos-slave info, container monitor and haproxy sessions status
-func SlaveStateHandler(message *util.RabbitMqMessage) {
-	if message == nil {
+func SlaveStateHandler(messageBody *[]byte) {
+	mqMessage := metrics.ParserMqMessage(messageBody)
+	if mqMessage == nil {
 		return
 	}
 
-	clusterId := strconv.Itoa(message.ClusterId)
+	clusterId := strconv.Itoa(mqMessage.ClusterId)
 	// parse "message"-> mesos-slave info
 	var slaveState util.SlaveState
-	if err := json.Unmarshal([]byte(message.Message), &slaveState); err != nil {
+	if err := json.Unmarshal([]byte(mqMessage.Message), &slaveState); err != nil {
 		log.Error("[SlaveState] unmarshal SlaveState error: ", err)
 		return
 	}
@@ -38,11 +40,11 @@ func SlaveStateHandler(message *util.RabbitMqMessage) {
 		return
 	}
 
-	if err := ParseAppMonitorData(&message.Attached, appInfo); err != nil {
+	if err := ParseAppMonitorData(&mqMessage.Attached, appInfo); err != nil {
 		log.Error("[Slave state] Parse app monitor info got error:  ", err.Error())
 	}
 
-	if sessionInfo, ok := message.Tags["session"]; ok {
+	if sessionInfo, ok := mqMessage.Tags["session"]; ok {
 		sessionKey := clusterId + ":" + slaveState.Id
 		if err := ParseSessionData(sessionInfo, sessionKey); err != nil {
 			log.Error("Slave state] Parse session data got error: ", err.Error())

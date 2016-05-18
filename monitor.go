@@ -21,13 +21,13 @@ import (
 
 func startC() {
 	log.Debug("start master metrics mq consumer")
-	go util.MetricsSubscribe(util.Metrics_exchange, util.Master_metrics_routing, handler)
-	go util.MetricsSubscribe(util.Metrics_exchange, util.Slave_state_routing, handler)
-	go util.MetricsSubscribe(util.Metrics_exchange, util.Master_state_routing, handler)
-	go util.MetricsSubscribe(util.Metrics_exchange, util.Slave_metrics_routing, func(routingKey string, messageBody []byte) {})
-	go util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_info_routing, func(routingKey string, messageBody []byte) {})
-	go util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_metrics_routing, func(routingKey string, messageBody []byte) {})
-	go util.MetricsSubscribe(util.Metrics_exchange, util.Slave_monitor_routing, func(routingKey string, messageBody []byte) {})
+	go util.MetricsSubscribe(util.Metrics_exchange, util.Master_state_routing, master.MasterMetricHandler)
+	go util.MetricsSubscribe(util.Metrics_exchange, util.Master_metrics_routing, master.MasterMetricHandler)
+	go util.MetricsSubscribe(util.Metrics_exchange, util.Slave_state_routing, slave.SlaveStateHandler)
+	go util.MetricsSubscribe(util.Metrics_exchange, util.Slave_metrics_routing, func(messageBody *[]byte) {})
+	go util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_info_routing, func(messageBody *[]byte) {})
+	go util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_metrics_routing, func(messageBody *[]byte) {})
+	go util.MetricsSubscribe(util.Metrics_exchange, util.Slave_monitor_routing, func(messageBody *[]byte) {})
 
 }
 
@@ -40,30 +40,6 @@ func SetHeader(ctx *gin.Context) {
 		ctx.String(204, "")
 	}
 	ctx.Next()
-}
-
-func handler(routingKey string, messageBody []byte) {
-	mqMessage := util.ParserMqClusterMessage(messageBody)
-	if mqMessage == nil {
-		return
-	}
-
-	switch routingKey {
-	case util.Master_metrics_routing:
-		jsonstr := util.MasterMetricsJson(*mqMessage)
-		if jsonstr.ClusterId != "" && jsonstr.Leader == 1 {
-			label := jsonstr.ClusterId + "_" + routingKey
-			value, _ := json.Marshal(jsonstr)
-			err := cache.WriteStringToRedis(label, string(value), config.DefaultTimeout)
-			if err != nil {
-				log.Error("[Master_metrics] writeStringToRedis has err: ", err)
-			}
-		}
-	case util.Master_state_routing:
-		master.MasterStateHandler(mqMessage)
-	case util.Slave_state_routing:
-		slave.SlaveStateHandler(mqMessage)
-	}
 }
 
 func masterMetrics(ctx *gin.Context) {
