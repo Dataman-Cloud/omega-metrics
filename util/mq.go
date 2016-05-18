@@ -47,7 +47,7 @@ func MQ() *amqp.Connection {
 	return mq
 }
 
-func MetricsSubscribe(exchange string, routingkey string, handler func(string, []byte)) error {
+func MetricsSubscribe(exchange string, routingkey string, handler func(messageBody *[]byte)) error {
 	defer func() {
 		if err := recover(); err != nil {
 			stack := logger.Stack(5)
@@ -77,7 +77,7 @@ func MetricsSubscribe(exchange string, routingkey string, handler func(string, [
 	for {
 		select {
 		case message, ok := <-messages:
-			handler(message.RoutingKey, message.Body)
+			handler(&message.Body)
 			if !ok {
 				log.Errorf("channel of queue with exchange:%s and routingkey:%s quit!", exchange, routingkey)
 
@@ -89,26 +89,26 @@ func MetricsSubscribe(exchange string, routingkey string, handler func(string, [
 }
 
 func Publish(exchange, routing string, message string) error {
-        mq := MQ()
-        channel, err := mq.Channel()
-        failOnError(err, "can't get channel")
+	mq := MQ()
+	channel, err := mq.Channel()
+	failOnError(err, "can't get channel")
 
-        defer channel.Close()
-        err = channel.ExchangeDeclare(exchange, "direct", true, false, false, false, nil)
-        failOnError(err, "can't declare exchange")
+	defer channel.Close()
+	err = channel.ExchangeDeclare(exchange, "direct", true, false, false, false, nil)
+	failOnError(err, "can't declare exchange")
 
-        err = channel.Publish(
-                exchange,
-                routing,
-                false,
-                false,
-                amqp.Publishing{
-                        ContentType: "text/plain",
-                        Body:        []byte(message),
-                },
-        )
-        failOnError(err, "can't publish message")
-        return nil
+	err = channel.Publish(
+		exchange,
+		routing,
+		false,
+		false,
+		amqp.Publishing{
+			ContentType: "text/plain",
+			Body:        []byte(message),
+		},
+	)
+	failOnError(err, "can't publish message")
+	return nil
 }
 
 func declareQueue(channel *amqp.Channel, name string) (amqp.Queue, error) {

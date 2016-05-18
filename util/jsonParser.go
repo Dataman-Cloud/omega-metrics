@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"reflect"
-	"strconv"
 
 	log "github.com/cihub/seelog"
 )
@@ -59,16 +58,6 @@ func ReturnMessage(typ string, strs []string) (*[]interface{}, error) {
 	return &monitorDatas, nil
 }
 
-func ParserMqClusterMessage(messgae []byte) *RabbitMqMessage {
-	var mqMessage *RabbitMqMessage = &RabbitMqMessage{}
-	err := json.Unmarshal(messgae, mqMessage)
-	if err != nil {
-		log.Error("Parser mq message has error: ", err)
-		return nil
-	}
-	return mqMessage
-}
-
 func ReturnData(typ, str string) (*interface{}, error) {
 	monitorType, ok := NewOfType(typ)
 	if !ok {
@@ -80,28 +69,4 @@ func ReturnData(typ, str string) (*interface{}, error) {
 		return nil, err
 	}
 	return &monitorType, nil
-}
-
-func MasterMetricsJson(rabbitMessage RabbitMqMessage) MasterMetricsMar {
-	var masMet MasterMetrics
-	var masMetMar MasterMetricsMar
-	clusterId := strconv.Itoa(rabbitMessage.ClusterId)
-	err := json.Unmarshal([]byte(rabbitMessage.Message), &masMet)
-	if err != nil {
-		log.Error("[MasterMetrics] unmarshal MasterMetrics error ", err)
-		return masMetMar
-	}
-
-	return MasterMetricsMar{
-		CpuPercent: masMet.CpuPercent * 100,
-		CpuShare:   masMet.CpuShare,
-		CpuTotal:   masMet.CpuTotal,
-		MemTotal:   masMet.MemTotal,
-		MemUsed:    masMet.MemUsed,
-		DiskUsed:   masMet.DiskUsed,
-		DiskTotal:  masMet.DiskTotal,
-		Leader:     masMet.Leader,
-		Timestamp:  rabbitMessage.Timestamp,
-		ClusterId:  clusterId,
-	}
 }
