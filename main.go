@@ -61,10 +61,12 @@ func initServer() {
 	log.Info("[monitor] is up")
 	router := gin.New()
 	router.Use(gin.Logger(), gin.Recovery())
-	// healthcheck
+	// options Handler
+	// router.Use(OptionHandler)
 	router.GET("/", func(c *gin.Context) {
 		c.String(200, "pass")
 	})
+	// healthcheck
 	router.GET("/api/v3/health/metrics", HealthCheck)
 
 	monitorGroup := router.Group("/api/v3")

@@ -268,7 +268,7 @@ func ConvertSeriesToMap(row models.Row) (results []map[string]interface{}) {
 
 // query requset info from influxdb by cluster id appname start time and end time
 func QueryReqInfo(cid string, appname string, sTime int64, eTime int64) ([]map[string]interface{}, error) {
-	formatSql := `select * from app_req_rate where clusterid = '%s' and appname = '%s' and time >= %d and time <= %d order by time desc`
+	formatSql := `select * from app_req_rate where clusterid = '%s' and appname = '%s' and time >= %d and time <= %d order by time`
 	sql := fmt.Sprintf(formatSql, cid, appname, sTime, eTime)
 	return Query(sql)
 }

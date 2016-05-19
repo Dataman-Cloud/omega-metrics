@@ -35,7 +35,8 @@ func RequestRate(c *gin.Context) {
 		endTime = time.Now().UnixNano()
 	}
 
-	results, err := db.QueryReqInfo(clusterId, appName, startTime, endTime)
+	var results []map[string]interface{}
+	results, err = db.QueryReqInfo(clusterId, appName, startTime, endTime)
 	if err != nil {
 		ReturnError(c, DbQueryError, err)
 		return
