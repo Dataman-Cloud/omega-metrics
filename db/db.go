@@ -165,17 +165,10 @@ func WriteContainerInfoToInflux(conInfo *util.SlaveStateMar) error {
 	fields["SlaveId"] = appInfo.SlaveId
 	tags := map[string]string{"appname": appInfo.AppName, "instance": appInfo.AppId, "clusterid": appInfo.ClusterId}
 
-	timestampInterface, ok := fields["Timestamp"]
-	var timestamp time.Time
-	if ok {
-		timestamp = timestampInterface.(time.Time)
-	} else {
-		timestamp = time.Now()
-	}
-
-	pt, err := client.NewPoint(config.ContainerMonitorSerie, tags, fields, timestamp)
+	pt, err := client.NewPoint(config.ContainerMonitorSerie, tags, fields)
 	if err != nil {
 		log.Error("Error: ", err.Error())
+		return err
 	}
 
 	bp.AddPoint(pt)
@@ -183,6 +176,7 @@ func WriteContainerInfoToInflux(conInfo *util.SlaveStateMar) error {
 	err = conn.Write(bp)
 	if err != nil {
 		log.Error("Error: ", err.Error())
+		return err
 	}
 
 	return err
@@ -270,5 +264,11 @@ func ConvertSeriesToMap(row models.Row) (results []map[string]interface{}) {
 func QueryReqInfo(cid string, appname string, sTime int64, eTime int64) ([]map[string]interface{}, error) {
 	formatSql := `select * from app_req_rate where clusterid = '%s' and appname = '%s' and time >= %d and time <= %d order by time desc`
 	sql := fmt.Sprintf(formatSql, cid, appname, sTime, eTime)
+	return Query(sql)
+}
+
+// query app metrics info from influxdb by cluster id appname start time and end time
+func QueryMetricsInfo(cid string, appname string, sTime int64, eTime int64) ([]map[string]interface{}, error) {
+	sql := fmt.Sprintf(QueryMetricFormatSql, cid, appname, sTime, eTime)
 	return Query(sql)
 }
