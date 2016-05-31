@@ -10,7 +10,6 @@ import (
 
 	"github.com/Dataman-Cloud/omega-metrics/cache"
 	"github.com/Dataman-Cloud/omega-metrics/config"
-	"github.com/Dataman-Cloud/omega-metrics/db"
 	"github.com/Dataman-Cloud/omega-metrics/metrics/master"
 	"github.com/Dataman-Cloud/omega-metrics/metrics/slave"
 	"github.com/Dataman-Cloud/omega-metrics/util"
@@ -282,63 +281,4 @@ func Milliseconds(d time.Duration) float64 {
 	min := d / 1e6
 	nsec := d % 1e6
 	return float64(min) + float64(nsec)*(1e-6)
-}
-
-func appMonitor(ctx *gin.Context) {
-	// Get the application monitor data and return to the http answer
-
-	conf := config.Pairs()
-	qurey_duration := fmt.Sprintf("%s", conf.Db.Query_Default_Duration) // Get the query duration from config
-	if len(qurey_duration) == 0 {
-		qurey_duration = "15m" // if blank in config, set the duration as 15m
-	}
-
-	cluster_id := ctx.Param("cluster_id")
-	appname := ctx.Param("app")
-	item := ctx.Query("item")
-	from := ctx.Query("from")
-	end := ctx.Query("end")
-
-	var filter string
-
-	// if request does not have from and end, the duration of query will be used.
-	if len(from) == 0 && len(end) == 0 {
-		filter = "clusterid = '" + cluster_id + "' AND appname = '" + appname + "' AND time > now() - " + qurey_duration
-	} else {
-		filter = "clusterid = '" + cluster_id + "' AND appname = '" + appname + "' AND time > '" + from + "' AND time < '" + end + "'"
-	}
-
-	// make up the query command
-	command := ""
-	fields := "time,ContainerName,instance,cluster_id,appname"
-	switch item {
-	case "cpu":
-		command = "SELECT " + fields + ",CpuShareCores,CpuUsedCores" + " FROM Slave_state WHERE " + filter
-	case "memory":
-		command = "SELECT " + fields + ",MemoryTotal,MemoryUsed" + " FROM Slave_state WHERE " + filter
-	case "network":
-		command = "SELECT " + fields + ",NetworkReceviedBytes,NetworkSentBytes" + " FROM Slave_state WHERE " + filter
-	case "disk":
-		command = "SELECT " + fields + ",DiskIOReadBytes,DiskIOWriteBytes" + " FROM Slave_state WHERE " + filter
-	default:
-		command = "SELECT * FROM Slave_state WHERE " + filter
-	}
-	log.Infof("[App Monitor] Query Influxdb Command %s ", command)
-
-	response := util.MonitorResponse{
-		Code: 1,
-		Data: nil,
-		Err:  "",
-	}
-
-	// querey the db with the command
-	dbresult, err := db.InfluxdbClient_Query(command)
-	if err != nil {
-		log.Error("[App Monitor] Query Influxdb Error ", err)
-		response.Err = "[App Monitor] Query Influxdb Error" + err.Error()
-		ctx.JSON(http.StatusOK, response)
-	}
-	response.Code = 0
-	response.Data = dbresult.Results
-	ctx.JSON(http.StatusOK, response)
 }
