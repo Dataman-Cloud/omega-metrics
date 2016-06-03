@@ -9,31 +9,31 @@ import (
 )
 
 const (
-	ContainerMonitorTimeout int = 30 // seconds
-	SessionInfoTimeout      int = 60 // seconds
-	DefaultTimeout          int = 24 * 3600
-	DefaultHost                 = "localhost"
-	DefaultPort                 = 9005
-	DefaultDebugging            = true
-	DefaultLogLevel             = "debug"
-	DefaultHealthCheck          = 60
-	ContainerMonitorSerie       = "Slave_state"
-	AppRequestInfoSerie         = "app_req_rate"
+	ContainerMonitorTimeout    int = 30 // seconds
+	SessionInfoTimeout         int = 60 // seconds
+	DefaultTimeout             int = 24 * 3600
+	DefaultHost                    = "localhost"
+	DefaultPort                    = 9005
+	DefaultDebugging               = true
+	DefaultLogLevel                = "debug"
+	DefaultHealthCheckInterval     = 60
+	ContainerMonitorSerie          = "Slave_state"
+	AppRequestInfoSerie            = "app_req_rate"
 )
 
 type Config struct {
-	CacheTimeout   int
-	NumCPU         int
-	Host           string
-	Port           uint
-	Debugging      bool
-	Omega_app_host string
-	Omega_app_port int
-	Log            *LogConfig
-	Cache          *CacheConfig
-	Mq             *MqConfig
-	Db             *DbConfig
-	HealthCheck    int
+	CacheTimeout        int
+	NumCPU              int
+	Host                string
+	Port                uint
+	Debugging           bool
+	Omega_app_host      string
+	Omega_app_port      int
+	Log                 *LogConfig
+	Cache               *CacheConfig
+	Mq                  *MqConfig
+	Db                  *DbConfig
+	HealthCheckInterval int
 }
 
 type LogConfig struct {
