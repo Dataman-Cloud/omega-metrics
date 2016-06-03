@@ -67,7 +67,7 @@ func initServer() {
 		c.String(200, "pass")
 	})
 	// healthcheck
-	router.GET("/api/v3/health/metrics", HealthCheck)
+	router.GET("/api/v3/health/metrics", controller.HealthCheck)
 
 	monitorGroup := router.Group("/api/v3")
 	{

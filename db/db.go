@@ -53,6 +53,28 @@ func CreateInfluxHttpClient() (client.Client, error) {
 	})
 }
 
+// check influxdb udp client health
+func UdpClientHealthCheck() (time.Duration, error) {
+	conn, err := CreateInfluxUDPClient()
+	if err != nil {
+		return 0 * time.Second, err
+	}
+
+	duration, _, err := conn.Ping(DefaultHttpTimeout)
+	return duration, err
+}
+
+// check influxdb http client health
+func HttpClientHealthCheck() (time.Duration, error) {
+	conn, err := CreateInfluxHttpClient()
+	if err != nil {
+		return 0 * time.Second, err
+	}
+
+	duration, _, err := conn.Ping(DefaultHttpTimeout)
+	return duration, err
+}
+
 // convert a struct instance to influxdb tags and fields. influx key use struct tag json
 // use struct influx tag 'influx' to differentiate tag and field
 func BuildInfluxData(instance interface{}) (tags map[string]string, fields map[string]interface{}) {

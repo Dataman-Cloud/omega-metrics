@@ -2,6 +2,7 @@ package controller
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,4 +23,10 @@ func ReturnOk(c *gin.Context, data interface{}) {
 
 func ReturnError(c *gin.Context, errorcode int, err error) {
 	c.JSON(http.StatusOK, gin.H{"code": errorcode, "data": ErrorMessage{err.Error()}})
+}
+
+func Milliseconds(d time.Duration) float64 {
+	min := d / 1e6
+	nsec := d % 1e6
+	return float64(min) + float64(nsec)*(1e-6)
 }
