@@ -6,7 +6,7 @@ const (
 			time,
 			appname,
 			instance,
-			CpuShareCores as cpuUsed,
+			CpuUsedCores as cpuUsed,
 			CpuShareCores as cpuTotal,
 			DiskIOReadBytesRate as diskReadRate,
 			DiskIOWriteBytesRate as diskWriteRate,
