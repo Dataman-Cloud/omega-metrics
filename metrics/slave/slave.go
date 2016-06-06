@@ -247,7 +247,7 @@ func ParseSessionData(message *string, sessionKey string) error {
 
 		appReqInfo := util.AppRequestInfo{
 			AppName: splits[0],
-			ReqRate: session.ReqRate,
+			ReqRate: session.Rate,
 		}
 
 		appReqInfos = append(appReqInfos, appReqInfo)
