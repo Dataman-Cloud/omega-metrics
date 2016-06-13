@@ -20,19 +20,19 @@ const (
 
 var (
 	InfluxAddr     string = "localhost:5008"
-	InfulxDataBase string = "shurenyun"
+	InfluxDataBase string = "shurenyun"
 	HttpInfluxAddr string = "http://localhost:5008"
-	InfulxUserName string = "shurenyun"
-	InfulxPassword string = "shurenyun"
+	InfluxUserName string = "shurenyun"
+	InfluxPassword string = "shurenyun"
 )
 
 func init() {
 	conf := config.Pairs()
 	InfluxAddr = fmt.Sprintf("%s:%d", conf.Db.Host, conf.Db.Port)
 	HttpInfluxAddr = fmt.Sprintf("http://%s", InfluxAddr)
-	InfulxDataBase = conf.Db.Database
-	InfulxUserName = conf.Db.User
-	InfulxPassword = conf.Db.Password
+	InfluxDataBase = conf.Db.Database
+	InfluxUserName = conf.Db.User
+	InfluxPassword = conf.Db.Password
 }
 
 // create new influxdb udp client
@@ -47,8 +47,8 @@ func CreateInfluxUDPClient() (client.Client, error) {
 func CreateInfluxHttpClient() (client.Client, error) {
 	return client.NewHTTPClient(client.HTTPConfig{
 		Addr:     HttpInfluxAddr,
-		Username: InfulxUserName,
-		Password: InfulxPassword,
+		Username: InfluxUserName,
+		Password: InfluxPassword,
 		Timeout:  DefaultHttpTimeout,
 	})
 }
@@ -124,7 +124,7 @@ func WriteAppReqInfoToInflux(appReq *util.InfluxAppRequestInfo) error {
 	defer conn.Close()
 
 	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  InfulxDataBase,
+		Database:  InfluxDataBase,
 		Precision: "s",
 	})
 	tags, fields := BuildInfluxData(appReq)
@@ -161,7 +161,7 @@ func WriteContainerInfoToInflux(conInfo *util.SlaveStateMar) error {
 
 	// Create a new point batch
 	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  InfulxDataBase,
+		Database:  InfluxDataBase,
 		Precision: "s",
 	})
 
@@ -214,7 +214,7 @@ func InfluxdbClient_Query(command string) (client.Response, error) {
 
 	q := client.Query{
 		Command:  command,
-		Database: InfulxDataBase,
+		Database: InfluxDataBase,
 	}
 
 	response, err := conn.Query(q)
@@ -229,7 +229,7 @@ func Query(sql string) (results []map[string]interface{}, err error) {
 		return
 	}
 
-	query := client.NewQuery(sql, InfulxDataBase, "ns")
+	query := client.NewQuery(sql, InfluxDataBase, "ns")
 	response, err := httpClient.Query(query)
 	if err != nil {
 		err = errors.New("Query influxdb got error: " + err.Error())
