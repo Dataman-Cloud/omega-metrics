@@ -103,7 +103,7 @@ func ParseSlaveState(clusterId string, slaveState util.SlaveState) (map[string]u
 					ClusterId:     clusterId,
 					Instance:      appId,
 					AppName:       appName,
-					ContainerName: exec.Container,
+					ContainerName: key,
 				}
 
 				instances = append(instances, instance)
