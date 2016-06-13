@@ -517,5 +517,5 @@ type HostInstance struct {
 	ClusterId     string `json:"clusterId"`
 	Instance      string `json:"instance"`
 	AppName       string `json:"appname"`
-	ContainerName string `json: "containerName"`
+	ContainerName string `json:"containerName"`
 }
