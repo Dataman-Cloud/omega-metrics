@@ -60,6 +60,9 @@ func ParseSlaveState(clusterId string, slaveState util.SlaveState) (map[string]u
 	slaveId := slaveState.Id
 	slaveIp := slaveState.Flags.Ip
 
+	// statistics instance info on one host
+	var instances []util.HostInstance
+
 	for _, v := range slaveState.Frameworks {
 		if v.Name == "marathon" {
 			for index, exec := range v.Executors {
@@ -83,20 +86,54 @@ func ParseSlaveState(clusterId string, slaveState util.SlaveState) (map[string]u
 				} else {
 					appId = slaveIp + ":" + portstring
 				}
+				appName := exec.Tasks[0].Name
+
+				// one mesos task info
 				appInfo := util.AppInfo{
 					TaskId:    exec.Id,
 					ClusterId: clusterId,
 					SlaveId:   slaveId,
-					AppName:   exec.Tasks[0].Name,
+					AppName:   appName,
 					Resources: exec.Tasks[0].Resources,
 					AppId:     appId,
 				}
+
+				// one instance info for one host
+				instance := util.HostInstance{
+					ClusterId:     clusterId,
+					Instance:      appId,
+					AppName:       appName,
+					ContainerName: key,
+				}
+
+				instances = append(instances, instance)
 				slaveAppMap[key] = appInfo
 			}
 		}
 	}
 
+	if err := SaveInstancesToCache(clusterId, slaveIp, instances); err != nil {
+		log.Error("save instances info got error: ", err)
+	}
+
 	return slaveAppMap, nil
+}
+
+// save all instances in one slave info to cache
+func SaveInstancesToCache(clusterId string, ip string, instances []util.HostInstance) error {
+	key := clusterId + ":" + ip
+	infoBytes, err := json.Marshal(instances)
+	if err != nil {
+		log.Error("[Slave state] marshal instances info got error: ", err)
+		return err
+	}
+
+	if err := cache.WriteStringToRedis(key, string(infoBytes), config.SessionInfoTimeout); err != nil {
+		log.Error("[Slave state] Write instances to cache got error: ", err.Error())
+		return err
+	}
+
+	return nil
 }
 
 // parse app monitor data to get the resourse seizure and mate container and app

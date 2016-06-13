@@ -512,3 +512,10 @@ type InfluxAppRequestInfo struct {
 	AppName   string `json:"appname" influx:"tag"`
 	ReqRate   int64  `json:"reqrate" influx:"field"`
 }
+
+type HostInstance struct {
+	ClusterId     string `json:"clusterId"`
+	Instance      string `json:"instance"`
+	AppName       string `json:"appname"`
+	ContainerName string `json: "containerName"`
+}
