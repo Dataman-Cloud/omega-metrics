@@ -73,8 +73,11 @@ func initServer() {
 	{
 		monitorGroup.GET("/clusters/:cluster_id/metrics", masterMetrics)
 		monitorGroup.GET("/clusters/:cluster_id/apps/:app/metrics", appMetrics)
-		monitorGroup.GET("/clusters/:cluster_id/apps/:app/monitor", controller.AppMonitorHandler) // Request the application monitor data
+		// Request the single application monitor data
+		monitorGroup.GET("/clusters/:cluster_id/apps/:app/monitor", controller.AppMonitorHandler)
 		monitorGroup.GET("/clusters/:cluster_id/apps/:app/session", controller.RequestRate)
+		// get host app instance info by cluster id and host ip
+		monitorGroup.GET("/clusters/:cluster_id/ip/:ip/instance", controller.HostInstanceHandler)
 	}
 
 	conf := config.Pairs()
