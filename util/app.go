@@ -1,8 +1,8 @@
 package util
 
 import (
-	"errors"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	AppStatusUrl string
+	AppStatusUrl  string
 	AppServerHost string
 	AppServerPort int
 
