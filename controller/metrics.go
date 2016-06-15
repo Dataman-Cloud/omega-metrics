@@ -49,6 +49,49 @@ func AppMonitorHandler(c *gin.Context) {
 	return
 }
 
+func AppMetricsHandler(c *gin.Context) {
+	clusterId := c.Param("cluster_id")
+	if clusterId == "" {
+		ReturnError(c, InvalidParams, errors.New("cluster id is empty"))
+		return
+	}
+
+	appName := c.Param("app")
+	if appName == "" {
+		ReturnError(c, InvalidParams, errors.New("appName is empty"))
+		return
+	}
+
+	key := clusterId + ":" + appName
+	smems, err := cache.ReadSetMembers(key)
+	if err != nil {
+		log.Error("[App Metrics] SMEMBERS error ", err)
+		ReturnError(c, DbQueryError, err)
+		return
+	}
+	var strs []string
+	for _, smem := range smems {
+		str, err := cache.ReadFromRedis(smem)
+		if err != nil {
+			log.Errorf("[App Metrics] Read key %v FromRedis error %v ", smem, err)
+			continue
+		}
+		if err == nil && str != "" {
+			strs = append(strs, str)
+		}
+	}
+
+	jsoninterface, err := util.ReturnMessage(util.MonitorAppMetrics, strs)
+	if err != nil {
+		log.Error("[App Metrics] analysis error ", err)
+		ReturnError(c, DbQueryError, err)
+		return
+	}
+
+	ReturnOk(c, *jsoninterface)
+	return
+}
+
 // cluster metrucs handler
 func ClusterMetricsHandler(c *gin.Context) {
 	clusterId := c.Param("cluster_id")

@@ -45,3 +45,14 @@ func GetToken(c *gin.Context) (token string) {
 	token = req.Header.Get(HeaderToken)
 	return
 }
+
+//function use to handle cross-domain requests
+func OptionHandler(c *gin.Context) {
+	c.Header("Access-Control-Allow-Origin", "*")
+	c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	c.Header("Access-Control-Allow-Headers", "Content-Type, Depth, User-Agent, X-File-Size, X-Requested-With, X-Requested-By, If-Modified-Since, X-File-Name, Cache-Control, X-XSRFToken, Authorization")
+	if c.Request.Method == "OPTIONS" {
+		c.String(204, "")
+	}
+	c.Next()
+}
