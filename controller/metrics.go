@@ -71,7 +71,7 @@ func ClusterMetricsHandler(c *gin.Context) {
 		return
 	}
 
-	appList, err := util.QueryApps(token)
+	appList, err := util.QueryApps(token, clusterId)
 	if err != nil {
 		log.Error("[Master metrics] Get app list from omega-app failed", err)
 		ReturnError(c, DbQueryError, err)

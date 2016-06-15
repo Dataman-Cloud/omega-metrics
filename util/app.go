@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	AppListUrl   string
 	AppStatusUrl string
+	AppServerHost string
+	AppServerPort int
 
 	HeaderToken        = "Authorization"
 	DefaultHttpTimeout = 15 * time.Second
@@ -21,15 +22,15 @@ var (
 
 func init() {
 	conf := config.Pairs()
-	host := conf.Omega_app_host
-	port := conf.Omega_app_port
-	AppListUrl = fmt.Sprintf("%s:%d/api/v3/apps/status", host, port)
-	AppStatusUrl = fmt.Sprintf("%s:%d/api/v3/apps/status", host, port)
+	AppServerHost = conf.Omega_app_host
+	AppServerPort = conf.Omega_app_port
+	AppStatusUrl = fmt.Sprintf("%s:%d/api/v3/apps/status", AppServerHost, AppServerPort)
 }
 
 // query all apps by user id with token
-func QueryApps(token string) ([]AppConfig, error) {
-	response, err := doHttpRequest(AppListUrl, token)
+func QueryApps(token, clusterId string) ([]AppConfig, error) {
+	appListUrl := fmt.Sprintf("%s:%d/api/v3/clusters/%s/apps", AppServerHost, AppServerPort, clusterId)
+	response, err := doHttpRequest(appListUrl, token)
 	if err != nil {
 		return nil, err
 	}
