@@ -519,3 +519,78 @@ type HostInstance struct {
 	AppName       string `json:"appname"`
 	ContainerName string `json:"containerName"`
 }
+
+type AppConfig struct {
+	Id              int64               `json:"id"`
+	Name            string              `json:"name"`
+	Alias           string              `json:"alias"`
+	Cid             int64               `json:"cid"`
+	Instances       float64             `json:"instances"`
+	Tasks           float64             `json:"tasks"`
+	Cpus            float64             `json:"cpus"`
+	Mem             float64             `json:"mem"`
+	Cmd             string              `json:"cmd"`
+	Envs            []map[string]string `json:"envs"`
+	ImageName       string              `json:"imageName"`
+	ImageVersion    string              `json:"imageVersion"`
+	ForceImage      bool                `json:"forceImage"`
+	Network         string              `json:"network"`
+	Ports           []AppPort           `json:"ports"`
+	Volumes         []AppVolume         `json:"volumes"`
+	Unique          bool                `json:"unique"`
+	Iplist          []string            `json:"iplist"`
+	Update          *time.Time          `json:"update"`
+	LogPaths        []string            `json:"logPaths"`
+	Parameters      []map[string]string `json:"parameters"`
+	Canary          uint8               `json:"canary"`
+	CanaryInstances int64               `json:"canaryInstances"`
+	Uid             int64               `json:"uid"`
+}
+
+// AppPort portmapping of application
+type AppPort struct {
+	AppID     int64  `db:"app_id" json:"appId,omitempty" structs:",omitempty"`
+	Port      int64  `json:"appPort" structs:"appPort"`
+	Type      uint8  `db:"svc_type" json:"type" structs:"type"`
+	URI       string `db:"uri" json:"uri" structs:"uri"`
+	Cid       string `json:"cid,omitempty" structs:",omitempty"`
+	Proto     int64  `json:"protocol" structs:"protocol"`
+	HasURI    int64  `db:"has_uri" json:"isUri" structs:"isUri"`
+	MapPort   int64  `db:"bind_port" json:"mapPort" structs:"mapPort"`
+	VersionId int64  `db:"ver_id" json:"versionId,omitempty" structs:",omitempty"`
+	Status    int    `db:"status" json:"status,omitempty" structs:",omitempty"`
+}
+
+type AppVolume struct {
+	HostPath      string `json:"hostPath"`
+	ContainerPath string `json:"containerPath"`
+}
+
+type ClusterAppList struct {
+	App   []AppConfig `json:"App"`
+	Count int         `json:"Count"`
+}
+
+// response of omega-app /clusters/:cid/apps REST API
+type ClusterAppListResp struct {
+	Code int64          `json:"code"`
+	Data ClusterAppList `json:"data"`
+}
+
+// app status struct
+type AppStatus struct {
+	Id          int64  `json:"id"`
+	Cid         int64  `json:"cid"`
+	Name        string `json:"name"`
+	Alias       string `json:"alias"`
+	Status      uint8  `json:"status"`
+	Tasks       int64  `json:"tasks"`
+	Instances   int64  `json:"instances"`
+	LastFailure uint8  `json:"lastfailure"`
+}
+
+// response of omega-app /apps/status REST API
+type AppStatusResp struct {
+	Code int64                `json:"code"`
+	Data map[string]AppStatus `json:"data"`
+}

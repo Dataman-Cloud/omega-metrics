@@ -137,3 +137,9 @@ func DeleteRedisByKey(key string) error {
 	_, err := conn.Do("DEL", key)
 	return err
 }
+
+func ReadSetMembers(key string) ([]string, error) {
+	conn := Open()
+	defer conn.Close()
+	return redis.Strings(conn.Do("SMEMBERS", key))
+}

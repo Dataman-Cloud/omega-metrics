@@ -2,14 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strconv"
 	"time"
 
 	"github.com/Dataman-Cloud/omega-metrics/cache"
-	"github.com/Dataman-Cloud/omega-metrics/config"
 	"github.com/Dataman-Cloud/omega-metrics/metrics/master"
 	"github.com/Dataman-Cloud/omega-metrics/metrics/slave"
 	"github.com/Dataman-Cloud/omega-metrics/util"
@@ -39,89 +36,6 @@ func OptionHandler(ctx *gin.Context) {
 		ctx.String(204, "")
 	}
 	ctx.Next()
-}
-
-func masterMetrics(ctx *gin.Context) {
-	conf := config.Pairs()
-	conn := cache.Open()
-	defer conn.Close()
-
-	var httpstr util.AppListResponse
-	var cm util.ClusterMetrics
-	cluster_id := ctx.Param("cluster_id") + "_" + util.Master_metrics_routing
-
-	response := util.MonitorResponse{
-		Code: 1,
-		Data: nil,
-		Err:  "",
-	}
-
-	rs, err := cache.ReadFromRedis(cluster_id)
-	if err != nil {
-		log.Errorf("[Master Metrics] read key %v FromRedis has err: %v", cluster_id, err)
-		response.Err = "[Master Metrics] read from redis error " + err.Error()
-		ctx.JSON(http.StatusOK, response)
-		return
-	}
-	masMet, err := util.ReturnData(util.MonitorMasterMetrics, rs)
-	if err != nil {
-		log.Error("[Master Metrics] analysis error ", err)
-		response.Err = "[Master Metrics] analysis error " + err.Error()
-		ctx.JSON(http.StatusOK, response)
-		return
-	}
-
-	token := util.Header(ctx, HeaderToken)
-	client := &http.Client{}
-	addr := fmt.Sprintf("%s:%d/api/v3/apps/status", conf.Omega_app_host, conf.Omega_app_port)
-	req, err := http.NewRequest("GET", addr, nil)
-	if err != nil {
-		log.Error("[Master Metrics] creat new http request error: ", err)
-		response.Err = "[Master Metrics] creat new http request error: " + err.Error()
-		ctx.JSON(http.StatusOK, response)
-		return
-	}
-	req.Header.Add("Authorization", token)
-	resp, err := client.Do(req)
-	if err != nil {
-		log.Error("http request error: ", err)
-		response.Err = "[Master Metrics] http request error: " + err.Error()
-		ctx.JSON(http.StatusOK, response)
-		return
-	}
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Error("[Master Metrics] read response body error: ", err)
-		response.Err = "[Master Metrics] read response body error: " + err.Error()
-		ctx.JSON(http.StatusOK, response)
-		return
-	}
-	err = json.Unmarshal([]byte(string(body)), &httpstr)
-	if err != nil {
-		log.Error("[Master Metrics] parse http response body error ", err)
-		response.Err = "[Master Metrics] parse http response body error: " + err.Error()
-		ctx.JSON(http.StatusOK, response)
-		return
-	}
-	for _, v := range httpstr.Data {
-		// 判断app所属集群
-		if strconv.FormatInt(v.Cid, 10) != ctx.Param("cluster_id") {
-			continue
-		}
-		appm, err := gatherApp(v)
-		if err != nil {
-			response.Err = err.Error()
-			ctx.JSON(http.StatusOK, response)
-			return
-		}
-		cm.AppMetrics = append(cm.AppMetrics, appm)
-	}
-
-	cm.MasMetrics = *masMet
-	response.Code = 0
-	response.Data = cm
-	ctx.JSON(http.StatusOK, response)
 }
 
 func gatherApp(app util.StatusAndTask) (util.AppMetric, error) {
