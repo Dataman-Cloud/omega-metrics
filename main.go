@@ -71,7 +71,7 @@ func initServer() {
 
 	monitorGroup := router.Group("/api/v3")
 	{
-		monitorGroup.GET("/clusters/:cluster_id/metrics", masterMetrics)
+		monitorGroup.GET("/clusters/:cluster_id/metrics", controller.ClusterMetricsHandler)
 		monitorGroup.GET("/clusters/:cluster_id/apps/:app/metrics", appMetrics)
 		// Request the single application monitor data
 		monitorGroup.GET("/clusters/:cluster_id/apps/:app/monitor", controller.AppMonitorHandler)

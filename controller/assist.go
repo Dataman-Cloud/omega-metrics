@@ -103,3 +103,13 @@ func HealthCheck(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, monitor)
 }
+
+type Application struct {
+	Id      int64
+	Cid     int64
+	Name    string
+	Status  uint8
+	Json    []byte
+	Created time.Time
+	Updated time.Time
+}
