@@ -62,7 +62,7 @@ func initServer() {
 	router := gin.New()
 	router.Use(gin.Logger(), gin.Recovery())
 	// options Handler
-	// router.Use(OptionHandler)
+	// router.Use(controller.OptionHandler)
 	router.GET("/", func(c *gin.Context) {
 		c.String(200, "pass")
 	})
@@ -72,7 +72,7 @@ func initServer() {
 	monitorGroup := router.Group("/api/v3")
 	{
 		monitorGroup.GET("/clusters/:cluster_id/metrics", controller.ClusterMetricsHandler)
-		monitorGroup.GET("/clusters/:cluster_id/apps/:app/metrics", appMetrics)
+		monitorGroup.GET("/clusters/:cluster_id/apps/:app/metrics", controller.AppMetricsHandler)
 		// Request the single application monitor data
 		monitorGroup.GET("/clusters/:cluster_id/apps/:app/monitor", controller.AppMonitorHandler)
 		monitorGroup.GET("/clusters/:cluster_id/apps/:app/session", controller.RequestRate)
