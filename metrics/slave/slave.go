@@ -40,8 +40,14 @@ func SlaveStateHandler(messageBody *[]byte) {
 		return
 	}
 
-	if err := ParseAppMonitorData(&mqMessage.Attached, appInfo); err != nil {
+	instancesInfo, err := ParseAppMonitorData(&mqMessage.Attached, appInfo)
+	if err != nil {
 		log.Error("[Slave state] Parse app monitor info got error:  ", err.Error())
+	}
+
+	// save instance info to cache
+	if err := SaveInstancesToCache(clusterId, slaveState.Flags.Ip, instancesInfo); err != nil {
+		log.Error("save instances info got error: ", err)
 	}
 
 	if sessionInfo, ok := mqMessage.Tags["session"]; ok {
@@ -59,9 +65,6 @@ func ParseSlaveState(clusterId string, slaveState util.SlaveState) (map[string]u
 	slaveAppMap := make(map[string]util.AppInfo)
 	slaveId := slaveState.Id
 	slaveIp := slaveState.Flags.Ip
-
-	// statistics instance info on one host
-	var instances []util.HostInstance
 
 	for _, v := range slaveState.Frameworks {
 		if v.Name == "marathon" {
@@ -90,30 +93,18 @@ func ParseSlaveState(clusterId string, slaveState util.SlaveState) (map[string]u
 
 				// one mesos task info
 				appInfo := util.AppInfo{
-					TaskId:    exec.Id,
-					ClusterId: clusterId,
-					SlaveId:   slaveId,
-					AppName:   appName,
-					Resources: exec.Tasks[0].Resources,
-					AppId:     appId,
-				}
-
-				// one instance info for one host
-				instance := util.HostInstance{
+					TaskId:        exec.Id,
 					ClusterId:     clusterId,
-					Instance:      appId,
+					SlaveId:       slaveId,
 					AppName:       appName,
+					Resources:     exec.Tasks[0].Resources,
+					AppId:         appId,
 					ContainerName: key,
 				}
 
-				instances = append(instances, instance)
 				slaveAppMap[key] = appInfo
 			}
 		}
-	}
-
-	if err := SaveInstancesToCache(clusterId, slaveIp, instances); err != nil {
-		log.Error("save instances info got error: ", err)
 	}
 
 	return slaveAppMap, nil
@@ -137,16 +128,19 @@ func SaveInstancesToCache(clusterId string, ip string, instances []util.HostInst
 }
 
 // parse app monitor data to get the resourse seizure and mate container and app
-func ParseAppMonitorData(message *string, slaveInfo map[string]util.AppInfo) error {
+func ParseAppMonitorData(message *string, slaveInfo map[string]util.AppInfo) ([]util.HostInstance, error) {
 	if message == nil {
-		return errors.New("[Slave attach] messgae is null")
+		return nil, errors.New("[Slave attach] messgae is null")
 	}
 
 	var cadInfo map[string]util.ContainerInfo
 	if err := json.Unmarshal([]byte(*message), &cadInfo); err != nil {
 		log.Error("[Slave attach] unmarshal cadvisor containerInfo error ", err)
-		return err
+		return nil, err
 	}
+
+	// statistics instance info on one host
+	var instances []util.HostInstance
 
 	for _, value := range cadInfo {
 		if len(value.Stats) < 2 {
@@ -224,8 +218,22 @@ func ParseAppMonitorData(message *string, slaveInfo map[string]util.AppInfo) err
 		go WriteContainerInfoToCache(&conInfo)
 
 		go db.WriteContainerInfoToInflux(&conInfo)
+
+		// one instance info for one host
+		instance := util.HostInstance{
+			ClusterId:     app.ClusterId,
+			Instance:      app.AppId,
+			AppName:       app.AppName,
+			CpuUsed:       conInfo.CpuUsedCores,
+			MemoryUsed:    conInfo.MemoryUsed,
+			ContainerName: app.ContainerName,
+			StartTime:     value.Spec.CreationTime.UnixNano(),
+		}
+
+		instances = append(instances, instance)
 	}
-	return nil
+
+	return instances, nil
 }
 
 // write container info to cache for cluster monitor
