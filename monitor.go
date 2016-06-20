@@ -16,5 +16,4 @@ func startC() {
 	go util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_info_routing, func(messageBody *[]byte) {})
 	go util.MetricsSubscribe(util.Metrics_exchange, util.Marathon_metrics_routing, func(messageBody *[]byte) {})
 	go util.MetricsSubscribe(util.Metrics_exchange, util.Slave_monitor_routing, func(messageBody *[]byte) {})
-
 }
