@@ -2,24 +2,6 @@
 	"version": 0,
 	"dependencies": [
 		{
-			"importpath": "github.com/BurntSushi/toml",
-			"repository": "https://github.com/BurntSushi/toml",
-			"revision": "056c9bc7be7190eaa7715723883caffa5f8fa3e4",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/Jeffail/gabs",
-			"repository": "https://github.com/Jeffail/gabs",
-			"revision": "feb7ecb58978ab279e4ac7f195f7c8fd26cf4469",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/armon/consul-api",
-			"repository": "https://github.com/armon/consul-api",
-			"revision": "dcfedd50ed5334f96adee43fc88518a4f095e15c",
-			"branch": "master"
-		},
-		{
 			"importpath": "github.com/bugsnag/bugsnag-go",
 			"repository": "https://github.com/bugsnag/bugsnag-go",
 			"revision": "9ee24c1db7e2c5b87e7228acb3e587a35124a041",
@@ -42,13 +24,6 @@
 			"repository": "https://github.com/cihub/seelog",
 			"revision": "5841159c495ad98691aac2bf90113c040e62bac2",
 			"branch": "master"
-		},
-		{
-			"importpath": "github.com/coreos/go-etcd/etcd",
-			"repository": "https://github.com/coreos/go-etcd",
-			"revision": "555b4186480c545106eb89e0158e9fa0c2bebcf6",
-			"branch": "master",
-			"path": "/etcd"
 		},
 		{
 			"importpath": "github.com/dustin/go-broadcast",
@@ -110,18 +85,6 @@
 			"path": "/pkg/escape"
 		},
 		{
-			"importpath": "github.com/kr/pretty",
-			"repository": "https://github.com/kr/pretty",
-			"revision": "e6ac2fc51e89a3249e82157fa0bb7a18ef9dd5bb",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/kr/text",
-			"repository": "https://github.com/kr/text",
-			"revision": "bb797dc4fb8320488f47bf11de07a733d7233e1f",
-			"branch": "master"
-		},
-		{
 			"importpath": "github.com/magiconair/properties",
 			"repository": "https://github.com/magiconair/properties",
 			"revision": "337395e44efb4affc8bf11971e22acbd4e27a32d",
@@ -149,30 +112,6 @@
 			"importpath": "github.com/mitchellh/mapstructure",
 			"repository": "https://github.com/mitchellh/mapstructure",
 			"revision": "281073eb9eb092240d33ef253c404f1cca550309",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/spf13/cast",
-			"repository": "https://github.com/spf13/cast",
-			"revision": "ee815aaf958c707ad07547cd62150d973710f747",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/spf13/jwalterweatherman",
-			"repository": "https://github.com/spf13/jwalterweatherman",
-			"revision": "3d60171a64319ef63c78bd45bd60e6eab1e75f8b",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/spf13/pflag",
-			"repository": "https://github.com/spf13/pflag",
-			"revision": "f735fdff4ffb34299727eb2e3c9abab588742d41",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/spf13/viper",
-			"repository": "https://github.com/spf13/viper",
-			"revision": "1967d93db724f4a5c0e101307e96d82ff520a067",
 			"branch": "master"
 		},
 		{
@@ -253,13 +192,6 @@
 			"repository": "https://gopkg.in/bsm/ratelimit.v1",
 			"revision": "bda20d5067a03094fc6762f7ead53027afac5f28",
 			"branch": "v1"
-		},
-		{
-			"importpath": "gopkg.in/yaml.v2",
-			"repository": "https://gopkg.in/yaml.v2",
-			"revision": "7ad95dd0798a40da1ccdff6dff35fd177b5edf40",
-			"branch": "v2"
 		}
 	]
 }
-
