@@ -42,10 +42,10 @@ func InitCache() {
 	defer conn.Close()
 	pong, err := conn.Do("ping")
 	if err != nil {
-		log.Errorf("initcache has error: %s, can't connect cache server: %+v", err.Error(), conf.Cache)
+		log.Errorf("initcache has error: %s, can't connect cache server: %+v", err.Error(), *conf.Cache)
 		panic(-1)
 	}
-	log.Debugf("reach cache server: %s initialized cache: %+v ", pong, conf.Cache)
+	log.Debugf("reach cache server: %s initialized cache: %+v ", pong, *conf.Cache)
 }
 
 func DestroyCache() {
