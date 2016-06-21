@@ -13,6 +13,7 @@ import (
 	"github.com/Dataman-Cloud/omega-metrics/cache"
 	"github.com/Dataman-Cloud/omega-metrics/config"
 	"github.com/Dataman-Cloud/omega-metrics/controller"
+	"github.com/Dataman-Cloud/omega-metrics/db"
 	"github.com/Dataman-Cloud/omega-metrics/logger"
 	"github.com/Dataman-Cloud/omega-metrics/util"
 	log "github.com/cihub/seelog"
@@ -51,6 +52,9 @@ func initEnv() {
 	logger.LoadLogConfig()
 	util.InitMQ()
 	cache.InitCache()
+	db.InitDb()
+	util.InitApp()
+	util.InitJsonParser()
 }
 
 func initServer() {

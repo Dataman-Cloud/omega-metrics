@@ -26,7 +26,7 @@ var (
 	InfluxPassword string = "shurenyun"
 )
 
-func init() {
+func InitDb() {
 	conf := config.Pairs()
 	InfluxAddr = fmt.Sprintf("%s:%d", conf.Db.Host, conf.Db.Port)
 	HttpInfluxAddr = fmt.Sprintf("http://%s", InfluxAddr)
