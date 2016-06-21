@@ -1,0 +1,9 @@
+FROM demoregistry.dataman-inc.com/library/centos7-base:20160602202509
+MAINTAINER yxxing yxxing@dataman-inc.com
+
+ENV CGO_ENABLED "0 go build -v"
+COPY omega-metrics/omega-metrics /
+COPY omega-metrics/env_file.sample /env_file
+ENTRYPOINT ["./omega-metrics"]
+
+#demoregistry.dataman-inc.com/shurenyun/centos7-omega-metrics:tag
