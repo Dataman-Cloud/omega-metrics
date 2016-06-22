@@ -164,13 +164,12 @@ type resources struct {
 }
 
 type AppInfo struct {
-	AppName       string    `json:"appName"`
-	AppId         string    `json:"appId"`
-	ClusterId     string    `json:"clusterId"`
-	TaskId        string    `json:"taskId"`
-	SlaveId       string    `json:"slaveId"`
-	Resources     resources `json:"resources"`
-	ContainerName string    `json:"containerName"`
+	AppName   string    `json:"appName"`
+	AppId     string    `json:"appId"`
+	ClusterId string    `json:"clusterId"`
+	TaskId    string    `json:"taskId"`
+	SlaveId   string    `json:"slaveId"`
+	Resources resources `json:"resources"`
 }
 
 // cadivsor
@@ -515,13 +514,10 @@ type InfluxAppRequestInfo struct {
 }
 
 type HostInstance struct {
-	ClusterId     string  `json:"clusterId"`
-	Instance      string  `json:"instance"`
-	AppName       string  `json:"appname"`
-	ContainerName string  `json:"containerName"`
-	CpuUsed       float64 `json:"cpuUsed"`
-	MemoryUsed    uint64  `json:"memoryUsed"`
-	StartTime     int64   `json:"startTime"`
+	ClusterId     string `json:"clusterId"`
+	Instance      string `json:"instance"`
+	AppName       string `json:"appname"`
+	ContainerName string `json:"containerName"`
 }
 
 type AppConfig struct {
