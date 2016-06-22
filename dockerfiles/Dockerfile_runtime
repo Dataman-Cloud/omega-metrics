@@ -1,0 +1,7 @@
+FROM demoregistry.dataman-inc.com/library/centos7-base:20160602202509
+MAINTAINER yxxing yxxing@dataman-inc.com
+
+COPY omega-metrics/omega-metrics /
+ENTRYPOINT ["./omega-metrics"]
+
+#demoregistry.dataman-inc.com/shurenyun/centos7-omega-metrics:tag

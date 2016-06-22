@@ -20,7 +20,7 @@ var (
 	DefaultHttpTimeout = 15 * time.Second
 )
 
-func init() {
+func InitApp() {
 	conf := config.Pairs()
 	AppServerHost = conf.Omega_app_host
 	AppServerPort = conf.Omega_app_port
