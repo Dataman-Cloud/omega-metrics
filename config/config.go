@@ -75,7 +75,7 @@ func initDefault(config *model.Config) {
 
 func InitConfig() {
 	log.Info("initing config ...")
-	envFile := flag.String("config", "env_file", "")
+	envFile := flag.String("config", "env", "")
 	flag.Parse()
 	loadEnvFile(*envFile)
 	initDefault(&config)

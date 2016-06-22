@@ -28,7 +28,7 @@ func destroy() {
 }
 
 func main() {
-	initEnv()
+	initConfigParam()
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt)
@@ -42,7 +42,7 @@ func main() {
 	initServer()
 }
 
-func initEnv() {
+func initConfigParam() {
 	config.InitConfig()
 	conf := config.Pairs()
 	numCPU := conf.NumCPU
