@@ -45,8 +45,6 @@ type EnvEntry struct {
 	METRICS_CACHE_HOST                string `required:"true"`
 	METRICS_CACHE_PORT                uint64 `required:"true"`
 	METRICS_CACHE_PASSWORD            string `required:"true"`
-	METRICS_CACHE_DB                  int64  `required:"true"`
-	METRICS_CACHE_LLEN                int    `required:"true"`
 	METRICS_CACHE_POOLSIZE            int    `required:"true"`
 	METRICS_MQ_USER                   string `required:"true"`
 	METRICS_MQ_PASSWORD               string `required:"true"`
@@ -71,11 +69,13 @@ func initDefault(config *model.Config) {
 	config.Host = DefaultHost
 	config.Port = DefaultPort
 	config.Debugging = true
+	config.Cache.DB = 0
+	config.Cache.Llen = 178
 }
 
 func InitConfig() {
 	log.Info("initing config ...")
-	envFile := flag.String("config", "env", "")
+	envFile := flag.String("config", "deploy/env", "")
 	flag.Parse()
 	loadEnvFile(*envFile)
 	initDefault(&config)
@@ -97,9 +97,7 @@ func InitConfig() {
 	config.Cache.Host = envEntry.METRICS_CACHE_HOST
 	config.Cache.Port = envEntry.METRICS_CACHE_PORT
 	config.Cache.Password = envEntry.METRICS_CACHE_PASSWORD
-	config.Cache.DB = envEntry.METRICS_CACHE_DB
 	config.Cache.PoolSize = envEntry.METRICS_CACHE_POOLSIZE
-	config.Cache.Llen = envEntry.METRICS_CACHE_LLEN
 	config.Mq.User = envEntry.METRICS_MQ_USER
 	config.Mq.Password = envEntry.METRICS_MQ_PASSWORD
 	config.Mq.Host = envEntry.METRICS_MQ_HOST
