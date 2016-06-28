@@ -19,7 +19,7 @@ curl -v -X POST $MARATHON_API_URL/v2/apps -H Content-Type:application/json -d \
                                      "privileged": '$PRIVILEGED',
                                      "forcePullImage": '$FORCEPULLIMAGE',
                                      "portMappings": [
-                                             { "containerPort": '$BAMBOO_TCP_PORT', "hostPort": 0, "protocol": "tcp"}
+                                             { "containerPort": 9005, "hostPort": 0, "protocol": "tcp"}
                                      ]
                                 }
                    },
