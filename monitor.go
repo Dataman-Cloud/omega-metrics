@@ -4,7 +4,7 @@ import (
 	"github.com/Dataman-Cloud/omega-metrics/metrics/master"
 	"github.com/Dataman-Cloud/omega-metrics/metrics/slave"
 	"github.com/Dataman-Cloud/omega-metrics/util"
-	log "github.com/cihub/seelog"
+	log "github.com/Sirupsen/logrus"
 )
 
 func startC() {

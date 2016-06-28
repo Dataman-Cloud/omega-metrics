@@ -36,12 +36,7 @@ type EnvEntry struct {
 	METRICS_OMEGA_APP_HOST            string `required:"true"`
 	METRICS_OMEGA_APP_PORT            int    `required:"true"`
 	METRICS_HEALTHCHECK               int    `required:"true"`
-	METRICS_LOG_CONSOLE               bool   `required:"true"`
-	METRICS_LOG_FILE                  string `required:"true"`
 	METRICS_LOG_LEVEL                 string `required:"true"`
-	METRICS_LOG_FORMATTER             string `required:"true"`
-	METRICS_LOG_FILESIZE              int    `required:"true"`
-	METRICS_LOG_FILENUM               int    `required:"true"`
 	METRICS_CACHE_HOST                string `required:"true"`
 	METRICS_CACHE_PORT                uint64 `required:"true"`
 	METRICS_CACHE_PASSWORD            string `required:"true"`
@@ -88,12 +83,7 @@ func InitConfig() {
 	config.Omega_app_host = envEntry.METRICS_OMEGA_APP_HOST
 	config.Omega_app_port = envEntry.METRICS_OMEGA_APP_PORT
 	config.HealthCheckInterval = envEntry.METRICS_HEALTHCHECK
-	config.Log.Console = envEntry.METRICS_LOG_CONSOLE
-	config.Log.File = envEntry.METRICS_LOG_FILE
 	config.Log.Level = envEntry.METRICS_LOG_LEVEL
-	config.Log.Formatter = envEntry.METRICS_LOG_FORMATTER
-	config.Log.FileSize = envEntry.METRICS_LOG_FILESIZE
-	config.Log.FileNum = envEntry.METRICS_LOG_FILENUM
 	config.Cache.Host = envEntry.METRICS_CACHE_HOST
 	config.Cache.Port = envEntry.METRICS_CACHE_PORT
 	config.Cache.Password = envEntry.METRICS_CACHE_PASSWORD

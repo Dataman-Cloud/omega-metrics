@@ -9,15 +9,10 @@
 	METRICS_OMEGA_APP_HOST="http://app"											#app地址
 	METRICS_OMEGA_APP_PORT=6080													#app端口
 	METRICS_HEALTHCHECK=60														#健康监测间隔
-	METRICS_LOG_CONSOLE=true													#是否在终端打印日志	
-	METRICS_LOG_FILE="/var/log/omega/omega-metrics.log"							#日志存储路径
 	METRICS_LOG_LEVEL="debug"													#日志级别
-	METRICS_LOG_FORMATTER="%Date(2006-01-02 15:04:05Z07:00) [%LEVEL] %Msg%n"	#日志时间格式
-	METRICS_LOG_FILESIZE=5000000												#日志文件大小
-	METRICS_LOG_FILENUM=10														#日志文件个数
 	METRICS_CACHE_HOST="redis"													#redis地址
 	METRICS_CACHE_PORT=6379														#redis端口
-	METRICS_CACHE_PASSWORD="123"												#redis密码														
+	METRICS_CACHE_PASSWORD="123"												#redis密码
 	METRICS_CACHE_POOLSIZE=100													#redis连接池大小
 	METRICS_MQ_USER="guest"														#rabbitmq用户名
 	METRICS_MQ_PASSWORD="guest"													#rabbitmq密码 

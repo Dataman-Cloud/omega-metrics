@@ -16,7 +16,7 @@ import (
 	"github.com/Dataman-Cloud/omega-metrics/db"
 	"github.com/Dataman-Cloud/omega-metrics/logger"
 	"github.com/Dataman-Cloud/omega-metrics/util"
-	log "github.com/cihub/seelog"
+	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,7 +24,6 @@ func destroy() {
 	log.Info("destroying ...")
 	cache.DestroyCache()
 	util.DestroyMQ()
-	log.Flush()
 }
 
 func main() {

@@ -11,7 +11,7 @@ import (
 	"github.com/Dataman-Cloud/omega-metrics/db"
 	"github.com/Dataman-Cloud/omega-metrics/metrics"
 	"github.com/Dataman-Cloud/omega-metrics/util"
-	log "github.com/cihub/seelog"
+	log "github.com/Sirupsen/logrus"
 )
 
 // hanlder slave state message

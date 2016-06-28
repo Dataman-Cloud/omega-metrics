@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/Dataman-Cloud/omega-metrics/util"
-	log "github.com/cihub/seelog"
+	log "github.com/Sirupsen/logrus"
 )
 
 func ParserMqMessage(messgae *[]byte) *util.RabbitMqMessage {
