@@ -13,27 +13,12 @@ import (
 	"github.com/Dataman-Cloud/omega-metrics/cache"
 	"github.com/Dataman-Cloud/omega-metrics/config"
 	"github.com/Dataman-Cloud/omega-metrics/controller"
+	"github.com/Dataman-Cloud/omega-metrics/db"
 	"github.com/Dataman-Cloud/omega-metrics/logger"
 	"github.com/Dataman-Cloud/omega-metrics/util"
 	log "github.com/cihub/seelog"
 	"github.com/gin-gonic/gin"
 )
-
-func init() {
-	logger.LoadLogConfig()
-	util.InitMQ()
-	cache.InitCache()
-
-	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt)
-
-	go func() {
-		log.Info("received exit signal", <-signals)
-		destroy()
-		os.Exit(0)
-	}()
-
-}
 
 func destroy() {
 	log.Info("destroying ...")
@@ -43,16 +28,33 @@ func destroy() {
 }
 
 func main() {
-	initEnv()
-	initServer()
+	initConfigParam()
+
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, os.Interrupt)
+	go func() {
+		log.Info("received exit signal", <-signals)
+		destroy()
+		os.Exit(0)
+	}()
+
 	defer destroy()
+	initServer()
 }
 
-func initEnv() {
+func initConfigParam() {
+	config.InitConfig()
 	conf := config.Pairs()
 	numCPU := conf.NumCPU
 	runtime.GOMAXPROCS(numCPU)
 	log.Info("Runing with ", numCPU, " CPUs")
+
+	logger.LoadLogConfig()
+	util.InitMQ()
+	cache.InitCache()
+	db.InitDb()
+	util.InitApp()
+	util.InitJsonParser()
 }
 
 func initServer() {

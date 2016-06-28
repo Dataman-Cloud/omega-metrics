@@ -20,7 +20,7 @@ const (
 
 var parserTypeMappings map[string]reflect.Type
 
-func init() {
+func InitJsonParser() {
 	recognizedTypes := []interface{}{
 		MasterMetricsMar{},
 		SlaveStateMar{},
