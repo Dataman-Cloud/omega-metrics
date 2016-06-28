@@ -6,7 +6,7 @@ import (
 
 	"github.com/Dataman-Cloud/omega-metrics/config"
 	"github.com/Dataman-Cloud/omega-metrics/logger"
-	log "github.com/cihub/seelog"
+	log "github.com/Sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
 
@@ -52,7 +52,6 @@ func MetricsSubscribe(exchange string, routingkey string, handler func(messageBo
 		if err := recover(); err != nil {
 			stack := logger.Stack(5)
 			log.Errorf("Panic recovery -> %s\n%s\n", err, stack)
-			log.Flush()
 			MetricsSubscribe(exchange, routingkey, handler)
 		}
 	}()

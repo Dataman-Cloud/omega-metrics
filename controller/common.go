@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	log "github.com/cihub/seelog"
+	log "github.com/Sirupsen/logrus"
 	"github.com/gin-gonic/gin"
 )
 

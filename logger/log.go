@@ -1,81 +1,33 @@
 package logger
 
 import (
-	"strings"
-
 	"github.com/Dataman-Cloud/omega-metrics/config"
-	seelog "github.com/cihub/seelog"
+	log "github.com/Sirupsen/logrus"
 )
 
 var conf = config.Pairs()
 
 var (
-	levels       map[string]string
-	logfile      string
-	level        string
-	logToScreen  bool
-	formatString string
-	fileNum      int
-	fileSize     int
+	levels map[string]log.Level
+	level  log.Level
 )
 
-func initLogger() {
-	levels = map[string]string{
-		"debug": "debug",
-		"info":  "info",
-		"warn":  "warn",
-		"error": "error",
-		"crit":  "critical",
-		"none":  "off",
+func initLogger(logLevel string) {
+	levels = map[string]log.Level{
+		"debug": log.DebugLevel,
+		"info":  log.InfoLevel,
+		"warn":  log.WarnLevel,
+		"error": log.ErrorLevel,
+		"panic": log.PanicLevel,
+		"fatal": log.FatalLevel,
 	}
-
-	if level == "" {
-		level = config.DefaultLogLevel
+	if logLevel == "" {
+		level = log.DebugLevel
 	}
-
-	if logfile == "" {
-		logfile = "/var/log/omeaga/omega-metrics.log"
-	}
-
-	if fileNum <= 0 {
-		fileNum = 10
-	}
-
-	if fileSize <= 0 {
-		fileSize = 5000000
-	}
-
-	if formatString == "" {
-		formatString = "%Date(2006-01-02 15:04:05Z07:00) [%LEVEL] %Msg%n"
-	}
-
-	SetLevel(level)
-}
-
-func SetLevel(logLevel string) {
-	parsedLevel, ok := levels[strings.ToLower(logLevel)]
-	if ok {
-		level = parsedLevel
-		reloadLogConfig()
-	}
-}
-
-func reloadLogConfig() {
-	logger, err := seelog.LoggerFromConfigAsString(loggerConfig())
-
-	if err == nil {
-		seelog.ReplaceLogger(logger)
-	} else {
-		seelog.Error(err)
-	}
+	log.SetLevel(level)
 }
 
 func LoadLogConfig() {
-	logfile = conf.Log.File
-	level = conf.Log.Level
-	logToScreen = conf.Log.Console
-	fileNum = conf.Log.FileNum
-	fileSize = conf.Log.FileSize
-	formatString = conf.Log.Formatter
-	initLogger()
+	logLevel := conf.Log.Level
+	initLogger(logLevel)
 }

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"reflect"
 
-	log "github.com/cihub/seelog"
+	log "github.com/Sirupsen/logrus"
 )
 
 const (
