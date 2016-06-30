@@ -21,7 +21,6 @@ ADD . /usr/lib/go/src/github.com/Dataman-Cloud/omega-metrics
 WORKDIR /usr/lib/go/src/github.com/Dataman-Cloud/omega-metrics
 
 RUN go build .
-RUN cp omega-metrics.yaml.sample /etc/omega/omega-metrics.yaml
 
 EXPOSE 9005
 
