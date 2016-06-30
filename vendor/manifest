@@ -2,60 +2,10 @@
 	"version": 0,
 	"dependencies": [
 		{
-			"importpath": "github.com/BurntSushi/toml",
-			"repository": "https://github.com/BurntSushi/toml",
-			"revision": "056c9bc7be7190eaa7715723883caffa5f8fa3e4",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/Jeffail/gabs",
-			"repository": "https://github.com/Jeffail/gabs",
-			"revision": "feb7ecb58978ab279e4ac7f195f7c8fd26cf4469",
-			"branch": "master"
-		},
-		{
 			"importpath": "github.com/Sirupsen/logrus",
 			"repository": "https://github.com/Sirupsen/logrus",
 			"revision": "f3cfb454f4c209e6668c95216c4744b8fddb2356",
-			"branch": "master",
-			"notests": true
-		},
-		{
-			"importpath": "github.com/armon/consul-api",
-			"repository": "https://github.com/armon/consul-api",
-			"revision": "dcfedd50ed5334f96adee43fc88518a4f095e15c",
 			"branch": "master"
-		},
-		{
-			"importpath": "github.com/bugsnag/bugsnag-go",
-			"repository": "https://github.com/bugsnag/bugsnag-go",
-			"revision": "9ee24c1db7e2c5b87e7228acb3e587a35124a041",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/bugsnag/osext",
-			"repository": "https://github.com/bugsnag/osext",
-			"revision": "0dd3f918b21bec95ace9dc86c7e70266cfc5c702",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/bugsnag/panicwrap",
-			"repository": "https://github.com/bugsnag/panicwrap",
-			"revision": "e5f9854865b9778a45169fc249e99e338d4d6f27",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/cihub/seelog",
-			"repository": "https://github.com/cihub/seelog",
-			"revision": "5841159c495ad98691aac2bf90113c040e62bac2",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/coreos/go-etcd/etcd",
-			"repository": "https://github.com/coreos/go-etcd",
-			"revision": "555b4186480c545106eb89e0158e9fa0c2bebcf6",
-			"branch": "master",
-			"path": "/etcd"
 		},
 		{
 			"importpath": "github.com/dustin/go-broadcast",
@@ -84,12 +34,6 @@
 			"path": "/redis"
 		},
 		{
-			"importpath": "github.com/getsentry/raven-go",
-			"repository": "https://github.com/getsentry/raven-go",
-			"revision": "74c334d7b8aaa4fd1b4fc6aa428c36fed1699e28",
-			"branch": "master"
-		},
-		{
 			"importpath": "github.com/gin-gonic/gin",
 			"repository": "https://github.com/gin-gonic/gin",
 			"revision": "704d690ac0e25fcd060ff82f75f913e879e65a3c",
@@ -115,18 +59,6 @@
 			"revision": "156cc5eddfd17795b2b407cd83b98f014036a26b",
 			"branch": "master",
 			"path": "/pkg/escape"
-		},
-		{
-			"importpath": "github.com/kr/pretty",
-			"repository": "https://github.com/kr/pretty",
-			"revision": "e6ac2fc51e89a3249e82157fa0bb7a18ef9dd5bb",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/kr/text",
-			"repository": "https://github.com/kr/text",
-			"revision": "bb797dc4fb8320488f47bf11de07a733d7233e1f",
-			"branch": "master"
 		},
 		{
 			"importpath": "github.com/magiconair/properties",
@@ -159,30 +91,6 @@
 			"branch": "master"
 		},
 		{
-			"importpath": "github.com/spf13/cast",
-			"repository": "https://github.com/spf13/cast",
-			"revision": "ee815aaf958c707ad07547cd62150d973710f747",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/spf13/jwalterweatherman",
-			"repository": "https://github.com/spf13/jwalterweatherman",
-			"revision": "3d60171a64319ef63c78bd45bd60e6eab1e75f8b",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/spf13/pflag",
-			"repository": "https://github.com/spf13/pflag",
-			"revision": "f735fdff4ffb34299727eb2e3c9abab588742d41",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/spf13/viper",
-			"repository": "https://github.com/spf13/viper",
-			"revision": "1967d93db724f4a5c0e101307e96d82ff520a067",
-			"branch": "master"
-		},
-		{
 			"importpath": "github.com/streadway/amqp",
 			"repository": "https://github.com/streadway/amqp",
 			"revision": "f4879ba28fffbb576743b03622a9ff20461826b2",
@@ -193,40 +101,6 @@
 			"repository": "https://github.com/streadway/amqp.git",
 			"revision": "b4f3ceab0337f013208d31348b578d83c0064744",
 			"branch": "master"
-		},
-		{
-			"importpath": "github.com/tobi/airbrake-go",
-			"repository": "https://github.com/tobi/airbrake-go",
-			"revision": "5b5e269e1bc398d43f67e43dafff3414a59cd5a2",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/ugorji/go/codec",
-			"repository": "https://github.com/ugorji/go",
-			"revision": "e2517eda870fd3db14968b85d831f0261af83561",
-			"branch": "master",
-			"path": "/codec"
-		},
-		{
-			"importpath": "github.com/xordataexchange/crypt/backend",
-			"repository": "https://github.com/xordataexchange/crypt",
-			"revision": "749e360c8f236773f28fc6d3ddfce4a470795227",
-			"branch": "master",
-			"path": "/backend"
-		},
-		{
-			"importpath": "github.com/xordataexchange/crypt/config",
-			"repository": "https://github.com/xordataexchange/crypt",
-			"revision": "749e360c8f236773f28fc6d3ddfce4a470795227",
-			"branch": "master",
-			"path": "/config"
-		},
-		{
-			"importpath": "github.com/xordataexchange/crypt/encoding/secconf",
-			"repository": "https://github.com/xordataexchange/crypt",
-			"revision": "749e360c8f236773f28fc6d3ddfce4a470795227",
-			"branch": "master",
-			"path": "/encoding/secconf"
 		},
 		{
 			"importpath": "golang.org/x/crypto/cast5",
@@ -253,8 +127,7 @@
 			"importpath": "gopkg.in/airbrake/gobrake.v2",
 			"repository": "https://gopkg.in/airbrake/gobrake.v2",
 			"revision": "31c8ff1fb8b79a6947e6565e9a6df535f98a6b94",
-			"branch": "master",
-			"notests": true
+			"branch": "master"
 		},
 		{
 			"importpath": "gopkg.in/bluesuncorp/validator.v5",
@@ -263,23 +136,10 @@
 			"branch": "master"
 		},
 		{
-			"importpath": "gopkg.in/bsm/ratelimit.v1",
-			"repository": "https://gopkg.in/bsm/ratelimit.v1",
-			"revision": "bda20d5067a03094fc6762f7ead53027afac5f28",
-			"branch": "v1"
-		},
-		{
 			"importpath": "gopkg.in/gemnasium/logrus-airbrake-hook.v2",
 			"repository": "https://gopkg.in/gemnasium/logrus-airbrake-hook.v2",
 			"revision": "31e6fd4bd5a98d8ee7673d24bc54ec73c31810dd",
-			"branch": "master",
-			"notests": true
-		},
-		{
-			"importpath": "gopkg.in/yaml.v2",
-			"repository": "https://gopkg.in/yaml.v2",
-			"revision": "7ad95dd0798a40da1ccdff6dff35fd177b5edf40",
-			"branch": "v2"
+			"branch": "master"
 		}
 	]
 }
