@@ -38,7 +38,12 @@ func GetHostInstanceInfo(clusterId string, ip string) ([]util.HostInstance, erro
 	var instances []util.HostInstance
 	key := clusterId + ":" + ip
 	value, err := cache.ReadFromRedis(key)
-	if err != nil && err != redis.ErrNil {
+	if err != nil {
+		// if intances cache data is empty return empty data not error
+		if err == redis.ErrNil {
+			return instances, nil
+		}
+
 		return instances, err
 	}
 
