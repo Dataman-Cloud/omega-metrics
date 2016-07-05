@@ -7,6 +7,7 @@ import (
 	"github.com/Dataman-Cloud/omega-metrics/cache"
 	"github.com/Dataman-Cloud/omega-metrics/util"
 	"github.com/gin-gonic/gin"
+	redis "github.com/garyburd/redigo/redis"
 )
 
 func HostInstanceHandler(c *gin.Context) {
@@ -37,7 +38,7 @@ func GetHostInstanceInfo(clusterId string, ip string) ([]util.HostInstance, erro
 	var instances []util.HostInstance
 	key := clusterId + ":" + ip
 	value, err := cache.ReadFromRedis(key)
-	if err != nil {
+	if err != nil && err != redis.ErrNil {
 		return instances, err
 	}
 
