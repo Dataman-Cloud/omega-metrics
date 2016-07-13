@@ -9,15 +9,15 @@ import (
 )
 
 func HealthCheck(ctx *gin.Context) {
-	checker := health_checker.NewHealthChecker("omega-app")
+	checker := health_checker.NewHealthChecker("omega-metrics")
 	conf := config.Pairs()
 	redisDsn := fmt.Sprintf("%s:%d",
 		conf.Cache.Host, conf.Cache.Port)
 	checker.AddCheckPoint("redis", redisDsn, nil, nil)
 
-	mysqlDsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true&loc=Local",
+	influxdbDsn := fmt.Sprintf("%s:%s@http://%s:%d/%s?parseTime=true&loc=Local",
 		conf.Db.User, conf.Db.Password, conf.Db.Host, conf.Db.Port, conf.Db.Database)
-	checker.AddCheckPoint("mysql", mysqlDsn, nil, nil)
+	checker.AddCheckPoint("influxdb", influxdbDsn, nil, nil)
 
 	mqDsn := fmt.Sprintf("amqp://%s:%s@%s:%d/",
 		conf.Mq.User, conf.Mq.Password, conf.Mq.Host, conf.Mq.Port)
