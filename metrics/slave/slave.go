@@ -166,7 +166,6 @@ func ParseAppMonitorData(message *string, slaveInfo map[string]util.AppInfo) ([]
 		if flag == false {
 			continue
 		}
-
 		conInfo.App = app
 		conInfo.ContainerId = containerId
 		conInfo.Timestamp = value.Stats[1].Timestamp
@@ -180,8 +179,8 @@ func ParseAppMonitorData(message *string, slaveInfo map[string]util.AppInfo) ([]
 
 		// calculate memory use info
 		conInfo.CpuShareCores = float64(app.Resources.Cpus)
-		conInfo.MemoryUsed = value.Stats[1].Memory.Usage / (1024 * 1024)
-		conInfo.MemoryTotal = app.Resources.Mem
+		conInfo.MemoryUsed = float64(value.Stats[1].Memory.Usage / (1024 * 1024))
+		conInfo.MemoryTotal = float64(app.Resources.Mem)
 
 		// calculate disk write and read rate B/s
 		if value.Spec.HasNetwork && (len(value.Stats[1].Network.Interfaces) > 0) {

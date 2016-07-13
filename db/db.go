@@ -171,12 +171,12 @@ func WriteContainerInfoToInflux(conInfo *util.SlaveStateMar) error {
 
 	MemoryTotal, ok := fields["MemoryTotal"]
 	if ok {
-		fields["MemoryTotal"] = float64(MemoryTotal.(uint64))
+		fields["MemoryTotal"] = MemoryTotal.(float64) //float64(MemoryTotal.(uint64))
 	}
 
 	MemoryUsed, ok := fields["MemoryUsed"]
 	if ok {
-		fields["MemoryUsed"] = float64(MemoryUsed.(uint64))
+		fields["MemoryUsed"] = MemoryUsed.(float64) //float64(MemoryUsed.(uint64))
 	}
 
 	delete(fields, "App")
