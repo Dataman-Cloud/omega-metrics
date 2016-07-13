@@ -205,7 +205,7 @@ func gatherApp(app util.AppStatus) (util.AppMetric, error) {
 	result.AppName = app.Name
 	result.AppCpuUsed = cpuUsedSum
 	result.AppCpuShare = cpuShareSum
-	result.AppMemUsed = memUsedSum
+	result.AppMemUsed = float64(memUsedSum)
 	result.AppMemShare = memTotalSum
 	result.Status = app.Status
 	result.Instances = app.Instances

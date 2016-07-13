@@ -6,8 +6,9 @@ import (
 
 	"github.com/Dataman-Cloud/omega-metrics/cache"
 	"github.com/Dataman-Cloud/omega-metrics/util"
-	"github.com/gin-gonic/gin"
+	log "github.com/Sirupsen/logrus"
 	redis "github.com/garyburd/redigo/redis"
+	"github.com/gin-gonic/gin"
 )
 
 func HostInstanceHandler(c *gin.Context) {

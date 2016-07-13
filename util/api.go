@@ -30,23 +30,23 @@ type MasterMetrics struct {
 	CpuPercent float64 `json:"master/cpus_percent"`
 	CpuShare   float64 `json:"master/cpus_used"`
 	CpuTotal   float64 `json:"master/cpus_total"`
-	DiskUsed   int     `json:"master/disk_used"`
-	DiskTotal  int     `json:"master/disk_total"`
-	MemUsed    int     `json:"master/mem_used"`
-	MemTotal   int     `json:"master/mem_total"`
-	Leader     int     `json:"master/elected"`
+	DiskUsed   float64 `json:"master/disk_used"`
+	DiskTotal  float64 `json:"master/disk_total"`
+	MemUsed    float64 `json:"master/mem_used"`
+	MemTotal   float64 `json:"master/mem_total"`
+	Leader     float64 `json:"master/elected"`
 }
 
 type MasterMetricsMar struct {
 	CpuPercent float64 `json:"cpuPercent"`
 	CpuShare   float64 `json:"cpuShare"`
 	CpuTotal   float64 `json:"cpuTotal"`
-	MemTotal   int     `json:"memTotal"`
-	MemUsed    int     `json:"memUsed"`
-	DiskTotal  int     `json:"diskTotal"`
-	DiskUsed   int     `json:"diskUsed"`
+	MemTotal   float64 `json:"memTotal"`
+	MemUsed    float64 `json:"memUsed"`
+	DiskTotal  float64 `json:"diskTotal"`
+	DiskUsed   float64 `json:"diskUsed"`
 	Timestamp  int64   `json:"timestamp"`
-	Leader     int     `json:"leader"`
+	Leader     float64 `json:"leader"`
 	ClusterId  string  `json:"clusterId"`
 }
 
@@ -61,7 +61,7 @@ type AppMetric struct {
 	AppCpuShare float64 `json:"appCpuShare"`
 	AppCpuUsed  float64 `json:"appCpuUsed"`
 	AppMemShare uint64  `json:"appMemShare"`
-	AppMemUsed  uint64  `json:"appMemUsed"`
+	AppMemUsed  float64 `json:"appMemUsed"`
 	Instances   int64   `json:"instances"`
 	Status      uint8   `json:"status"`
 }
@@ -116,8 +116,8 @@ type SlaveStateMar struct {
 	ContainerId             string    `json:"containerId"`
 	CpuUsedCores            float64   `json:"cpuUsedCores"`
 	CpuShareCores           float64   `json:"cpuShareCores"`
-	MemoryTotal             uint64    `json:"memoryTotal"`
-	MemoryUsed              uint64    `json:"memoryUsed"`
+	MemoryTotal             float64   `json:"memoryTotal"`
+	MemoryUsed              float64   `json:"memoryUsed"`
 	NetworkReceviedByteRate float64   `json:"nw_rx_bytes"`
 	NetworkSentByteRate     float64   `json:"nw_tx_bytes"`
 	DiskIOReadBytesRate     float64   `json: "disk_read_bytes"`
@@ -158,8 +158,8 @@ type tasks struct {
 
 type resources struct {
 	Cpus  float64 `json:"cpus"`
-	Disk  uint64  `json:"disk"`
-	Mem   uint64  `json:"mem"`
+	Disk  float64 `json:"disk"`
+	Mem   float64 `json:"mem"`
 	Ports string  `json:"ports,omitempty"`
 }
 
@@ -402,42 +402,42 @@ type FsStats struct {
 }
 
 type CpuSpec struct {
-	Limit    uint64 `json:"limit"`
-	MaxLimit uint64 `json:"max_limit"`
-	Mask     string `json:"mask,omitempty"`
+	Limit    float64 `json:"limit"`
+	MaxLimit float64 `json:"max_limit"`
+	Mask     string  `json:"mask,omitempty"`
 }
 
 type MemorySpec struct {
 	// The amount of memory requested. Default is unlimited (-1).
 	// Units: bytes.
-	Limit uint64 `json:"limit,omitempty"`
+	Limit float64 `json:"limit,omitempty"`
 
 	// The amount of guaranteed memory.  Default is 0.
 	// Units: bytes.
-	Reservation uint64 `json:"reservation,omitempty"`
+	Reservation float64 `json:"reservation,omitempty"`
 
 	// The amount of swap space requested. Default is unlimited (-1).
 	// Units: bytes.
-	SwapLimit uint64 `json:"swap_limit,omitempty"`
+	SwapLimit float64 `json:"swap_limit,omitempty"`
 }
 
 // CPU usage time statistics.
 type CpuUsage struct {
 	// Total CPU usage.
 	// Units: nanoseconds
-	Total uint64 `json:"total"`
+	Total float64 `json:"total"`
 
 	// Per CPU/core usage of the container.
 	// Unit: nanoseconds.
-	PerCpu []uint64 `json:"per_cpu_usage,omitempty"`
+	PerCpu []float64 `json:"per_cpu_usage,omitempty"`
 
 	// Time spent in user space.
 	// Unit: nanoseconds
-	User uint64 `json:"user"`
+	User float64 `json:"user"`
 
 	// Time spent in kernel space.
 	// Unit: nanoseconds
-	System uint64 `json:"system"`
+	System float64 `json:"system"`
 }
 
 type MemoryStatsMemoryData struct {
@@ -520,7 +520,7 @@ type HostInstance struct {
 	AppName       string  `json:"appname"`
 	ContainerName string  `json:"containerName"`
 	CpuUsed       float64 `json:"cpuUsed"`
-	MemoryUsed    uint64  `json:"memoryUsed"`
+	MemoryUsed    float64 `json:"memoryUsed"`
 	StartTime     int64   `json:"startTime"`
 }
 
