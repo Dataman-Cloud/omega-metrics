@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/Dataman-Cloud/omega-metrics/config"
 	"io/ioutil"
 	"net/http"
 	"time"
-
-	"github.com/Dataman-Cloud/omega-metrics/config"
 )
 
 var (
@@ -48,7 +47,8 @@ func QueryApps(token, clusterId string) ([]AppConfig, error) {
 }
 
 // query all app status under one user all clusters
-func QueryAppStatus(token string) (map[string]AppStatus, error) {
+func QueryAppStatus(token string, clusterId string, host string, port int) (map[string]AppStatus, error) {
+	AppStatusUrl = fmt.Sprintf("%s:%d/api/v3/apps/status?cid=%s", host, port, clusterId)
 	response, err := doHttpRequest(AppStatusUrl, token)
 	if err != nil {
 		return nil, err
