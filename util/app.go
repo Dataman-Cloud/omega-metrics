@@ -24,7 +24,6 @@ func InitApp() {
 	conf := config.Pairs()
 	AppServerHost = conf.Omega_app_host
 	AppServerPort = conf.Omega_app_port
-	AppStatusUrl = fmt.Sprintf("%s:%d/api/v3/apps/status", AppServerHost, AppServerPort)
 }
 
 // query all apps by user id with token
@@ -48,7 +47,8 @@ func QueryApps(token, clusterId string) ([]AppConfig, error) {
 }
 
 // query all app status under one user all clusters
-func QueryAppStatus(token string) (map[string]AppStatus, error) {
+func QueryAppStatus(token string, clusterId string) (map[string]AppStatus, error) {
+	AppStatusUrl = fmt.Sprintf("%s:%d/api/v3/apps/status?cid=%s", AppServerHost, AppServerPort, clusterId)
 	response, err := doHttpRequest(AppStatusUrl, token)
 	if err != nil {
 		return nil, err
