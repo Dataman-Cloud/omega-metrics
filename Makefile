@@ -10,14 +10,16 @@ run: build
 fmt:
 	go fmt ./...
 test:
-	go test `go list ./... | grep -v /vendor/`
+	go test -v `go list ./... | grep -v /vendor/`
 
 PACKAGES = $(shell go list ./... | grep -v /vendor/)
 collect-cover-data:
 	echo "mode: count" > coverage-all.out
 	@$(foreach pkg,$(PACKAGES),\
 		go test -v -coverprofile=coverage.out -covermode=count $(pkg);\
-		tail -n +2 coverage.out >> coverage-all.out;)
+		if [ -f coverage.out ]; then\
+			tail -n +2 coverage.out >> coverage-all.out;\
+		fi;)
 
 test-cover-html:
 	go tool cover -html=coverage-all.out -o coverage.html
