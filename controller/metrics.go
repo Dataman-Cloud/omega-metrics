@@ -121,7 +121,7 @@ func ClusterMetricsHandler(c *gin.Context) {
 		return
 	}
 
-	appStatus, err := util.QueryAppStatus(token)
+	appStatus, err := util.QueryAppStatus(token, clusterId)
 	if err != nil {
 		log.Error("[Master metrics] Get app status from omega-app failed ", err)
 		ReturnError(c, DbQueryError, err)
