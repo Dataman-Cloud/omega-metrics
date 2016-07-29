@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Dataman-Cloud/omega-metrics/cache"
+	"github.com/Dataman-Cloud/omega-metrics/config"
 	"github.com/Dataman-Cloud/omega-metrics/db"
 	"github.com/Dataman-Cloud/omega-metrics/util"
 	log "github.com/Sirupsen/logrus"
@@ -121,7 +122,10 @@ func ClusterMetricsHandler(c *gin.Context) {
 		return
 	}
 
-	appStatus, err := util.QueryAppStatus(token)
+	appStatus, err := util.QueryAppStatus(token,
+		clusterId,
+		config.Pairs().Omega_app_host,
+		config.Pairs().Omega_app_port)
 	if err != nil {
 		log.Error("[Master metrics] Get app status from omega-app failed ", err)
 		ReturnError(c, DbQueryError, err)
