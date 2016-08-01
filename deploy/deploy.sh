@@ -23,6 +23,15 @@ curl -v -X PUT $MARATHON_API_URL/v2/apps/shurenyun-$TASKENV-$SERVICE -H Content-
                                      ]
                                 }
                    },
+      "healthChecks": [{
+               "path": "/api/v3/health/metrics",
+               "protocol": "HTTP",
+               "gracePeriodSeconds": 300,
+               "intervalSeconds": 60,
+               "portIndex": 0,
+               "timeoutSeconds": 20,
+               "maxConsecutiveFailures": 3
+           }],
       "env": {
                     "BAMBOO_TCP_PORT": "'$BAMBOO_TCP_PORT'",
                     "BAMBOO_PRIVATE": "'$BAMBOO_PRIVATE'",
