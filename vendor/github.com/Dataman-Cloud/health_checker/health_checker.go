@@ -285,6 +285,7 @@ func (checkPoint *CheckPoint) InfluxdbConnectionChecker() bool {
 		log.Fatalln("Error: ", err)
 		return false
 	}
+	defer c.Close()
 
 	if _, _, err := c.Ping(10 * time.Second); err != nil {
 		log.Fatalln("Error: ", err)
