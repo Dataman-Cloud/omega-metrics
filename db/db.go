@@ -44,7 +44,7 @@ func CreateInfluxUDPClient() (client.Client, error) {
 }
 
 // create a new http influx client
-func CreateInfluxHttpClient() (client.Client, error) {
+var CreateInfluxHttpClient = func() (client.Client, error) {
 	return client.NewHTTPClient(client.HTTPConfig{
 		Addr:     HttpInfluxAddr,
 		Username: InfluxUserName,
@@ -228,6 +228,7 @@ func Query(sql string) (results []map[string]interface{}, err error) {
 		err = errors.New("Create influx http client got error: " + err.Error())
 		return
 	}
+	defer httpClient.Close()
 
 	query := client.NewQuery(sql, InfluxDataBase, "ns")
 	response, err := httpClient.Query(query)
