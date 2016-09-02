@@ -13,9 +13,6 @@ curl -v -X PUT $MARATHON_API_URL/v2/apps/shurenyun-$TASKENV-$SERVICE -H Content-
                      "docker": {
                                      "image": "'$SERVICE_IMAGE'",
                                      "network": "BRIDGE",
-                                     "parameters": [
-                                                 {"key": "dns","value": "'$DNS_IP'"}
-                                                   ],
                                      "privileged": '$PRIVILEGED',
                                      "forcePullImage": '$FORCEPULLIMAGE',
                                      "portMappings": [
